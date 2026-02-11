@@ -14,11 +14,14 @@ jobs:
     strategy:
       matrix:
         build_type: [Debug, Release]
+        compiler: [gcc, clang]
 
     steps:
       - uses: actions/checkout@v6
 
       - name: Configure
+        env:
+          CC: ${{ matrix.compiler }}
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
