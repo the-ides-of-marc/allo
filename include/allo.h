@@ -57,7 +57,7 @@ static inline void allo_free(struct allo_allocator a, void *ptr) {
   a.free(a.ctx, ptr);
 }
 
-#endif /* !ALLO_H */
+#endif // !ALLO_H
 
 #ifdef ALLO_IMPLEMENTATION
 #endif

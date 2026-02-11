@@ -1,9 +1,9 @@
-#include "allo.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #define ALLO_IMPLEMENTATION
+#include "allo.h"
 
 static const uintptr_t MOCK_BASE_ADDR = 0x1000;
 
