@@ -6,6 +6,11 @@ function(add_allo_test TEST_NAME)
             allo
     )
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+    set_tests_properties(${TEST_NAME}
+        PROPERTIES
+            ENVIRONMENT
+            "ASAN_OPTIONS=detect_leaks=1:symbolize=1:abort_on_error=1"
+        )
 endfunction()
 
 
