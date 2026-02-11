@@ -33,7 +33,7 @@ target_include_directories(allo INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-enable_testing()
-add_subdirectory(tests)
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
