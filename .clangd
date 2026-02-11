@@ -1,0 +1,7 @@
+CompileFlags:
+  Add: [-DALLO_IMPLEMENTATION]
+  CompilationDatabase: "build"
+
+Diagnostics:
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
