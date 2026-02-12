@@ -16,12 +16,13 @@ struct mock_state {
   void *ptr_last_allocated;
 };
 
-static void *mock_alloc(void *ctx, size_t size, size_t align) {
+static enum allo_status mock_alloc(void **dest, void *ctx, size_t size,
+                                   size_t align) {
   struct mock_state *state = ctx;
   ++state->alloc_calls;
-  void *addr = (void *)(MOCK_BASE_ADDR + size + align);
-  state->ptr_last_allocated = addr;
-  return addr;
+  *dest = (void *)(MOCK_BASE_ADDR + size + align);
+  state->ptr_last_allocated = *dest;
+  return ALLO_OK;
 }
 
 static void mock_free(void *ctx, void *ptr) {
@@ -44,7 +45,9 @@ int main(void) {
       .free = &mock_free,
   };
 
-  void *ptr = allo_alloc(allocator, 64, 16);
+  void *ptr;
+  enum allo_status status = allo_alloc(&ptr, allocator, 64, 16);
+  TEST_ASSERT_EQUAL_INT(ALLO_OK, status);
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
       MOCK_BASE_ADDR + 64 + 16, ptr,
       "ptr should point to mocked allocation of base addr + size + align");

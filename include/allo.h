@@ -21,6 +21,14 @@
 //
 // DOCUMENTATION
 //
+// enum allo_status:
+//
+//   This is an enum representing the status of an operation/function call.
+//   This enum contains all the different possible success/error statuses across
+//   this library.
+//   All functions that can fail returns an `enum allo_status`.
+//
+//
 // struct allo_allocator:
 //
 //   This is an interface for a memory allocator.
@@ -32,25 +40,41 @@
 //   - Backing allocators that take in an underlying allocator.
 //
 //   Functions:
+//
 //     allo_alloc:
-//       void* allo_alloc(struct allo_allocator a, size_t size, size_t align);
-//       allocates `size` bytes at an alignment of `align`.
+//
+//       enum allo_status allo_alloc(
+//         void **dest,
+//         struct allo_allocator a,
+//         size_t size,
+//         size_t align);
+//
+//       Allocates `size` bytes at an alignment of `align`.
+//       `dest` points to the allocated memory on success.
 //
 //     allo_free:
+//
 //       void allo_free(struct allo_allocator a, void* ptr);
+//
 //       frees the memory at `ptr`.
 
 #include <stddef.h>
+#include <stdint.h>
+
+enum allo_status {
+  ALLO_OK = 0,
+  ALLO_ERROR,
+};
 
 struct allo_allocator {
   void *ctx;
-  void *(*alloc)(void *ctx, size_t size, size_t align);
+  enum allo_status (*alloc)(void **dest, void *ctx, size_t size, size_t align);
   void (*free)(void *ctx, void *ptr);
 };
 
-static inline void *allo_alloc(struct allo_allocator a, size_t size,
-                               size_t align) {
-  return a.alloc(a.ctx, size, align);
+static inline enum allo_status allo_alloc(void **dest, struct allo_allocator a,
+                                          size_t size, size_t align) {
+  return a.alloc(dest, a.ctx, size, align);
 }
 
 static inline void allo_free(struct allo_allocator a, void *ptr) {
