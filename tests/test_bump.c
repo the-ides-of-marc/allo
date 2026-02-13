@@ -62,7 +62,7 @@ void test_alloc_first_alloc(void) {
                                   "allocator initialization should succeed");
     allo__assert_fixed_bump(&b);
 
-    void *dest;
+    void *dest = NULL;
     status = allo_fixed_bump_alloc(&dest, &b, tests[i].size, tests[i].align);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(
@@ -128,7 +128,7 @@ void test_alloc_subsequent_allocs(void) {
     b.cursor -= tests[i].starting_offset;
     allo__assert_fixed_bump(&b);
 
-    void *dest;
+    void *dest = NULL;
     status = allo_fixed_bump_alloc(&dest, &b, tests[i].size, tests[i].align);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(
@@ -193,7 +193,7 @@ void test_alloc_oom(void) {
     b.cursor -= tests[i].offset;
     allo__assert_fixed_bump(&b);
 
-    void *dest;
+    void *dest = NULL;
     status = allo_fixed_bump_alloc(&dest, &b, tests[i].size, tests[i].align);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OOM, status,
                                   "allocation should fail due to OOM");
@@ -238,7 +238,7 @@ void test_sequential(void) {
   enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
   allo__assert_fixed_bump(&b);
 
-  void *dest;
+  void *dest = NULL;
 
   status = allo_fixed_bump_alloc(&dest, &b, 1, 1);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
