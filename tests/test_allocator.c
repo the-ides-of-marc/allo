@@ -31,18 +31,20 @@ static void mock_free(void *ctx, void *ptr) {
   (void)ptr;
 }
 
+static struct allo__allocator_vtable mock_vtable = {
+    .alloc = &mock_alloc,
+    .free = &mock_free,
+};
+
 void setUp(void) {}
 
 void tearDown(void) {}
 
-int main(void) {
-  UNITY_BEGIN();
-
+void test_alloc_and_free(void) {
   struct mock_state state = {0};
   struct allo_allocator allocator = {
-      .ctx = &state,
-      .alloc = &mock_alloc,
-      .free = &mock_free,
+      .allo__ptr = &state,
+      .allo__vtable = &mock_vtable,
   };
 
   void *dest = NULL;
@@ -61,6 +63,25 @@ int main(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
       dest, state.ptr_last_allocated,
       "freed pointer should be correctly tracked by mock free");
+}
 
+void test_allocator_from_fixed_bump(void) {
+  uint8_t buf[0x10] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x10);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocation initialization should succeed");
+  struct allo_allocator a = allo_allocator_from_fixed_bump(&b);
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allo__ptr,
+                                "ptr should point to underlying allocator");
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(
+      &allo__fixed_bump_vtable, a.allo__vtable,
+      "vtable should point to bump allocator's vtable");
+}
+
+int main(void) {
+  UNITY_BEGIN();
+  RUN_TEST(test_alloc_and_free);
+  RUN_TEST(test_allocator_from_fixed_bump);
   return UNITY_END();
 }
