@@ -92,10 +92,11 @@ enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *b,
                                       void *restrict buf, size_t size);
 
 enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
-                                 struct allo_fixed_bump *restrict b,
-                                 size_t size, size_t align);
+                                       struct allo_fixed_bump *restrict b,
+                                       size_t size, size_t align);
 
-void allo_fixed_bump_free(struct allo_fixed_bump *restrict b, void *restrict ptr);
+void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
+                          void *restrict ptr);
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 
@@ -110,7 +111,7 @@ static inline bool allo__is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
 }
 
-static inline void allo__assert_bump(struct allo_fixed_bump *b) {
+static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
   assert(b && "bump allocator must not be NULL");
   assert(b->start && "start of memory range must not be NULL");
   assert(b->end && "end of memory range must not be NULL");
@@ -129,15 +130,15 @@ enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *b,
   b->end = b->start + size;
   b->cursor = b->end;
 
-  allo__assert_bump(b);
+  allo__assert_fixed_bump(b);
   return ALLO_OK;
 }
 
 enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
-                                 struct allo_fixed_bump *restrict b,
-                                 size_t size, size_t align) {
+                                       struct allo_fixed_bump *restrict b,
+                                       size_t size, size_t align) {
   assert(dest && "dest must not be NULL");
-  allo__assert_bump(b);
+  allo__assert_fixed_bump(b);
   assert(size && "size to allocate must be non-zero");
   assert(align && "alignment must be non-zero");
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
@@ -151,13 +152,14 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
     return ALLO_OOM;
   }
   b->cursor = next_cursor;
-  allo__assert_bump(b);
+  allo__assert_fixed_bump(b);
 
   *dest = (void *)next_cursor;
   return ALLO_OK;
 }
 
-void allo_fixed_bump_free(struct allo_fixed_bump *restrict b, void *restrict ptr) {
+void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
+                          void *restrict ptr) {
   (void)b;
   (void)ptr;
 }
