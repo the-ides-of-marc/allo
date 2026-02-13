@@ -118,6 +118,7 @@ static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
   assert(b->start < b->end && "memory range property: start < end");
   assert(b->start <= b->cursor && "memory range property: start <= cursor");
   assert(b->cursor <= b->end && "memory range property: cursor <= end");
+  (void)b;
 }
 
 enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *b,
