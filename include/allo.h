@@ -57,6 +57,60 @@
 //       void allo_free(struct allo_allocator a, void* ptr);
 //
 //       frees the memory at `ptr`.
+//
+//  struct allo_fixed_bump:
+//
+//     This is a fixed bump allocator implementation.
+//
+//     This follows a bump-down implementation instead of a bump-up
+//     implementation as it is claimed that there is 1 less conditional and
+//     lower pressure on registers. While bump-down might cause slower
+//     reallocation but since this is a fixed size bump allocator, this means
+//     bump-down is preferrable to bump-up.
+//     See https://fitzgen.com/2019/11/01/always-bump-downwards.html.
+//
+//     Functions:
+//
+//       allo_fixed_bump_init:
+//
+//         enum allo_status allo_fixed_bump_init(
+//           struct allo_fixed_bump *restrict b,
+//           void *restrict buf,
+//           size_t size);
+//
+//         Initializes the allocator `b` to track the `buf` from
+//         [buf[0]..buf[size]).
+//         The cursor of the allocator will point to buf[size], 1 position after
+//         the first allocatable location in `buf`.
+//
+//       allo_fixed_bump_alloc:
+//
+//         enum allo_status allo_fixed_bump_alloc(
+//           void *restrict *restrict dest,
+//           struct allo_fixed_bump *restrict b,
+//           size_t size,
+//           size_t align);
+//
+//         Tries to allocate `size` bytes at `align` alignment.
+//         `size` MUST be > 0 and `align` MUST be a power of 2.
+//
+//       allo_fixed_bump_free:
+//
+//         void allo_fixed_bump_free(struct allo_fixed_bump *b, void *ptr);
+//
+//         This is a noop as the bump allocator cannot free specific memory
+//         previously allocated and can only be reset, clearing the allocator.
+//         See `allo_fixed_bump_reset`.
+//
+//       allo_fixed_bump_reset:
+//
+//         void allo_fixed_bump_reset(struct allo_fixed_bump *b);
+//
+//         This resets the whole allocated, clearing the allocator by resetting
+//         its cursor to its beginning position (1 position to the right of the
+//         first allocatable memory). All addresses held be previously allocated
+//         memory should be considered invalid and unsafe to use even though
+//         they are still in the allocator's usable memory region.
 
 #include <stddef.h>
 #include <stdint.h>
@@ -88,7 +142,7 @@ struct allo_fixed_bump {
   uintptr_t cursor;
 };
 
-enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *b,
+enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
                                       void *restrict buf, size_t size);
 
 enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
@@ -113,15 +167,15 @@ static inline bool allo__is_pow2(size_t n) {
 
 static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
   assert(b && "bump allocator must not be NULL");
-  assert(b->start && "start of memory range must not be NULL");
-  assert(b->end && "end of memory range must not be NULL");
-  assert(b->start < b->end && "memory range property: start < end");
-  assert(b->start <= b->cursor && "memory range property: start <= cursor");
-  assert(b->cursor <= b->end && "memory range property: cursor <= end");
+  assert(b->start && "start of memory region must not be NULL");
+  assert(b->end && "end of memory region must not be NULL");
+  assert(b->start < b->end && "memory region property: start < end");
+  assert(b->start <= b->cursor && "memory region property: start <= cursor");
+  assert(b->cursor <= b->end && "memory region property: cursor <= end");
   (void)b;
 }
 
-enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *b,
+enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
                                       void *restrict buf, size_t size) {
   assert(b && "bump allocator must not be NULL");
   assert(buf && "buffer for allocator must not be NULL");
