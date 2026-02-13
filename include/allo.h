@@ -58,6 +58,14 @@
 //
 //       frees the memory at `ptr`.
 //
+//     allo_allocator_from_fixed_bump:
+//
+//       struct allo_allocator allo_allocator_from_fixed_bump(
+//         struct allo_fixed_bump *b);
+//
+//       Wraps an existing `struct allo_fixed_bump` allocator in the a `struct
+//       allo_allocator`.
+//
 //  struct allo_fixed_bump:
 //
 //     This is a fixed bump allocator implementation.
@@ -154,6 +162,8 @@ void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 
+struct allo_allocator allo_allocator_from_fixed_bump(struct allo_fixed_bump *b);
+
 #endif // !ALLO_H
 
 #ifdef ALLO_IMPLEMENTATION
@@ -163,6 +173,26 @@ void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 
 static inline bool allo__is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
+}
+
+static enum allo_status allo_fixed_bump_alloc_adapter(void **dest, void *ctx,
+                                                      size_t size,
+                                                      size_t align) {
+  return allo_fixed_bump_alloc(dest, (struct allo_fixed_bump *)ctx, size,
+                               align);
+}
+
+static void allo__fixed_bump_free_adapter(void *ctx, void *ptr) {
+  allo_fixed_bump_free((struct allo_fixed_bump *)ctx, ptr);
+}
+
+struct allo_allocator
+allo_allocator_from_fixed_bump(struct allo_fixed_bump *b) {
+  return (struct allo_allocator){
+      .ctx = b,
+      .alloc = &allo_fixed_bump_alloc_adapter,
+      .free = &allo__fixed_bump_free_adapter,
+  };
 }
 
 static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
