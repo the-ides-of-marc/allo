@@ -68,6 +68,8 @@ void test_alloc_first_alloc(void) {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(
         dest, b.cursor,
         "dest should be at the current cursor after allocation");
+    TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % tests[i].align == 0,
+                             "allocated address should be aligned");
     allo__assert_fixed_bump(&b);
   }
 }
@@ -139,6 +141,8 @@ void test_alloc_subsequent_allocs(void) {
         "expected cursor position should be aligned");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - tests[i].expected_offset, b.cursor,
                                   "cursor should be at the expected offset");
+    TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % tests[i].align == 0,
+                             "allocated address should be aligned");
   }
 }
 
@@ -200,6 +204,8 @@ void test_alloc_oom(void) {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(
         b.end - tests[i].offset, b.cursor,
         "cursor should remain at its original position");
+    TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % tests[i].align == 0,
+                             "allocated address should be aligned");
     allo__assert_fixed_bump(&b);
   }
 }
@@ -251,6 +257,8 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 8, b.cursor,
                                 "cursor should shift to an alignment of 8");
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 8 == 0, "cursor should be aligned");
+  TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 8 == 0,
+                           "allocated address should be aligned");
   allo__assert_fixed_bump(&b);
 
   status = allo_fixed_bump_alloc(&dest, &b, 8, 8);
@@ -258,6 +266,8 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 16, b.cursor,
                                 "cursor should shift to an alignment of 8");
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 8 == 0, "cursor should be aligned");
+  TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 8 == 0,
+                           "allocated address should be aligned");
   allo__assert_fixed_bump(&b);
 
   status = allo_fixed_bump_alloc(&dest, &b, 15, 16);
@@ -265,6 +275,8 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 32, b.cursor,
                                 "cursor should shift to an alignment of 16");
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 16 == 0, "cursor should be aligned");
+  TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 16 == 0,
+                           "allocated address should be aligned");
   allo__assert_fixed_bump(&b);
 
   status = allo_fixed_bump_alloc(&dest, &b, 1, 128);
@@ -272,6 +284,8 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 128, b.cursor,
                                 "cursor should shift to an alignment of 128");
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 128 == 0, "cursor should be aligned");
+  TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 128 == 0,
+                           "allocated address should be aligned");
   allo__assert_fixed_bump(&b);
 
   status = allo_fixed_bump_alloc(&dest, &b, 128, 128);
@@ -280,6 +294,8 @@ void test_sequential(void) {
                                 "cursor should shift to an alignment of 128 "
                                 "and at the start of the memory range");
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 128 == 0, "cursor should be aligned");
+  TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 128 == 0,
+                           "allocated address should be aligned");
   allo__assert_fixed_bump(&b);
 
   status = allo_fixed_bump_alloc(&dest, &b, 1, 1);
