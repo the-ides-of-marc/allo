@@ -219,7 +219,10 @@ void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
   (void)ptr;
 }
 
-void allo_fixed_bump_reset(struct allo_fixed_bump *b) { b->cursor = b->end; }
+void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
+  b->cursor = b->end;
+  allo__assert_fixed_bump(b);
+}
 
 #endif
 
