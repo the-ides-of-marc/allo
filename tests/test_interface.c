@@ -1,9 +1,12 @@
+#include "unity_internals.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #define ALLO_IMPLEMENTATION
 #include "allo.h"
+
+#include "unity.h"
 
 static const uintptr_t MOCK_BASE_ADDR = 0x1000;
 
@@ -27,7 +30,13 @@ static void mock_free(void *ctx, void *ptr) {
   (void)ptr;
 }
 
+void setUp(void) {}
+
+void tearDown(void) {}
+
 int main(void) {
+  UNITY_BEGIN();
+
   struct mock_state state = {0};
   struct allo_allocator allocator = {
       .ctx = &state,
@@ -36,10 +45,19 @@ int main(void) {
   };
 
   void *ptr = allo_alloc(allocator, 64, 16);
-  assert(ptr == (void *)(MOCK_BASE_ADDR + 64 + 16));
-  assert(state.alloc_calls == 1);
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(
+      MOCK_BASE_ADDR + 64 + 16, ptr,
+      "ptr should point to mocked allocation of base addr + size + align");
+  TEST_ASSERT_EQUAL_size_t_MESSAGE(1, state.alloc_calls,
+                                   "alloc counter should be incremented by 1");
 
   allo_free(allocator, ptr);
-  assert(state.free_calls == 1);
-  assert(state.ptr_last_allocated == ptr);
+
+  TEST_ASSERT_EQUAL_size_t_MESSAGE(1, state.free_calls,
+                                   "free counter should be incremented by 1");
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(
+      ptr, state.ptr_last_allocated,
+      "freed pointer should be correctly tracked by mock free");
+
+  return UNITY_END();
 }
