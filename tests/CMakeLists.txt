@@ -26,7 +26,7 @@ endfunction()
 
 
 set(TESTS
-    test_interface
+    test_allocator
     test_bump
 )
 

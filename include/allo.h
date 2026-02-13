@@ -21,104 +21,136 @@
 //
 // DOCUMENTATION
 //
-// enum allo_status:
+// OVERVIEW:
 //
-//   This is an enum representing the status of an operation/function call.
-//   This enum contains all the different possible success/error statuses across
-//   this library.
-//   All functions that can fail returns an `enum allo_status`.
+//   This library implements different types of memory allocators.
+//   Each memory allocator implementation can be abstracted by a common type
+//   `struct allo_allocator` which is implemented as a fat pointer holding the
+//   allocator and its vtable.
 //
+//   Allocator implementations:
+//   - `allo_fixed_bump`
 //
-// struct allo_allocator:
-//
-//   This is an interface for a memory allocator.
-//   The primary use case is when there is a need to have represent an
-//   allocator with no concrete implementation.
+//   For optimal usage, use the specific memory allocator directly to avoid
+//   vtable overhead. However, `struct allo_allocator` is useful for code that
+//   relies on a allocator, but delegates the implementation downstream.
 //
 //   Examples:
-//   - Data structures that take an allocator.
-//   - Backing allocators that take in an underlying allocator.
+//   - data structures that have an underlying allocator.
+//     resizable array, hash table, etc.
+//   - complex allocator strategies that rely on underlying alllocators.
+//     arena, debug/logging, etc.
 //
-//   Functions:
+// NOTE:
+//   Since this is a header-only library, internal types cannot be hidden in the
+//   source files, thus all internal types start with the prefix
+//   `allo__<identifier>` and should not be used.
 //
-//     allo_alloc:
+//   All failable functions return an `enum allo_status` that represents the
+//   possible errors encountered in this library.
 //
-//       enum allo_status allo_alloc(
-//         void **dest,
-//         struct allo_allocator a,
-//         size_t size,
-//         size_t align);
 //
-//       Allocates `size` bytes at an alignment of `align`.
-//       `dest` points to the allocated memory on success.
+// INTERFACE:
 //
-//     allo_free:
+//   enum allo_status:
 //
-//       void allo_free(struct allo_allocator a, void* ptr);
+//     This is an enum representing the status of an operation/function call.
+//     This enum contains all the different possible success/error statuses
+//     across this library. All functions that can fail returns an `enum
+//     allo_status`.
 //
-//       frees the memory at `ptr`.
 //
-//     allo_allocator_from_fixed_bump:
+//   struct allo_allocator:
 //
-//       struct allo_allocator allo_allocator_from_fixed_bump(
-//         struct allo_fixed_bump *b);
+//     This is an interface for a memory allocator.
+//     The primary use case is when there is a need to have represent an
+//     allocator with no concrete implementation.
 //
-//       Wraps an existing `struct allo_fixed_bump` allocator in the a `struct
-//       allo_allocator`.
-//
-//  struct allo_fixed_bump:
-//
-//     This is a fixed bump allocator implementation.
-//
-//     This follows a bump-down implementation instead of a bump-up
-//     implementation as it is claimed that there is 1 less conditional and
-//     lower pressure on registers. While bump-down might cause slower
-//     reallocation but since this is a fixed size bump allocator, this means
-//     bump-down is preferrable to bump-up.
-//     See https://fitzgen.com/2019/11/01/always-bump-downwards.html.
+//     Examples:
+//     - Data structures that take an allocator.
+//     - Backing allocators that take in an underlying allocator.
 //
 //     Functions:
 //
-//       allo_fixed_bump_init:
+//       allo_alloc:
 //
-//         enum allo_status allo_fixed_bump_init(
-//           struct allo_fixed_bump *restrict b,
-//           void *restrict buf,
-//           size_t size);
-//
-//         Initializes the allocator `b` to track the `buf` from
-//         [buf[0]..buf[size]).
-//         The cursor of the allocator will point to buf[size], 1 position after
-//         the first allocatable location in `buf`.
-//
-//       allo_fixed_bump_alloc:
-//
-//         enum allo_status allo_fixed_bump_alloc(
-//           void *restrict *restrict dest,
-//           struct allo_fixed_bump *restrict b,
+//         enum allo_status allo_alloc(
+//           void **dest,
+//           struct allo_allocator a,
 //           size_t size,
 //           size_t align);
 //
-//         Tries to allocate `size` bytes at `align` alignment.
-//         `size` MUST be > 0 and `align` MUST be a power of 2.
+//         Allocates `size` bytes at an alignment of `align`.
+//         `dest` points to the allocated memory on success.
 //
-//       allo_fixed_bump_free:
+//       allo_free:
 //
-//         void allo_fixed_bump_free(struct allo_fixed_bump *b, void *ptr);
+//         void allo_free(struct allo_allocator a, void* ptr);
 //
-//         This is a noop as the bump allocator cannot free specific memory
-//         previously allocated and can only be reset, clearing the allocator.
-//         See `allo_fixed_bump_reset`.
+//         frees the memory at `ptr`.
 //
-//       allo_fixed_bump_reset:
+//       allo_allocator_from_fixed_bump:
 //
-//         void allo_fixed_bump_reset(struct allo_fixed_bump *b);
+//         struct allo_allocator allo_allocator_from_fixed_bump(
+//           struct allo_fixed_bump *b);
 //
-//         This resets the whole allocated, clearing the allocator by resetting
-//         its cursor to its beginning position (1 position to the right of the
-//         first allocatable memory). All addresses held be previously allocated
-//         memory should be considered invalid and unsafe to use even though
-//         they are still in the allocator's usable memory region.
+//         Wraps an existing `struct allo_fixed_bump` allocator in the a `struct
+//         allo_allocator`.
+//
+//    struct allo_fixed_bump:
+//
+//       This is a fixed bump allocator implementation.
+//
+//       This follows a bump-down implementation instead of a bump-up
+//       implementation as it is claimed that there is 1 less conditional and
+//       lower pressure on registers. While bump-down might cause slower
+//       reallocation but since this is a fixed size bump allocator, this means
+//       bump-down is preferrable to bump-up.
+//       See https://fitzgen.com/2019/11/01/always-bump-downwards.html.
+//
+//       Functions:
+//
+//         allo_fixed_bump_init:
+//
+//           enum allo_status allo_fixed_bump_init(
+//             struct allo_fixed_bump *restrict b,
+//             void *restrict buf,
+//             size_t size);
+//
+//           Initializes the allocator `b` to track the `buf` from
+//           [buf[0]..buf[size]).
+//           The cursor of the allocator will point to buf[size], 1 position
+//           after the first allocatable location in `buf`.
+//
+//         allo_fixed_bump_alloc:
+//
+//           enum allo_status allo_fixed_bump_alloc(
+//             void *restrict *restrict dest,
+//             struct allo_fixed_bump *restrict b,
+//             size_t size,
+//             size_t align);
+//
+//           Tries to allocate `size` bytes at `align` alignment.
+//           `size` MUST be > 0 and `align` MUST be a power of 2.
+//
+//         allo_fixed_bump_free:
+//
+//           void allo_fixed_bump_free(struct allo_fixed_bump *b, void *ptr);
+//
+//           This is a noop as the bump allocator cannot free specific memory
+//           previously allocated and can only be reset, clearing the allocator.
+//           See `allo_fixed_bump_reset`.
+//
+//         allo_fixed_bump_reset:
+//
+//           void allo_fixed_bump_reset(struct allo_fixed_bump *b);
+//
+//           This resets the whole allocated, clearing the allocator by
+//           resetting its cursor to its beginning position (1 position to the
+//           right of the first allocatable memory). All addresses held be
+//           previously allocated memory should be considered invalid and unsafe
+//           to use even though they are still in the allocator's usable memory
+//           region.
 
 #include <stddef.h>
 #include <stdint.h>
@@ -129,19 +161,23 @@ enum allo_status {
   ALLO_ERROR,
 };
 
-struct allo_allocator {
-  void *ctx;
+struct allo__allocator_vtable {
   enum allo_status (*alloc)(void **dest, void *ctx, size_t size, size_t align);
   void (*free)(void *ctx, void *ptr);
 };
 
+struct allo_allocator {
+  void *allo__ptr;
+  const struct allo__allocator_vtable *allo__vtable;
+};
+
 static inline enum allo_status allo_alloc(void **dest, struct allo_allocator a,
                                           size_t size, size_t align) {
-  return a.alloc(dest, a.ctx, size, align);
+  return a.allo__vtable->alloc(dest, a.allo__ptr, size, align);
 }
 
 static inline void allo_free(struct allo_allocator a, void *ptr) {
-  a.free(a.ctx, ptr);
+  a.allo__vtable->free(a.allo__ptr, ptr);
 }
 
 struct allo_fixed_bump {
@@ -186,12 +222,16 @@ static void allo__fixed_bump_free_adapter(void *ctx, void *ptr) {
   allo_fixed_bump_free((struct allo_fixed_bump *)ctx, ptr);
 }
 
+static const struct allo__allocator_vtable allo__fixed_bump_vtable = {
+    .alloc = allo_fixed_bump_alloc_adapter,
+    .free = allo__fixed_bump_free_adapter,
+};
+
 struct allo_allocator
 allo_allocator_from_fixed_bump(struct allo_fixed_bump *b) {
   return (struct allo_allocator){
-      .ctx = b,
-      .alloc = &allo_fixed_bump_alloc_adapter,
-      .free = &allo__fixed_bump_free_adapter,
+      .allo__ptr = b,
+      .allo__vtable = &allo__fixed_bump_vtable,
   };
 }
 
