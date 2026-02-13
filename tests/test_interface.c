@@ -47,7 +47,7 @@ int main(void) {
 
   void *ptr;
   enum allo_status status = allo_alloc(&ptr, allocator, 64, 16);
-  TEST_ASSERT_EQUAL_INT(ALLO_OK, status);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should success");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
       MOCK_BASE_ADDR + 64 + 16, ptr,
       "ptr should point to mocked allocation of base addr + size + align");
