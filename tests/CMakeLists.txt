@@ -27,6 +27,7 @@ endfunction()
 
 set(TESTS
     test_interface
+    test_bump
 )
 
 foreach(TEST ${TESTS})

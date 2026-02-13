@@ -16,12 +16,13 @@ struct mock_state {
   void *ptr_last_allocated;
 };
 
-static void *mock_alloc(void *ctx, size_t size, size_t align) {
+static enum allo_status mock_alloc(void **dest, void *ctx, size_t size,
+                                   size_t align) {
   struct mock_state *state = ctx;
   ++state->alloc_calls;
-  void *addr = (void *)(MOCK_BASE_ADDR + size + align);
-  state->ptr_last_allocated = addr;
-  return addr;
+  *dest = (void *)(MOCK_BASE_ADDR + size + align);
+  state->ptr_last_allocated = *dest;
+  return ALLO_OK;
 }
 
 static void mock_free(void *ctx, void *ptr) {
@@ -44,19 +45,21 @@ int main(void) {
       .free = &mock_free,
   };
 
-  void *ptr = allo_alloc(allocator, 64, 16);
+  void *dest = NULL;
+  enum allo_status status = allo_alloc(&dest, allocator, 64, 16);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should success");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
-      MOCK_BASE_ADDR + 64 + 16, ptr,
+      MOCK_BASE_ADDR + 64 + 16, dest,
       "ptr should point to mocked allocation of base addr + size + align");
   TEST_ASSERT_EQUAL_size_t_MESSAGE(1, state.alloc_calls,
                                    "alloc counter should be incremented by 1");
 
-  allo_free(allocator, ptr);
+  allo_free(allocator, dest);
 
   TEST_ASSERT_EQUAL_size_t_MESSAGE(1, state.free_calls,
                                    "free counter should be incremented by 1");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
-      ptr, state.ptr_last_allocated,
+      dest, state.ptr_last_allocated,
       "freed pointer should be correctly tracked by mock free");
 
   return UNITY_END();
