@@ -120,7 +120,7 @@ void test_alloc_subsequent_allocs(void) {
   };
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    alignas(16) uint8_t buf[0x100];
+    uint8_t buf[0x100] __attribute__((aligned(16)));
     struct allo_fixed_bump b;
     enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
@@ -185,7 +185,7 @@ void test_alloc_oom(void) {
   };
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    alignas(16) uint8_t buf[0x100];
+    uint8_t buf[0x100] __attribute__((aligned(16)));
     struct allo_fixed_bump b;
     enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
@@ -217,7 +217,7 @@ void test_reset(void) {
   };
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
-    uint8_t buf[0x4];
+    uint8_t buf[0x4] __attribute__((aligned(4)));
     struct allo_fixed_bump b;
     enum allo_status status = allo_fixed_bump_init(&b, buf, 0x4);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
@@ -233,7 +233,7 @@ void test_reset(void) {
 }
 
 void test_sequential(void) {
-  alignas(128) uint8_t buf[0x100];
+  uint8_t buf[0x100] __attribute__((aligned(128)));
   struct allo_fixed_bump b;
   enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
   allo__assert_fixed_bump(&b);
