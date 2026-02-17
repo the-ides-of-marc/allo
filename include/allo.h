@@ -152,6 +152,36 @@
 //           to use even though they are still in the allocator's usable memory
 //           region.
 //
+//     struct allo_pool:
+//
+//       This is a pool allocator that manages fixed size chunks of memory via
+//       an intrusive free list.
+//
+//       Functions:
+//
+//         allo_pool_init:
+//
+//           enum allo_status allo_pool_init(
+//             struct allo_pool *restrict p,
+//             void *restrict buf, size_t buf_size,
+//             size_t chunk_size, size_t align);
+//
+//           Initializes the pool allocator with a given chunk size and
+//           alignment. The pool will use the memory region strictly within
+//           [buf[0]..buf[buf_size]] with the free list pointing to the first
+//           chunk.
+//
+//         allo_pool_alloc:
+//
+//           enum allo_status allo_pool_alloc(
+//             void *restrict *restrict dest,
+//             struct allo_pool *restrict p);
+//
+//           Allocates a new chunk of memory of `p.chunk_size` and writes it to
+//           `*dest`. The free list is updated to point to the next free chunk
+//           of memory.
+//
+//
 // TODO:
 //
 // - Update allocator init functions to perform more validation and return
