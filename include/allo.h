@@ -151,6 +151,20 @@
 //           previously allocated memory should be considered invalid and unsafe
 //           to use even though they are still in the allocator's usable memory
 //           region.
+//
+// TODO:
+//
+// - Update allocator init functions to perform more validation and return
+//   appropriate `enum allo_status`.
+//   Validation performance cost should be acceptable as it is typically not a
+//   hot path. This library shall prioritize informing callers if allocator
+//   initialization was erroneous or suboptimal rather crashing from an assert
+//   only in debug builds.
+//
+// - Add more refined error codes in allo_status for init errors.
+//
+// - Add a rewind/reset function for `struct fixed_bump` allocator to allow
+//   callers to free up memory without performing a full reset.
 
 #include <stddef.h>
 #include <stdint.h>
@@ -213,8 +227,7 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
                                 size_t chunk_size, size_t align);
 
 enum allo_status allo_pool_alloc(void *restrict *restrict dest,
-                                 struct allo_pool *restrict p, size_t size,
-                                 size_t align);
+                                 struct allo_pool *restrict p);
 
 void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr);
 
@@ -357,9 +370,13 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   assert(align >= sizeof(void *) && "alignment must be able to hold a pointer");
   assert((uintptr_t)buf % align == 0 && "buffer must be aligned");
 
+  chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
   chunk_size = (chunk_size + align - 1) & ~(align - 1);
   assert(chunk_size >= sizeof(void *) &&
          "aligned chunk size must be able to hold a pointer");
+  assert(chunk_size >= align &&
+         "chunk size must be >= align to hold pointers in the free list and "
+         "ensure reading chunks are aligned");
 
   size_t chunk_count = buf_size / chunk_size;
   assert(chunk_count > 0 && "buffer must be able to hold non-zero chunks");
@@ -373,26 +390,19 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
          "end must be within input memory region");
 
   void **curr_chunk = buf;
-  for (size_t i = 0; i < chunk_count - 1; ++i) {
+  do {
     void *next = (uint8_t *)curr_chunk + p->chunk_size;
     *curr_chunk = next;
     curr_chunk = next;
-  }
+  } while ((uintptr_t)curr_chunk < p->end - p->chunk_size);
+  *curr_chunk = NULL;
 
   allo__assert_pool(p);
   return ALLO_OK;
 }
 
 enum allo_status allo_pool_alloc(void *restrict *restrict dest,
-                                 struct allo_pool *restrict p, size_t size,
-                                 size_t align) {
-  assert(size == p->chunk_size &&
-         "requested size must match pool allocator chunk size");
-  assert(align == p->align &&
-         "requested alignment must match pool allocator alignment");
-  (void)size;
-  (void)align;
-
+                                 struct allo_pool *restrict p) {
   allo__assert_pool(p);
 
   *dest = NULL;

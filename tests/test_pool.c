@@ -1,0 +1,213 @@
+#include "unity.h"
+#include "unity_internals.h"
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#define ALLO_IMPLEMENTATION
+#include "allo.h"
+
+#include "test_utils.h"
+
+const size_t ALIGNMENTS[] = {1, 2, 4, 8, 16};
+
+// Tests that the chunk_size is always at least sizeof(void*) and aligned.
+void test_init_chunk_size_and_align(void) {
+  for (size_t chunk_size = 1; chunk_size <= sizeof(void *) * 4; ++chunk_size) {
+    void *buf;
+    size_t bufsize = sizeof(void *) * 64;
+
+    for (size_t i = 0; i < sizeof(ALIGNMENTS) / sizeof(ALIGNMENTS[0]); ++i) {
+      size_t align = ALIGNMENTS[i];
+
+      size_t expected_chunk_size =
+          chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
+      expected_chunk_size = (expected_chunk_size + align - 1) & ~(align - 1);
+
+      void *buf_aligned = malloc_aligned(&buf, bufsize, align);
+      struct allo_pool p;
+      enum allo_status status =
+          allo_pool_init(&p, buf_aligned, bufsize, chunk_size, align);
+
+      TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                    "allocator initialization should succeed");
+      TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                    "allocator initialization should succeed");
+
+      TEST_ASSERT_EQUAL_size_t_MESSAGE(expected_chunk_size, p.chunk_size,
+                                       "chunk size should match");
+      TEST_ASSERT_EQUAL_size_t_MESSAGE(align, p.align,
+                                       "alignment should match");
+      TEST_ASSERT_TRUE_MESSAGE(p.chunk_size % p.align == 0,
+                               "chunk size must be aligned");
+
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(p.start, p.free_list,
+                                    "free list should point to the start");
+
+      allo__assert_pool(&p);
+
+      free(buf);
+    }
+  }
+}
+
+// Tests that the memory region is properly aligned and fits chunks exactly.
+void test_init_memory_region(void) {
+  struct {
+    size_t buf_size;
+    size_t chunk_size;
+    size_t expected_end_offset;
+  } tests[] = {
+      // buffer size already a multiple of chunk size
+      {1024, 256, 1024},
+      {1024, 256, 1024},
+      {1024, 256, 1024},
+      {1024, 256, 1024},
+      {1024, 256, 1024},
+
+      // buffer size not a multiple of chunk size
+      {1025, 256, 1024},
+      {1111, 256, 1024},
+      {1279, 256, 1024},
+  };
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    for (size_t align_index = 0;
+         align_index < sizeof(ALIGNMENTS) / sizeof(ALIGNMENTS[0]);
+         ++align_index) {
+      size_t align = ALIGNMENTS[align_index];
+      void *buf;
+      void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, align);
+      struct allo_pool p;
+      enum allo_status status = allo_pool_init(
+          &p, buf_aligned, tests[i].buf_size, tests[i].chunk_size, align);
+      TEST_ASSERT_EQUAL_INT_MESSAGE(
+          ALLO_OK, status, "allocator initialization should be succeed");
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(buf_aligned, p.start,
+                                    "allocator start should match");
+      TEST_ASSERT_EQUAL_PTR_MESSAGE((uintptr_t)buf_aligned +
+                                        tests[i].expected_end_offset,
+                                    p.end, "allocator end should match");
+
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(p.start, p.free_list,
+                                    "free list should point to the start");
+
+      free(buf);
+    }
+  }
+}
+
+void test_alloc_first_alloc(void) {
+  struct {
+    size_t buf_size;
+    size_t chunk_size;
+  } tests[] = {
+      {1024, 128},
+      {1024, 256},
+      {1024, 512},
+      {1024, 1024},
+  };
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    for (size_t align_index = 0;
+         align_index < sizeof(ALIGNMENTS) / sizeof(ALIGNMENTS[0]);
+         ++align_index) {
+      size_t align = ALIGNMENTS[align_index];
+      void *buf;
+      void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, align);
+
+      struct allo_pool p;
+      enum allo_status status = allo_pool_init(
+          &p, buf_aligned, tests[i].buf_size, tests[i].chunk_size, align);
+      TEST_ASSERT_EQUAL_INT_MESSAGE(
+          ALLO_OK, status, "allocator initialization should be succeed");
+      allo__assert_pool(&p);
+
+      TEST_ASSERT_NOT_NULL_MESSAGE(p.free_list, "free list should not be NULL");
+      void *next = *(void **)p.free_list;
+
+      void *dest;
+      status = allo_pool_alloc(&dest, &p);
+      TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                    "allocation should succeed");
+
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(p.start, dest,
+                                    "allocated memory should match");
+      TEST_ASSERT_NOT_EQUAL_MESSAGE(
+          dest, p.free_list,
+          "free list should not point to the recently allocated memory");
+
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(
+          next, p.free_list, "free list should be pointing to the next chunk");
+
+      allo__assert_pool(&p);
+      free(buf);
+    }
+  }
+}
+
+void test_alloc_allocs_till_oom(void) {
+  struct {
+    size_t buf_size;
+    size_t chunk_size;
+  } tests[] = {
+      {1024, 256},
+  };
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+    for (size_t align_index = 0;
+         align_index < sizeof(ALIGNMENTS) / sizeof(ALIGNMENTS[0]);
+         ++align_index) {
+
+      size_t align = ALIGNMENTS[align_index];
+      void *buf;
+      void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, align);
+
+      struct allo_pool p;
+      enum allo_status status = allo_pool_init(
+          &p, buf_aligned, tests[i].buf_size, tests[i].chunk_size, align);
+      TEST_ASSERT_EQUAL_INT_MESSAGE(
+          ALLO_OK, status, "allocator initialization should be succeed");
+      allo__assert_pool(&p);
+
+      size_t chunk_counts = (p.end - p.start) / p.chunk_size;
+      void *dest;
+      for (size_t chunk = 0; chunk < chunk_counts; ++chunk) {
+
+        void *next = *(void **)p.free_list;
+        status = allo_pool_alloc(&dest, &p);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                      "allocation should succeed");
+
+        TEST_ASSERT_NOT_EQUAL_MESSAGE(
+            dest, p.free_list,
+            "free list should not point to the recently allocated memory");
+
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(
+            next, p.free_list,
+            "free list should be pointing to the next chunk");
+      }
+
+      TEST_ASSERT_NULL_MESSAGE(
+          p.free_list,
+          "free list should now point to NULL as allocator is full");
+
+      status = allo_pool_alloc(&dest, &p);
+      TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OOM, status,
+                                    "allocation should fail due to OOM");
+    }
+  }
+}
+
+void setUp(void) {}
+
+void tearDown(void) {}
+
+int main(void) {
+  UNITY_BEGIN();
+  RUN_TEST(test_init_chunk_size_and_align);
+  RUN_TEST(test_init_memory_region);
+  RUN_TEST(test_alloc_first_alloc);
+  RUN_TEST(test_alloc_allocs_till_oom);
+  return UNITY_END();
+}
