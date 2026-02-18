@@ -12,18 +12,21 @@
 // Tests that the chunk_size is always at least sizeof(void*) and aligned.
 void test_init_chunk_size_and_align(void) {
   for (size_t chunk_size = 1; chunk_size <= sizeof(void *) * 4; ++chunk_size) {
-    void *buf;
-    size_t bufsize = sizeof(void *) * 64;
-
     const size_t alignments[] = {1, 2, 4, 8, 16};
     for (size_t i = 0; i < sizeof(alignments) / sizeof(alignments[0]); ++i) {
       size_t align = alignments[i];
 
+      size_t expected_align = align >= sizeof(void *) ? align : sizeof(void *);
+
       size_t expected_chunk_size =
           chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
-      expected_chunk_size = (expected_chunk_size + align - 1) & ~(align - 1);
+      expected_chunk_size =
+          (expected_chunk_size + expected_align - 1) & ~(expected_align - 1);
 
-      void *buf_aligned = malloc_aligned(&buf, bufsize, align);
+      void *buf;
+      size_t bufsize = sizeof(void *) * 64;
+      void *buf_aligned = malloc_aligned(&buf, bufsize, expected_align);
+
       struct allo_pool p;
       enum allo_status status =
           allo_pool_init(&p, buf_aligned, bufsize, chunk_size, align);
@@ -35,7 +38,7 @@ void test_init_chunk_size_and_align(void) {
 
       TEST_ASSERT_EQUAL_size_t_MESSAGE(expected_chunk_size, p.chunk_size,
                                        "chunk size should match");
-      TEST_ASSERT_EQUAL_size_t_MESSAGE(align, p.align,
+      TEST_ASSERT_EQUAL_size_t_MESSAGE(expected_align, p.align,
                                        "alignment should match");
       TEST_ASSERT_TRUE_MESSAGE(p.chunk_size % p.align == 0,
                                "chunk size must be aligned");

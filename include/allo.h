@@ -403,6 +403,10 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
 
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
   assert((uintptr_t)buf % align == 0 && "buffer must be aligned");
+  align = align >= sizeof(void *) ? align : sizeof(void *);
+  assert(align >= sizeof(void *) &&
+         "alignment must be at least the size of a pointer so that chunks will "
+         "remain aligned");
 
   chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
   chunk_size = (chunk_size + align - 1) & ~(align - 1);
