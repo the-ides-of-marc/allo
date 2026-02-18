@@ -358,13 +358,16 @@ void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
 static inline void allo__assert_pool(const struct allo_pool *p) {
   assert(p && "pool allocator must not be NULL");
 
-  assert(p->chunk_size && "chunk size must be non-zero");
-  assert(p->chunk_size >= sizeof(void *) &&
-         "chunk size must be able to hold a pointer");
-
   assert(p->align && "pool allocator alignment must be non-zero");
+  assert(p->align >= sizeof(void *) &&
+         "pool allocator alignment must be able to hold a pointer");
   assert(allo__is_pow2(p->align) && "pool allocator must be a power of 2");
 
+  assert(p->chunk_size && "chunk size must be non-zero");
+  assert(p->chunk_size <= p->end - p->start &&
+         "chunk size must not be greater than the memory region");
+  assert(p->chunk_size >= sizeof(void *) &&
+         "chunk size must be able to hold a pointer");
   assert(p->chunk_size % p->align == 0 && "chunk size must be aligned");
 
   assert(p->start && "start must not be NULL");
@@ -397,19 +400,20 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   assert(buf && "buffer for allocator must not be NULL");
   assert(buf_size && "buffer size must be non-zero");
 
+  align = align >= sizeof(void *) ? align : sizeof(void *);
+  chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
+  chunk_size = (chunk_size + align - 1) & ~(align - 1);
+
   assert(chunk_size && "chunk size must be non-zero");
-  assert(chunk_size < buf_size &&
-         "chunk size must be smaller than buffer size");
+  assert(chunk_size <= buf_size &&
+         "chunk size must not be larger than the size of the buffer");
 
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
   assert((uintptr_t)buf % align == 0 && "buffer must be aligned");
-  align = align >= sizeof(void *) ? align : sizeof(void *);
   assert(align >= sizeof(void *) &&
          "alignment must be at least the size of a pointer so that chunks will "
          "remain aligned");
 
-  chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
-  chunk_size = (chunk_size + align - 1) & ~(align - 1);
   assert(chunk_size >= sizeof(void *) &&
          "aligned chunk size must be able to hold a pointer");
   assert(chunk_size >= align &&
