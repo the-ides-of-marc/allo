@@ -42,9 +42,9 @@
 //     arena, debug/logging, etc.
 //
 // NOTE:
-//   Since this is a header-only library, internal types cannot be hidden in the
-//   source files, thus all internal types start with the prefix
-//   `allo__<identifier>` and should not be used.
+//   Since this is a header-only library, internal types and struct fields
+//   cannot be hidden in the source files, thus all internal types start with
+//   the prefix `allo__<identifier>` and should not be used.
 //
 //   All failable functions return an `enum allo_status` that represents the
 //   possible errors encountered in this library.
@@ -177,9 +177,9 @@
 //             void *restrict *restrict dest,
 //             struct allo_pool *restrict p);
 //
-//           Allocates a new chunk of memory of `p.chunk_size` and writes it to
-//           `*dest`. The free list is updated to point to the next free chunk
-//           of memory.
+//           Allocates a new chunk of memory based on the allocator's chunk size
+//           and writes it to `*dest`. The free list is updated to point to the
+//           next free chunk of memory.
 //
 //
 // TODO:
@@ -225,9 +225,9 @@ static inline void allo_free(struct allo_allocator a, void *ptr) {
 }
 
 struct allo_fixed_bump {
-  uintptr_t start;
-  uintptr_t end;
-  uintptr_t cursor;
+  uintptr_t allo__start;
+  uintptr_t allo__end;
+  uintptr_t allo__cursor;
 };
 
 enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
@@ -245,11 +245,11 @@ void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 struct allo_allocator allo_allocator_from_fixed_bump(struct allo_fixed_bump *b);
 
 struct allo_pool {
-  void *free_list;
-  uintptr_t start;
-  uintptr_t end;
-  size_t chunk_size;
-  size_t align;
+  void *allo__free_list;
+  uintptr_t allo__start;
+  uintptr_t allo__end;
+  size_t allo__chunk_size;
+  size_t allo__align;
 };
 
 enum allo_status allo_pool_init(struct allo_pool *restrict p,
@@ -312,9 +312,9 @@ enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
   assert(buf && "buffer for allocator must not be NULL");
   assert(size && "buffer size must be non-zero");
 
-  b->start = (uintptr_t)buf;
-  b->end = b->start + size;
-  b->cursor = b->end;
+  b->allo__start = (uintptr_t)buf;
+  b->allo__end = b->allo__start + size;
+  b->allo__cursor = b->allo__end;
 
   allo__assert_fixed_bump(b);
   return ALLO_OK;
@@ -329,15 +329,15 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
   assert(align && "alignment must be non-zero");
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
 
-  uintptr_t next_cursor = b->cursor - size;
-  if (next_cursor > b->cursor) {
+  uintptr_t next_cursor = b->allo__cursor - size;
+  if (next_cursor > b->allo__cursor) {
     return ALLO_OOM;
   }
   next_cursor = next_cursor & ~(align - 1);
-  if (next_cursor < b->start) {
+  if (next_cursor < b->allo__start) {
     return ALLO_OOM;
   }
-  b->cursor = next_cursor;
+  b->allo__cursor = next_cursor;
   allo__assert_fixed_bump(b);
 
   *dest = (void *)next_cursor;
@@ -351,7 +351,7 @@ void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
 }
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
-  b->cursor = b->end;
+  b->allo__cursor = b->allo__end;
   allo__assert_fixed_bump(b);
 }
 
@@ -377,7 +377,7 @@ static inline void allo__assert_pool(const struct allo_pool *p) {
   assert(p->start % p->align == 0 && "start must be aligned");
   assert(p->end % p->align == 0 && "end must be aligned");
 
-  if (p->free_list) {
+  if (p->allo__free_list) {
     assert(p->start <= (uintptr_t)p->free_list &&
            "free list must be >= start of memory region");
     assert((uintptr_t)p->free_list < p->end &&
@@ -423,17 +423,17 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   size_t chunk_count = buf_size / chunk_size;
   assert(chunk_count > 0 && "buffer must be able to hold non-zero chunks");
 
-  p->chunk_size = chunk_size;
-  p->align = align;
-  p->free_list = buf;
-  p->start = (uintptr_t)buf;
-  p->end = p->start + chunk_count * p->chunk_size;
+  p->allo__chunk_size = chunk_size;
+  p->allo__align = align;
+  p->allo__free_list = buf;
+  p->allo__start = (uintptr_t)buf;
+  p->allo__end = p->allo__start + chunk_count * p->allo__chunk_size;
   assert((uintptr_t)p->end <= (uintptr_t)buf + buf_size &&
          "end must be within input memory region");
 
   void **curr_chunk = buf;
   for (size_t i = 0; i < chunk_count - 1; ++i) {
-    void *next = (uint8_t *)curr_chunk + p->chunk_size;
+    void *next = (uint8_t *)curr_chunk + p->allo__chunk_size;
     *curr_chunk = next;
     curr_chunk = next;
   }
@@ -448,13 +448,13 @@ enum allo_status allo_pool_alloc(void *restrict *restrict dest,
   allo__assert_pool(p);
 
   *dest = NULL;
-  void **addr = p->free_list;
+  void **addr = p->allo__free_list;
   if (!addr) {
     return ALLO_OOM;
   }
 
   *dest = addr;
-  p->free_list = *addr;
+  p->allo__free_list = *addr;
 
   allo__assert_pool(p);
   return ALLO_OK;
@@ -469,8 +469,8 @@ void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr) {
   assert((uintptr_t)ptr % p->align == 0 && "ptr must be aligned");
 
   void **next_ptr = ptr;
-  *next_ptr = p->free_list;
-  p->free_list = ptr;
+  *next_ptr = p->allo__free_list;
+  p->allo__free_list = ptr;
 
   allo__assert_pool(p);
 }
