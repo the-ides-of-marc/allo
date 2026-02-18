@@ -375,7 +375,12 @@ static inline void allo__assert_pool(const struct allo_pool *p) {
   assert(p->end % p->align == 0 && "end must be aligned");
 
   if (p->free_list) {
-    assert(p->start <= p->free_list && p->free_list < p->end &&
+    assert(p->start <= (uintptr_t)p->free_list &&
+           "free list must be >= start of memory region");
+    assert((uintptr_t)p->free_list < p->end &&
+           "free list must be < end of memory region");
+    assert(p->start <= (uintptr_t)p->free_list &&
+           (uintptr_t)p->free_list < p->end &&
            "free list must be within the allocator's memory region");
     assert(((uintptr_t)p->free_list % p->align == 0) &&
            "free list must be aligned");
@@ -450,9 +455,8 @@ enum allo_status allo_pool_alloc(void *restrict *restrict dest,
 
 void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr) {
   allo__assert_pool(p);
-  assert(p->start <= (uintptr_t)ptr &&
-         "ptr should be >= start of memory region");
-  assert((uintptr_t)ptr < p->end && "ptr should be < end of memory region");
+  assert(p->start <= (uintptr_t)ptr && "ptr must be >= start of memory region");
+  assert((uintptr_t)ptr < p->end && "ptr must be < end of memory region");
   assert(((uintptr_t)ptr - (uintptr_t)p->start) % p->chunk_size == 0 &&
          "ptr must be aligned to chunks");
   assert((uintptr_t)ptr % p->align == 0 && "ptr must be aligned");
