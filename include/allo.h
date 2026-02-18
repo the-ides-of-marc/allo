@@ -420,11 +420,11 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
          "end must be within input memory region");
 
   void **curr_chunk = buf;
-  do {
+  for (size_t i = 0; i < chunk_count - 1; ++i) {
     void *next = (uint8_t *)curr_chunk + p->chunk_size;
     *curr_chunk = next;
     curr_chunk = next;
-  } while ((uintptr_t)curr_chunk < p->end - p->chunk_size);
+  }
   *curr_chunk = NULL;
 
   allo__assert_pool(p);
