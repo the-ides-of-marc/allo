@@ -298,11 +298,14 @@ allo_allocator_from_fixed_bump(struct allo_fixed_bump *b) {
 
 static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
   assert(b && "bump allocator must not be NULL");
-  assert(b->start && "start of memory region must not be NULL");
-  assert(b->end && "end of memory region must not be NULL");
-  assert(b->start < b->end && "memory region property: start < end");
-  assert(b->start <= b->cursor && "memory region property: start <= cursor");
-  assert(b->cursor <= b->end && "memory region property: cursor <= end");
+  assert(b->allo__start && "start of memory region must not be NULL");
+  assert(b->allo__end && "end of memory region must not be NULL");
+  assert(b->allo__start < b->allo__end &&
+         "memory region property: start < end");
+  assert(b->allo__start <= b->allo__cursor &&
+         "memory region property: start <= cursor");
+  assert(b->allo__cursor <= b->allo__end &&
+         "memory region property: cursor <= end");
   (void)b;
 }
 
@@ -358,34 +361,36 @@ void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
 static inline void allo__assert_pool(const struct allo_pool *p) {
   assert(p && "pool allocator must not be NULL");
 
-  assert(p->align && "pool allocator alignment must be non-zero");
-  assert(p->align >= sizeof(void *) &&
+  assert(p->allo__align && "pool allocator alignment must be non-zero");
+  assert(p->allo__align >= sizeof(void *) &&
          "pool allocator alignment must be able to hold a pointer");
-  assert(allo__is_pow2(p->align) && "pool allocator must be a power of 2");
+  assert(allo__is_pow2(p->allo__align) &&
+         "pool allocator must be a power of 2");
 
-  assert(p->chunk_size && "chunk size must be non-zero");
-  assert(p->chunk_size <= p->end - p->start &&
+  assert(p->allo__chunk_size && "chunk size must be non-zero");
+  assert(p->allo__chunk_size <= p->allo__end - p->allo__start &&
          "chunk size must not be greater than the memory region");
-  assert(p->chunk_size >= sizeof(void *) &&
+  assert(p->allo__chunk_size >= sizeof(void *) &&
          "chunk size must be able to hold a pointer");
-  assert(p->chunk_size % p->align == 0 && "chunk size must be aligned");
+  assert(p->allo__chunk_size % p->allo__align == 0 &&
+         "chunk size must be aligned");
 
-  assert(p->start && "start must not be NULL");
-  assert(p->end && "end must not be NULL");
-  assert(p->start < p->end && "start must be lesser than end");
+  assert(p->allo__start && "start must not be NULL");
+  assert(p->allo__end && "end must not be NULL");
+  assert(p->allo__start < p->allo__end && "start must be lesser than end");
 
-  assert(p->start % p->align == 0 && "start must be aligned");
-  assert(p->end % p->align == 0 && "end must be aligned");
+  assert(p->allo__start % p->allo__align == 0 && "start must be aligned");
+  assert(p->allo__end % p->allo__align == 0 && "end must be aligned");
 
   if (p->allo__free_list) {
-    assert(p->start <= (uintptr_t)p->free_list &&
+    assert(p->allo__start <= (uintptr_t)p->allo__free_list &&
            "free list must be >= start of memory region");
-    assert((uintptr_t)p->free_list < p->end &&
+    assert((uintptr_t)p->allo__free_list < p->allo__end &&
            "free list must be < end of memory region");
-    assert(p->start <= (uintptr_t)p->free_list &&
-           (uintptr_t)p->free_list < p->end &&
+    assert(p->allo__start <= (uintptr_t)p->allo__free_list &&
+           (uintptr_t)p->allo__free_list < p->allo__end &&
            "free list must be within the allocator's memory region");
-    assert(((uintptr_t)p->free_list % p->align == 0) &&
+    assert(((uintptr_t)p->allo__free_list % p->allo__align == 0) &&
            "free list must be aligned");
   }
 
@@ -428,7 +433,7 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   p->allo__free_list = buf;
   p->allo__start = (uintptr_t)buf;
   p->allo__end = p->allo__start + chunk_count * p->allo__chunk_size;
-  assert((uintptr_t)p->end <= (uintptr_t)buf + buf_size &&
+  assert((uintptr_t)p->allo__end <= (uintptr_t)buf + buf_size &&
          "end must be within input memory region");
 
   void **curr_chunk = buf;
@@ -462,11 +467,13 @@ enum allo_status allo_pool_alloc(void *restrict *restrict dest,
 
 void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr) {
   allo__assert_pool(p);
-  assert(p->start <= (uintptr_t)ptr && "ptr must be >= start of memory region");
-  assert((uintptr_t)ptr < p->end && "ptr must be < end of memory region");
-  assert(((uintptr_t)ptr - (uintptr_t)p->start) % p->chunk_size == 0 &&
+  assert(p->allo__start <= (uintptr_t)ptr &&
+         "ptr must be >= start of memory region");
+  assert((uintptr_t)ptr < p->allo__end && "ptr must be < end of memory region");
+  assert(((uintptr_t)ptr - (uintptr_t)p->allo__start) % p->allo__chunk_size ==
+             0 &&
          "ptr must be aligned to chunks");
-  assert((uintptr_t)ptr % p->align == 0 && "ptr must be aligned");
+  assert((uintptr_t)ptr % p->allo__align == 0 && "ptr must be aligned");
 
   void **next_ptr = ptr;
   *next_ptr = p->allo__free_list;
