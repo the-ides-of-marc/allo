@@ -30,6 +30,7 @@
 //
 //   Allocator implementations:
 //   - `allo_fixed_bump`
+//   - `allo_pool`
 //
 //   For optimal usage, use the specific memory allocator directly to avoid
 //   vtable overhead. However, `struct allo_allocator` is useful for code that
@@ -40,6 +41,16 @@
 //     resizable array, hash table, etc.
 //   - complex allocator strategies that rely on underlying alllocators.
 //     arena, debug/logging, etc.
+//
+//   Each allocator implementations have unique properties and support
+//   unique operations, which are supported via their related functions,
+//   `allo_<impl-name>_<operation`.
+//
+//   Integration of these operations into the more general
+//   `allo_allocator_<operation>` functions is NOT guaranteed and done so in a
+//   best effort attempt. This decision is done so to balance
+//   providing these capabilities through the general
+//   `allo_allocator_<operation>` functions in a misleading manner.
 //
 // NOTE:
 //   Since this is a header-only library, internal types and struct fields
@@ -133,13 +144,13 @@
 //           Tries to allocate `size` bytes at `align` alignment.
 //           `size` MUST be > 0 and `align` MUST be a power of 2.
 //
-//         allo_fixed_bump_free:
+//         allo_fixed_bump_rewind:
 //
-//           void allo_fixed_bump_free(struct allo_fixed_bump *b, void *ptr);
+//           void allo_fixed_bump_rewind(struct allo_fixed_bump *b, void *ptr);
 //
-//           This is a noop as the bump allocator cannot free specific memory
-//           previously allocated and can only be reset, clearing the allocator.
-//           See `allo_fixed_bump_reset`.
+//           This sets the cursor to point to the given `ptr` address.
+//           It is the caller's responsibility to pass a valid position in
+//           [buf[0]..buf[size]].
 //
 //         allo_fixed_bump_reset:
 //
@@ -195,6 +206,13 @@
 //
 // - Add a rewind/reset function for `struct fixed_bump` allocator to allow
 //   callers to free up memory without performing a full reset.
+//
+// - Update vtable to have a free_all/reset function, that all allocators should
+//   be able to implement.
+//
+// - Add feature/test macro toggles to enable or disable checks such as bounds
+//   checking. This should allow users more control over performance/safety
+//   instead of just relying on debug builds.
 
 #include <stddef.h>
 #include <stdint.h>
@@ -237,8 +255,7 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
                                        struct allo_fixed_bump *restrict b,
                                        size_t size, size_t align);
 
-void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
-                          void *restrict ptr);
+void allo_fixed_bump_rewind(struct allo_fixed_bump *b, const void *ptr);
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 
@@ -280,7 +297,8 @@ static enum allo_status allo_fixed_bump_alloc_adapter(void **dest, void *ctx,
 }
 
 static void allo__fixed_bump_free_adapter(void *ctx, void *ptr) {
-  allo_fixed_bump_free((struct allo_fixed_bump *)ctx, ptr);
+  (void)ctx;
+  (void)ptr;
 }
 
 static const struct allo__allocator_vtable allo__fixed_bump_vtable = {
@@ -347,13 +365,20 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-void allo_fixed_bump_free(struct allo_fixed_bump *restrict b,
-                          void *restrict ptr) {
-  (void)b;
-  (void)ptr;
+void allo_fixed_bump_rewind(struct allo_fixed_bump *b, const void *ptr) {
+  allo__assert_fixed_bump(b);
+
+  uintptr_t p = (uintptr_t)ptr;
+  assert(b->allo__start <= p && "ptr should be <= start of memory region");
+  assert(p <= b->allo__cursor && "ptr should be <= cursor current position");
+
+  b->allo__cursor = p;
+
+  allo__assert_fixed_bump(b);
 }
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
+  allo__assert_fixed_bump(b);
   b->allo__cursor = b->allo__end;
   allo__assert_fixed_bump(b);
 }
