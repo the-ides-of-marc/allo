@@ -144,13 +144,14 @@
 //           Tries to allocate `size` bytes at `align` alignment.
 //           `size` MUST be > 0 and `align` MUST be a power of 2.
 //
-//         allo_fixed_bump_rewind:
+//         allo_fixed_bump_set_cursor:
 //
-//           void allo_fixed_bump_rewind(struct allo_fixed_bump *b, void *ptr);
+//           void allo_fixed_bump_set_cursor(struct allo_fixed_bump *b, void
+//           *cursor);
 //
-//           This sets the cursor to point to the given `ptr` address.
-//           It is the caller's responsibility to pass a valid position in
-//           [buf[0]..buf[size]].
+//           This sets the allocator's cursor to point to the given `cursor`
+//           address. It is the caller's responsibility to pass a valid position
+//           in [buf[0]..buf[size]].
 //
 //         allo_fixed_bump_reset:
 //
@@ -255,7 +256,7 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
                                        struct allo_fixed_bump *restrict b,
                                        size_t size, size_t align);
 
-void allo_fixed_bump_rewind(struct allo_fixed_bump *b, const void *ptr);
+void allo_fixed_bump_set_cursor(struct allo_fixed_bump *b, const void *ptr);
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 
@@ -365,14 +366,14 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-void allo_fixed_bump_rewind(struct allo_fixed_bump *b, const void *ptr) {
+void allo_fixed_bump_set_cursor(struct allo_fixed_bump *b, const void *cursor) {
   allo__assert_fixed_bump(b);
 
-  uintptr_t p = (uintptr_t)ptr;
-  assert(b->allo__start <= p && "ptr should be <= start of memory region");
-  assert(p <= b->allo__cursor && "ptr should be <= cursor current position");
+  uintptr_t c = (uintptr_t)cursor;
+  assert(b->allo__start <= c && "ptr should be <= start of memory region");
+  assert(c <= b->allo__end && "ptr should be <= end of memory region");
 
-  b->allo__cursor = p;
+  b->allo__cursor = c;
 
   allo__assert_fixed_bump(b);
 }
