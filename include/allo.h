@@ -221,7 +221,10 @@
 enum allo_status {
   ALLO_OK = 0,
   ALLO_OOM,
-  ALLO_ERROR,
+  ALLO_ERR_NULL,
+  ALLO_ERR_INVALID_SIZE,
+  ALLO_ERR_INVALID_ALIGN,
+  ALLO_ERR_MEM_NOT_ALIGNED,
 };
 
 struct allo__allocator_vtable {
@@ -330,9 +333,12 @@ static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
 
 enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
                                       void *restrict buf, size_t size) {
-  assert(b && "bump allocator must not be NULL");
-  assert(buf && "buffer for allocator must not be NULL");
-  assert(size && "buffer size must be non-zero");
+  if (!b || !buf) {
+    return ALLO_ERR_NULL;
+  }
+  if (!size) {
+    return ALLO_ERR_INVALID_SIZE;
+  }
 
   b->allo__start = (uintptr_t)buf;
   b->allo__end = b->allo__start + size;
@@ -426,33 +432,38 @@ static inline void allo__assert_pool(const struct allo_pool *p) {
 enum allo_status allo_pool_init(struct allo_pool *restrict p,
                                 void *restrict buf, size_t buf_size,
                                 size_t chunk_size, size_t align) {
-  assert(p && "pool allocator must not be NULL");
-
-  assert(buf && "buffer for allocator must not be NULL");
-  assert(buf_size && "buffer size must be non-zero");
+  if (!p || !buf) {
+    return ALLO_ERR_NULL;
+  }
+  if (!buf_size || !chunk_size) {
+    return ALLO_ERR_INVALID_SIZE;
+  }
+  if (!align || !allo__is_pow2(align)) {
+    return ALLO_ERR_INVALID_ALIGN;
+  }
 
   align = align >= sizeof(void *) ? align : sizeof(void *);
   chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
   chunk_size = (chunk_size + align - 1) & ~(align - 1);
 
-  assert(chunk_size && "chunk size must be non-zero");
-  assert(chunk_size <= buf_size &&
-         "chunk size must not be larger than the size of the buffer");
-
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
-  assert((uintptr_t)buf % align == 0 && "buffer must be aligned");
-  assert(align >= sizeof(void *) &&
-         "alignment must be at least the size of a pointer so that chunks will "
-         "remain aligned");
+  assert(sizeof(align) >= sizeof(void *) &&
+         "alignment must be greater than sizeof(void*)");
+  assert(chunk_size > align &&
+         "chunk size must be at least the size of the alignment");
+  assert(chunk_size % align == 0 &&
+         "chunk size must be a multiple of alignment");
 
-  assert(chunk_size >= sizeof(void *) &&
-         "aligned chunk size must be able to hold a pointer");
-  assert(chunk_size >= align &&
-         "chunk size must be >= align to hold pointers in the free list and "
-         "ensure reading chunks are aligned");
+  if (chunk_size > buf_size) {
+    return ALLO_ERR_INVALID_SIZE;
+  }
 
   size_t chunk_count = buf_size / chunk_size;
-  assert(chunk_count > 0 && "buffer must be able to hold non-zero chunks");
+  assert(chunk_count > 0 && "chunk count must be non-zero");
+
+  if ((uintptr_t)buf % align != 0) {
+    return ALLO_ERR_MEM_NOT_ALIGNED;
+  }
 
   p->allo__chunk_size = chunk_size;
   p->allo__align = align;

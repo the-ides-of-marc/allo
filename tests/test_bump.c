@@ -27,6 +27,29 @@ void test_init(void) {
       "cursor should point to the exclusive end of memory range");
 }
 
+void test_init_null_allocator(void) {
+  uint8_t buf[0x100];
+  enum allo_status status = allo_fixed_bump_init(NULL, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_NULL, status,
+      "error should match for receiving a NULL allocator");
+}
+
+void test_init_null_buffer(void) {
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, NULL, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
+}
+
+void test_init_zero_size(void) {
+  uint8_t buf[0x100];
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_INVALID_SIZE, status,
+                                "error should match for receiving a zero size");
+}
+
 void test_alloc_first_alloc(void) {
   struct {
     size_t size;
@@ -422,12 +445,20 @@ void tearDown(void) {}
 
 int main(void) {
   UNITY_BEGIN();
+
   RUN_TEST(test_init);
+  RUN_TEST(test_init_null_allocator);
+  RUN_TEST(test_init_null_buffer);
+  RUN_TEST(test_init_zero_size);
+
   RUN_TEST(test_alloc_first_alloc);
   RUN_TEST(test_alloc_subsequent_allocs);
   RUN_TEST(test_alloc_oom);
+
   RUN_TEST(test_set_cursor);
+
   RUN_TEST(test_reset);
+
   RUN_TEST(test_sequential);
   return UNITY_END();
 }
