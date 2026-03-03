@@ -333,6 +333,30 @@ void test_set_cursor(void) {
   }
 }
 
+void test_set_cursor_null_allocator(void) {
+  uint8_t buf[0x100] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocator initialization should succeed");
+
+  status = allo_fixed_bump_set_cursor(NULL, (void *)b.allo__end);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_NULL, status,
+                                "set cursor should fail due to null allocator");
+}
+
+void test_set_cursor_null_cursor(void) {
+  uint8_t buf[0x100] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocator initialization should succeed");
+
+  status = allo_fixed_bump_set_cursor(&b, NULL);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_NULL, status,
+                                "set cursor should fail due to null cursor");
+}
+
 void test_set_cursor_out_of_bounds(void) {
   uint8_t buf[0x100] __attribute__((aligned(16)));
   struct allo_fixed_bump b;
@@ -480,6 +504,8 @@ int main(void) {
 
   RUN_TEST(test_set_cursor);
   RUN_TEST(test_set_cursor_out_of_bounds);
+  RUN_TEST(test_set_cursor_null_allocator);
+  RUN_TEST(test_set_cursor_null_cursor);
 
   RUN_TEST(test_reset);
 

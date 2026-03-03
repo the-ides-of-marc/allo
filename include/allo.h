@@ -132,6 +132,8 @@
 //           [buf[0]..buf[size]).
 //           The cursor of the allocator will point to buf[size], 1 position
 //           after the first allocatable location in `buf`.
+//           ALLO_ERR_NULL is returned if `b` or `buf` is NULL.
+//           ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
 //
 //         allo_fixed_bump_alloc:
 //
@@ -143,15 +145,20 @@
 //
 //           Tries to allocate `size` bytes at `align` alignment.
 //           `size` MUST be > 0 and `align` MUST be a power of 2.
+//           ALLO_OOM is returned if there is insufficient space to allocate the
+//           bytes.
 //
 //         allo_fixed_bump_set_cursor:
 //
-//           void allo_fixed_bump_set_cursor(struct allo_fixed_bump *b, void
-//           *cursor);
+//           enum allo_status allo_fixed_bump_set_cursor(
+//             struct allo_fixed_bump *b,
+//             void *cursor);
 //
 //           This sets the allocator's cursor to point to the given `cursor`
-//           address. It is the caller's responsibility to pass a valid position
-//           in [buf[0]..buf[size]].
+//           address.
+//           ALLO_ERR_NULL is returned if `b` or `cursor` is NULL.
+//           ALLO_ERR_OUT_OF_BOUNDS is returned if `cursor` is outside of the
+//           allocator's memory region.
 //
 //         allo_fixed_bump_reset:
 //
@@ -182,6 +189,17 @@
 //           alignment. The pool will use the memory region strictly within
 //           [buf[0]..buf[buf_size]] with the free list pointing to the first
 //           chunk.
+//           `align` is rounded to the nearest power of 2, and `chunk_size` will
+//           be incremented to the nearest multiple of `align`.
+//           Both `align` and `chunk_size` will be at least `sizeof(void *)` to
+//           facilitate the intrusive free list.
+//
+//           ALLO_ERR_NULL is returned if `p` or `buf` is NULL.
+//           ALLO_ERR_INVALID_SIZE is returned if `buf_size` or `chunk_size` is
+//           0 or if the incremented `chunk_size` is larger than `buf_size`.
+//           ALLO_ERR_INVALID_ALIGN is returned if `align` is 0.
+//           ALLO_ERR_MEM_NOT_ALIGNED is returned if the `buf` is not aligned
+//           with the rounded `align`.
 //
 //         allo_pool_alloc:
 //
@@ -195,18 +213,6 @@
 //
 //
 // TODO:
-//
-// - Update allocator init functions to perform more validation and return
-//   appropriate `enum allo_status`.
-//   Validation performance cost should be acceptable as it is typically not a
-//   hot path. This library shall prioritize informing callers if allocator
-//   initialization was erroneous or suboptimal rather crashing from an assert
-//   only in debug builds.
-//
-// - Add more refined error codes in allo_status for init errors.
-//
-// - Add a rewind/reset function for `struct fixed_bump` allocator to allow
-//   callers to free up memory without performing a full reset.
 //
 // - Update vtable to have a free_all/reset function, that all allocators should
 //   be able to implement.
@@ -291,10 +297,30 @@ void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr);
 #ifdef ALLO_IMPLEMENTATION
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 
 static inline bool allo__is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
+}
+
+static inline size_t allo__round_pow2(size_t n) {
+  --n;
+#if SIZE_MAX >= UINT8_MAX
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+#endif
+#if SIZE_MAX >= UINT16_MAX
+  n |= n >> 8;
+#endif
+#if SIZE_MAX >= UINT32_MAX
+  n |= n >> 16;
+#endif
+#if SIZE_MAX >= UINT64_MAX
+  n |= n >> 32;
+#endif
+  return ++n;
 }
 
 static enum allo_status allo_fixed_bump_alloc_adapter(void **dest, void *ctx,
@@ -378,6 +404,10 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
 
 enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
                                             const void *cursor) {
+  if (!b || !cursor) {
+    return ALLO_ERR_NULL;
+  }
+
   allo__assert_fixed_bump(b);
 
   uintptr_t c = (uintptr_t)cursor;
@@ -444,16 +474,17 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   if (!buf_size || !chunk_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
-  if (!align || !allo__is_pow2(align)) {
+  if (!align) {
     return ALLO_ERR_INVALID_ALIGN;
   }
 
+  align = allo__round_pow2(align);
   align = align >= sizeof(void *) ? align : sizeof(void *);
   chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
   chunk_size = (chunk_size + align - 1) & ~(align - 1);
 
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
-  assert(sizeof(align) >= sizeof(void *) &&
+  assert(align >= sizeof(void *) &&
          "alignment must be greater than sizeof(void*)");
   assert(chunk_size > align &&
          "chunk size must be at least the size of the alignment");

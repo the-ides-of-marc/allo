@@ -136,17 +136,6 @@ void test_init_zero_alignment(void) {
       "error should match for receiving zero alignment");
 }
 
-void test_init_non_pow2_alignment(void) {
-
-  uint8_t buf[0x100];
-  struct allo_pool p = {0};
-  enum allo_status status =
-      allo_pool_init(&p, buf, 0x100, 0x10, sizeof(void *) + 1);
-  TEST_ASSERT_EQUAL_INT_MESSAGE(
-      ALLO_ERR_INVALID_ALIGN, status,
-      "error should match for receiving non power of 2 alignment");
-}
-
 void test_init_memory_not_aligned(void) {
   size_t buf_size = 0x100;
   uint8_t buf[0x100];
@@ -448,7 +437,6 @@ int main(void) {
   RUN_TEST(test_init_zero_buf_size);
   RUN_TEST(test_init_zero_chunk_size);
   RUN_TEST(test_init_zero_alignment);
-  RUN_TEST(test_init_non_pow2_alignment);
   RUN_TEST(test_init_memory_not_aligned);
 
   RUN_TEST(test_alloc_first_alloc);
