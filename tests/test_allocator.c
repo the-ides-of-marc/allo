@@ -69,15 +69,15 @@ void test_alloc_and_free(void) {
 
 void test_allocator_from_fixed_bump(void) {
   uint8_t buf[0x10] __attribute__((aligned(16)));
-  struct allo_fixed_bump b;
-  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x10);
+  struct allo_bump b;
+  enum allo_status status = allo_bump_init(&b, buf, 0x10);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                 "allocation initialization should succeed");
-  struct allo_allocator a = allo_allocator_from_fixed_bump(&b);
+  struct allo_allocator a = allo_allocator_from_bump(&b);
   TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allo__ptr,
                                 "ptr should point to underlying allocator");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
-      &allo__fixed_bump_vtable, a.allo__vtable,
+      &allo__bump_vtable, a.allo__vtable,
       "vtable should point to bump allocator's vtable");
 }
 
