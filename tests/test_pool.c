@@ -27,7 +27,7 @@ void test_init_chunk_size_and_align(void) {
       size_t bufsize = sizeof(void *) * 64;
       void *buf_aligned = malloc_aligned(&buf, bufsize, expected_align);
 
-      struct allo_pool p;
+      struct allo_pool p = {0};
       enum allo_status status =
           allo_pool_init(&p, buf_aligned, bufsize, chunk_size, align);
 
@@ -75,7 +75,7 @@ void test_init_memory_region(void) {
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
-    struct allo_pool p;
+    struct allo_pool p = {0};
     enum allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
@@ -94,6 +94,67 @@ void test_init_memory_region(void) {
   }
 }
 
+void test_init_null_allocator(void) {
+  uint8_t buf[0x100];
+  enum allo_status status = allo_pool_init(NULL, buf, 0x100, 0x10, 0x1);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_NULL, status,
+      "error should match for receiving a NULL allocator");
+}
+
+void test_init_null_buffer(void) {
+  struct allo_pool p = {0};
+  enum allo_status status = allo_pool_init(&p, NULL, 0x100, 0x10, 0x1);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
+}
+
+void test_init_zero_buf_size(void) {
+  uint8_t buf[0x100];
+  struct allo_pool p = {0};
+  enum allo_status status = allo_pool_init(&p, buf, 0, 0x10, 0x1);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_INVALID_SIZE, status,
+      "error should match for receiving a zero buf size");
+}
+
+void test_init_zero_chunk_size(void) {
+  uint8_t buf[0x100];
+  struct allo_pool p = {0};
+  enum allo_status status = allo_pool_init(&p, buf, 0x100, 0x0, sizeof(void *));
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_INVALID_SIZE, status,
+      "error should match for receiving a zero chunk size");
+}
+
+void test_init_zero_alignment(void) {
+  uint8_t buf[0x100];
+  struct allo_pool p = {0};
+  enum allo_status status = allo_pool_init(&p, buf, 0x100, 0x10, 0x0);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_INVALID_ALIGN, status,
+      "error should match for receiving zero alignment");
+}
+
+void test_init_memory_not_aligned(void) {
+  size_t buf_size = 0x100;
+  uint8_t buf[0x100];
+
+  size_t align = sizeof(void *);
+
+  uintptr_t aligned_buf = ((uintptr_t)buf + align - 1) & ~(align - 1);
+  uint8_t *unaligned_buf = (uint8_t *)(aligned_buf + 1);
+
+  buf_size -= (size_t)((uintptr_t)unaligned_buf - (uintptr_t)buf);
+
+  struct allo_pool p = {0};
+  enum allo_status status =
+      allo_pool_init(&p, unaligned_buf, buf_size, 0x10, align);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_MEM_NOT_ALIGNED, status,
+      "error should match for receiving a buffer that is not aligned");
+}
+
 void test_alloc_first_alloc(void) {
   struct {
     size_t buf_size;
@@ -110,7 +171,7 @@ void test_alloc_first_alloc(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
 
-    struct allo_pool p;
+    struct allo_pool p = {0};
     enum allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
@@ -118,7 +179,8 @@ void test_alloc_first_alloc(void) {
                                   "allocator initialization should be succeed");
     allo__assert_pool(&p);
 
-    TEST_ASSERT_NOT_NULL_MESSAGE(p.allo__free_list, "free list should not be NULL");
+    TEST_ASSERT_NOT_NULL_MESSAGE(p.allo__free_list,
+                                 "free list should not be NULL");
     void *next = *(void **)p.allo__free_list;
 
     void *dest;
@@ -132,7 +194,8 @@ void test_alloc_first_alloc(void) {
         "free list should not point to the recently allocated memory");
 
     TEST_ASSERT_EQUAL_PTR_MESSAGE(
-        next, p.allo__free_list, "free list should be pointing to the next chunk");
+        next, p.allo__free_list,
+        "free list should be pointing to the next chunk");
 
     allo__assert_pool(&p);
     free(buf);
@@ -155,7 +218,7 @@ void test_alloc_allocs_till_oom(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
 
-    struct allo_pool p;
+    struct allo_pool p = {0};
     enum allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
@@ -177,11 +240,13 @@ void test_alloc_allocs_till_oom(void) {
           "free list should not point to the recently allocated memory");
 
       TEST_ASSERT_EQUAL_PTR_MESSAGE(
-          next, p.allo__free_list, "free list should be pointing to the next chunk");
+          next, p.allo__free_list,
+          "free list should be pointing to the next chunk");
     }
 
     TEST_ASSERT_NULL_MESSAGE(
-        p.allo__free_list, "free list should now point to NULL as allocator is full");
+        p.allo__free_list,
+        "free list should now point to NULL as allocator is full");
 
     status = allo_pool_alloc(&dest, &p);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OOM, status,
@@ -207,7 +272,7 @@ void test_free_one(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
 
-    struct allo_pool p;
+    struct allo_pool p = {0};
     enum allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
@@ -223,8 +288,8 @@ void test_free_one(void) {
                                     "allocation should succeed");
     }
 
-    void *to_remove =
-        (void *)((uintptr_t)p.allo__start + (tests[i].free_index * p.allo__chunk_size));
+    void *to_remove = (void *)((uintptr_t)p.allo__start +
+                               (tests[i].free_index * p.allo__chunk_size));
 
     allo_pool_free(&p, to_remove);
 
@@ -253,7 +318,7 @@ void test_free_sequential(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, buf_size, align);
 
-    struct allo_pool p;
+    struct allo_pool p = {0};
     enum allo_status status =
         allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
@@ -271,8 +336,7 @@ void test_free_sequential(void) {
 
     void *chunk_positions[4];
     for (size_t chunk = 0; chunk < 4; ++chunk) {
-      chunk_positions[chunk] =
-          (void *)((uintptr_t)p.allo__start + chunk * chunk_size);
+      chunk_positions[chunk] = (void *)(p.allo__start + chunk * chunk_size);
     }
 
     size_t free_count =
@@ -297,7 +361,7 @@ void test_sequential(void) {
   void *buf;
   void *buf_aligned = malloc_aligned(&buf, buf_size, align);
 
-  struct allo_pool p;
+  struct allo_pool p = {0};
   enum allo_status status =
       allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
@@ -306,7 +370,8 @@ void test_sequential(void) {
 
   void *chunk_positions[4];
   for (size_t chunk = 0; chunk < 4; ++chunk) {
-    chunk_positions[chunk] = (void *)((uintptr_t)p.allo__start + chunk * chunk_size);
+    chunk_positions[chunk] =
+        (void *)((uintptr_t)p.allo__start + chunk * chunk_size);
   }
 
   void *dest;
@@ -364,12 +429,23 @@ void tearDown(void) {}
 
 int main(void) {
   UNITY_BEGIN();
+
   RUN_TEST(test_init_chunk_size_and_align);
   RUN_TEST(test_init_memory_region);
+  RUN_TEST(test_init_null_allocator);
+  RUN_TEST(test_init_null_buffer);
+  RUN_TEST(test_init_zero_buf_size);
+  RUN_TEST(test_init_zero_chunk_size);
+  RUN_TEST(test_init_zero_alignment);
+  RUN_TEST(test_init_memory_not_aligned);
+
   RUN_TEST(test_alloc_first_alloc);
   RUN_TEST(test_alloc_allocs_till_oom);
+
   RUN_TEST(test_free_one);
   RUN_TEST(test_free_sequential);
+
   RUN_TEST(test_sequential);
+
   return UNITY_END();
 }

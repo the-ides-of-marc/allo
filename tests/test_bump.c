@@ -27,6 +27,29 @@ void test_init(void) {
       "cursor should point to the exclusive end of memory range");
 }
 
+void test_init_null_allocator(void) {
+  uint8_t buf[0x100];
+  enum allo_status status = allo_fixed_bump_init(NULL, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_NULL, status,
+      "error should match for receiving a NULL allocator");
+}
+
+void test_init_null_buffer(void) {
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, NULL, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(
+      ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
+}
+
+void test_init_zero_size(void) {
+  uint8_t buf[0x100];
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_INVALID_SIZE, status,
+                                "error should match for receiving a zero size");
+}
+
 void test_alloc_first_alloc(void) {
   struct {
     size_t size;
@@ -300,13 +323,60 @@ void test_set_cursor(void) {
     allo__assert_fixed_bump(&b);
 
     void *unwind_ptr = (void *)(b.allo__start + tests[i].unwind_offset);
-    allo_fixed_bump_set_cursor(&b, unwind_ptr);
+    status = allo_fixed_bump_set_cursor(&b, unwind_ptr);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "set cursor should succeed");
 
     TEST_ASSERT_EQUAL_PTR_MESSAGE(unwind_ptr, b.allo__cursor,
                                   "cursor should point to unwind destination");
 
     allo__assert_fixed_bump(&b);
   }
+}
+
+void test_set_cursor_null_allocator(void) {
+  uint8_t buf[0x100] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocator initialization should succeed");
+
+  status = allo_fixed_bump_set_cursor(NULL, (void *)b.allo__end);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_NULL, status,
+                                "set cursor should fail due to null allocator");
+}
+
+void test_set_cursor_null_cursor(void) {
+  uint8_t buf[0x100] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocator initialization should succeed");
+
+  status = allo_fixed_bump_set_cursor(&b, NULL);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_NULL, status,
+                                "set cursor should fail due to null cursor");
+}
+
+void test_set_cursor_out_of_bounds(void) {
+  uint8_t buf[0x100] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocator initialization should succeed");
+  allo__assert_fixed_bump(&b);
+
+  uintptr_t out_of_bounds_start = (uintptr_t)buf - 1;
+  uintptr_t out_of_bounds_end = (uintptr_t)buf + 0x100 + 1;
+
+  status = allo_fixed_bump_set_cursor(&b, (void *)out_of_bounds_start);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                "set cursor should fail due to out of bounds");
+
+  status = allo_fixed_bump_set_cursor(&b, (void *)out_of_bounds_end);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                "set cursor should fail due to out of bounds");
+
+  allo__assert_fixed_bump(&b);
 }
 
 void test_reset(void) {
@@ -422,12 +492,23 @@ void tearDown(void) {}
 
 int main(void) {
   UNITY_BEGIN();
+
   RUN_TEST(test_init);
+  RUN_TEST(test_init_null_allocator);
+  RUN_TEST(test_init_null_buffer);
+  RUN_TEST(test_init_zero_size);
+
   RUN_TEST(test_alloc_first_alloc);
   RUN_TEST(test_alloc_subsequent_allocs);
   RUN_TEST(test_alloc_oom);
+
   RUN_TEST(test_set_cursor);
+  RUN_TEST(test_set_cursor_out_of_bounds);
+  RUN_TEST(test_set_cursor_null_allocator);
+  RUN_TEST(test_set_cursor_null_cursor);
+
   RUN_TEST(test_reset);
+
   RUN_TEST(test_sequential);
   return UNITY_END();
 }

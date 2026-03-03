@@ -1,7 +1,13 @@
 CompileFlags:
-  Add: [-DALLO_IMPLEMENTATION]
   CompilationDatabase: "build"
 
 Diagnostics:
   UnusedIncludes: Strict
   MissingIncludes: Strict
+
+---
+
+If:
+  PathMatch: include/allo.h
+CompileFlags:
+  Add: [-DALLO_IMPLEMENTATION]
