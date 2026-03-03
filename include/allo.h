@@ -29,7 +29,7 @@
 //   allocator and its vtable.
 //
 //   Allocator implementations:
-//   - `allo_fixed_bump`
+//   - `allo_bump`
 //   - `allo_pool`
 //
 //   For optimal usage, use the specific memory allocator directly to avoid
@@ -100,15 +100,15 @@
 //
 //         frees the memory at `ptr`.
 //
-//       allo_allocator_from_fixed_bump:
+//       allo_allocator_from_bump:
 //
-//         struct allo_allocator allo_allocator_from_fixed_bump(
-//           struct allo_fixed_bump *b);
+//         struct allo_allocator allo_allocator_from_bump(
+//           struct allo_bump *b);
 //
-//         Wraps an existing `struct allo_fixed_bump` allocator in the a `struct
+//         Wraps an existing `struct allo_bump` allocator in the a `struct
 //         allo_allocator`.
 //
-//    struct allo_fixed_bump:
+//    struct allo_bump:
 //
 //       This is a fixed bump allocator implementation.
 //
@@ -121,10 +121,10 @@
 //
 //       Functions:
 //
-//         allo_fixed_bump_init:
+//         allo_bump_init:
 //
-//           enum allo_status allo_fixed_bump_init(
-//             struct allo_fixed_bump *restrict b,
+//           enum allo_status allo_bump_init(
+//             struct allo_bump *restrict b,
 //             void *restrict buf,
 //             size_t size);
 //
@@ -135,11 +135,11 @@
 //           ALLO_ERR_NULL is returned if `b` or `buf` is NULL.
 //           ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
 //
-//         allo_fixed_bump_alloc:
+//         allo_bump_alloc:
 //
-//           enum allo_status allo_fixed_bump_alloc(
+//           enum allo_status allo_bump_alloc(
 //             void *restrict *restrict dest,
-//             struct allo_fixed_bump *restrict b,
+//             struct allo_bump *restrict b,
 //             size_t size,
 //             size_t align);
 //
@@ -148,10 +148,10 @@
 //           ALLO_OOM is returned if there is insufficient space to allocate the
 //           bytes.
 //
-//         allo_fixed_bump_set_cursor:
+//         allo_bump_set_cursor:
 //
-//           enum allo_status allo_fixed_bump_set_cursor(
-//             struct allo_fixed_bump *b,
+//           enum allo_status allo_bump_set_cursor(
+//             struct allo_bump *b,
 //             void *cursor);
 //
 //           This sets the allocator's cursor to point to the given `cursor`
@@ -160,9 +160,9 @@
 //           ALLO_ERR_OUT_OF_BOUNDS is returned if `cursor` is outside of the
 //           allocator's memory region.
 //
-//         allo_fixed_bump_reset:
+//         allo_bump_reset:
 //
-//           void allo_fixed_bump_reset(struct allo_fixed_bump *b);
+//           void allo_bump_reset(struct allo_bump *b);
 //
 //           This resets the whole allocated, clearing the allocator by
 //           resetting its cursor to its beginning position (1 position to the
@@ -256,25 +256,24 @@ static inline void allo_free(struct allo_allocator a, void *ptr) {
   a.allo__vtable->free(a.allo__ptr, ptr);
 }
 
-struct allo_fixed_bump {
+struct allo_bump {
   uintptr_t allo__start;
   uintptr_t allo__end;
   uintptr_t allo__cursor;
 };
 
-enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
-                                      void *restrict buf, size_t size);
+enum allo_status allo_bump_init(struct allo_bump *restrict b,
+                                void *restrict buf, size_t size);
 
-enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
-                                       struct allo_fixed_bump *restrict b,
-                                       size_t size, size_t align);
+enum allo_status allo_bump_alloc(void *restrict *restrict dest,
+                                 struct allo_bump *restrict b, size_t size,
+                                 size_t align);
 
-enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
-                                            const void *ptr);
+enum allo_status allo_bump_set_cursor(struct allo_bump *b, const void *ptr);
 
-void allo_fixed_bump_reset(struct allo_fixed_bump *b);
+void allo_bump_reset(struct allo_bump *b);
 
-struct allo_allocator allo_allocator_from_fixed_bump(struct allo_fixed_bump *b);
+struct allo_allocator allo_allocator_from_bump(struct allo_bump *b);
 
 struct allo_pool {
   void *allo__free_list;
@@ -324,32 +323,29 @@ static inline size_t allo__round_pow2(size_t n) {
   return ++n;
 }
 
-static enum allo_status allo_fixed_bump_alloc_adapter(void **dest, void *ctx,
-                                                      size_t size,
-                                                      size_t align) {
-  return allo_fixed_bump_alloc(dest, (struct allo_fixed_bump *)ctx, size,
-                               align);
+static enum allo_status allo__bump_alloc_adapter(void **dest, void *ctx,
+                                                 size_t size, size_t align) {
+  return allo_bump_alloc(dest, (struct allo_bump *)ctx, size, align);
 }
 
-static void allo__fixed_bump_free_adapter(void *ctx, void *ptr) {
+static void allo__bump_free_adapter(void *ctx, void *ptr) {
   (void)ctx;
   (void)ptr;
 }
 
-static const struct allo__allocator_vtable allo__fixed_bump_vtable = {
-    .alloc = allo_fixed_bump_alloc_adapter,
-    .free = allo__fixed_bump_free_adapter,
+static const struct allo__allocator_vtable allo__bump_vtable = {
+    .alloc = allo__bump_alloc_adapter,
+    .free = allo__bump_free_adapter,
 };
 
-struct allo_allocator
-allo_allocator_from_fixed_bump(struct allo_fixed_bump *b) {
+struct allo_allocator allo_allocator_from_bump(struct allo_bump *b) {
   return (struct allo_allocator){
       .allo__ptr = b,
-      .allo__vtable = &allo__fixed_bump_vtable,
+      .allo__vtable = &allo__bump_vtable,
   };
 }
 
-static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
+static inline void allo__assert_bump(struct allo_bump *b) {
   assert(b && "bump allocator must not be NULL");
   assert(b->allo__start && "start of memory region must not be NULL");
   assert(b->allo__end && "end of memory region must not be NULL");
@@ -362,8 +358,8 @@ static inline void allo__assert_fixed_bump(struct allo_fixed_bump *b) {
   (void)b;
 }
 
-enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
-                                      void *restrict buf, size_t size) {
+enum allo_status allo_bump_init(struct allo_bump *restrict b,
+                                void *restrict buf, size_t size) {
   if (!b || !buf) {
     return ALLO_ERR_NULL;
   }
@@ -375,15 +371,15 @@ enum allo_status allo_fixed_bump_init(struct allo_fixed_bump *restrict b,
   b->allo__end = b->allo__start + size;
   b->allo__cursor = b->allo__end;
 
-  allo__assert_fixed_bump(b);
+  allo__assert_bump(b);
   return ALLO_OK;
 }
 
-enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
-                                       struct allo_fixed_bump *restrict b,
-                                       size_t size, size_t align) {
+enum allo_status allo_bump_alloc(void *restrict *restrict dest,
+                                 struct allo_bump *restrict b, size_t size,
+                                 size_t align) {
   assert(dest && "dest must not be NULL");
-  allo__assert_fixed_bump(b);
+  allo__assert_bump(b);
   assert(size && "size to allocate must be non-zero");
   assert(align && "alignment must be non-zero");
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
@@ -397,19 +393,18 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
     return ALLO_OOM;
   }
   b->allo__cursor = next_cursor;
-  allo__assert_fixed_bump(b);
+  allo__assert_bump(b);
 
   *dest = (void *)next_cursor;
   return ALLO_OK;
 }
 
-enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
-                                            const void *cursor) {
+enum allo_status allo_bump_set_cursor(struct allo_bump *b, const void *cursor) {
   if (!b || !cursor) {
     return ALLO_ERR_NULL;
   }
 
-  allo__assert_fixed_bump(b);
+  allo__assert_bump(b);
 
   uintptr_t c = (uintptr_t)cursor;
   if (c < b->allo__start || c > b->allo__end) {
@@ -417,14 +412,14 @@ enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
   }
   b->allo__cursor = c;
 
-  allo__assert_fixed_bump(b);
+  allo__assert_bump(b);
   return ALLO_OK;
 }
 
-void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
-  allo__assert_fixed_bump(b);
+void allo_bump_reset(struct allo_bump *b) {
+  allo__assert_bump(b);
   b->allo__cursor = b->allo__end;
-  allo__assert_fixed_bump(b);
+  allo__assert_bump(b);
 }
 
 static inline void allo__assert_pool(const struct allo_pool *p) {
