@@ -218,9 +218,9 @@
 //   be able to implement.
 //
 // - Add feature/test macro toggles to enable or disable checks on allocation.
-// Since allocation is subjected to being executed in a hot loop, these
-// conditional checks that introduce branching should have the flexibility of
-// being toggled via macros.
+//   Since allocation is subjected to being executed in a hot loop, these
+//   conditional checks that introduce branching should have the flexibility of
+//   being toggled via macros.
 //
 // - Add function that takes in allo_status and return a readable string.
 
@@ -487,7 +487,7 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
   assert(align >= sizeof(void *) &&
          "alignment must be greater than sizeof(void*)");
-  assert(chunk_size > align &&
+  assert(chunk_size >= align &&
          "chunk size must be at least the size of the alignment");
   assert(chunk_size % align == 0 &&
          "chunk size must be a multiple of alignment");
