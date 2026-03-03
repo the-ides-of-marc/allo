@@ -323,13 +323,36 @@ void test_set_cursor(void) {
     allo__assert_fixed_bump(&b);
 
     void *unwind_ptr = (void *)(b.allo__start + tests[i].unwind_offset);
-    allo_fixed_bump_set_cursor(&b, unwind_ptr);
+    status = allo_fixed_bump_set_cursor(&b, unwind_ptr);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "set cursor should succeed");
 
     TEST_ASSERT_EQUAL_PTR_MESSAGE(unwind_ptr, b.allo__cursor,
                                   "cursor should point to unwind destination");
 
     allo__assert_fixed_bump(&b);
   }
+}
+
+void test_set_cursor_out_of_bounds(void) {
+  uint8_t buf[0x100] __attribute__((aligned(16)));
+  struct allo_fixed_bump b;
+  enum allo_status status = allo_fixed_bump_init(&b, buf, 0x100);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
+                                "allocator initialization should succeed");
+  allo__assert_fixed_bump(&b);
+
+  uintptr_t out_of_bounds_start = (uintptr_t)buf - 1;
+  uintptr_t out_of_bounds_end = (uintptr_t)buf + 0x100 + 1;
+
+  status = allo_fixed_bump_set_cursor(&b, (void *)out_of_bounds_start);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                "set cursor should fail due to out of bounds");
+
+  status = allo_fixed_bump_set_cursor(&b, (void *)out_of_bounds_end);
+  TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                "set cursor should fail due to out of bounds");
+
+  allo__assert_fixed_bump(&b);
 }
 
 void test_reset(void) {
@@ -456,6 +479,7 @@ int main(void) {
   RUN_TEST(test_alloc_oom);
 
   RUN_TEST(test_set_cursor);
+  RUN_TEST(test_set_cursor_out_of_bounds);
 
   RUN_TEST(test_reset);
 

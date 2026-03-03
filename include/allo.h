@@ -214,6 +214,8 @@
 // - Add feature/test macro toggles to enable or disable checks such as bounds
 //   checking. This should allow users more control over performance/safety
 //   instead of just relying on debug builds.
+//
+// - Add function that takes in allo_status and return a readable string.
 
 #include <stddef.h>
 #include <stdint.h>
@@ -225,6 +227,7 @@ enum allo_status {
   ALLO_ERR_INVALID_SIZE,
   ALLO_ERR_INVALID_ALIGN,
   ALLO_ERR_MEM_NOT_ALIGNED,
+  ALLO_ERR_OUT_OF_BOUNDS,
 };
 
 struct allo__allocator_vtable {
@@ -259,7 +262,8 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
                                        struct allo_fixed_bump *restrict b,
                                        size_t size, size_t align);
 
-void allo_fixed_bump_set_cursor(struct allo_fixed_bump *b, const void *ptr);
+enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
+                                            const void *ptr);
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b);
 
@@ -372,16 +376,21 @@ enum allo_status allo_fixed_bump_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-void allo_fixed_bump_set_cursor(struct allo_fixed_bump *b, const void *cursor) {
+enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
+                                            const void *cursor) {
   allo__assert_fixed_bump(b);
 
   uintptr_t c = (uintptr_t)cursor;
+  if (c < b->allo__start || c >= b->allo__end) {
+    return ALLO_ERR_OUT_OF_BOUNDS;
+  }
   assert(b->allo__start <= c && "ptr should be <= start of memory region");
   assert(c <= b->allo__end && "ptr should be <= end of memory region");
 
   b->allo__cursor = c;
 
   allo__assert_fixed_bump(b);
+  return ALLO_OK;
 }
 
 void allo_fixed_bump_reset(struct allo_fixed_bump *b) {
