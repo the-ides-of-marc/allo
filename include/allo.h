@@ -217,9 +217,10 @@
 // - Update vtable to have a free_all/reset function, that all allocators should
 //   be able to implement.
 //
-// - Add feature/test macro toggles to enable or disable checks such as bounds
-//   checking. This should allow users more control over performance/safety
-//   instead of just relying on debug builds.
+// - Add feature/test macro toggles to enable or disable checks on allocation.
+// Since allocation is subjected to being executed in a hot loop, these
+// conditional checks that introduce branching should have the flexibility of
+// being toggled via macros.
 //
 // - Add function that takes in allo_status and return a readable string.
 
