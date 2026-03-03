@@ -381,7 +381,7 @@ enum allo_status allo_fixed_bump_set_cursor(struct allo_fixed_bump *b,
   allo__assert_fixed_bump(b);
 
   uintptr_t c = (uintptr_t)cursor;
-  if (c <= b->allo__start || c > b->allo__end) {
+  if (c < b->allo__start || c > b->allo__end) {
     return ALLO_ERR_OUT_OF_BOUNDS;
   }
   assert(b->allo__start <= c && "ptr should be <= start of memory region");
