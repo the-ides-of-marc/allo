@@ -227,6 +227,34 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Platform detection.
+
+#if defined(_WIN32)
+#define ALLO_PLATFORM_WINDOWS 1
+#elif defined(__linux__)
+#define ALLO_PLATFORM_LINUX 1
+#else
+#error "platform not supported"
+#endif
+
+// Inlining
+
+#if defined(_MSC_VER)
+#define ALLO_FORCE_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define ALLO_FORCE_INLINE inline __attribute__((always_inline))
+#else
+#define ALLO_FORCE_INLINE inline
+#endif
+
+// Restrict qualifier
+
+#if defined(_MSC_VER)
+#define ALLO_RESTRICT __restrict
+#else
+#define ALLO_RESTRICT restrict
+#endif
+
 enum allo_status {
   ALLO_OK = 0,
   ALLO_OOM,
@@ -305,6 +333,9 @@ static inline bool allo__is_pow2(size_t n) {
 }
 
 static inline size_t allo__round_pow2(size_t n) {
+  if (n == 0) {
+    return 1;
+  }
   --n;
 #if SIZE_MAX >= UINT8_MAX
   n |= n >> 1;
