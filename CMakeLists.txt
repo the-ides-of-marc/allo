@@ -10,6 +10,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+include(GNUInstallDirs)
+
 add_library(dev_config INTERFACE)
 
 target_compile_options(dev_config INTERFACE
@@ -29,12 +31,30 @@ target_link_options(dev_config INTERFACE
 )
 
 add_library(allo INTERFACE)
+add_library(allo::allo ALIAS allo)
 target_include_directories(allo INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(allo INTERFACE dev_config)
+target_link_libraries(allo INTERFACE
+    $<BUILD_INTERFACE:dev_config>
+)
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(TARGETS allo
+    EXPORT allo-targets
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(EXPORT allo-targets
+    FILE alloTargets.cmake
+    NAMESPACE allo::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/allo
+)
