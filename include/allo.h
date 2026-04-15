@@ -231,10 +231,28 @@
 
 #if defined(_WIN32)
 #define ALLO_PLATFORM_WINDOWS 1
-#elif defined(__linux__)
-#define ALLO_PLATFORM_LINUX 1
+#elif defined(__unix__) || defined(__APPLE__)
+#define ALLO_PLATFORM_UNIX 1
 #else
 #error "platform not supported"
+#endif
+
+// Export functions
+
+#ifdef ALLO_PLATFORM_WINDOWS
+#ifdef ALLO_EXPORT
+#define ALLO_API __declspec(dllexport)
+#else
+#define ALLO_API __declspec(dllimport)
+#endif
+#endif
+
+#ifdef ALLO_PLATFORM_UNIX
+#if defined(__GNUC__) || defined(__clang__)
+#define ALLO_API __attribute__((visibility("default")))
+#else
+#define ALLO_API
+#endif
 #endif
 
 // Inlining
@@ -276,7 +294,7 @@ struct allo_allocator {
 };
 
 static inline enum allo_status allo_alloc(void **dest, struct allo_allocator a,
-                                          size_t size, size_t align) {
+                                   size_t size, size_t align) {
   return a.allo__vtable->alloc(dest, a.allo__ptr, size, align);
 }
 
