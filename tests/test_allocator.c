@@ -16,7 +16,8 @@ struct mock_state {
   void *ptr_last_allocated;
 };
 
-static enum allo_status mock_alloc(void **dest, void *ctx, size_t size,
+static enum allo_status mock_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                                   void *ALLO_RESTRICT ctx, size_t size,
                                    size_t align) {
   struct mock_state *state = ctx;
   ++state->alloc_calls;
