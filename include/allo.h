@@ -227,6 +227,34 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Platform detection.
+
+#if defined(_WIN32)
+#define ALLO_PLATFORM_WINDOWS 1
+#elif defined(__unix__) || defined(__APPLE__)
+#define ALLO_PLATFORM_UNIX 1
+#else
+#error "platform not supported"
+#endif
+
+// Inlining
+
+#if defined(_MSC_VER)
+#define ALLO_FORCE_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define ALLO_FORCE_INLINE inline __attribute__((always_inline))
+#else
+#define ALLO_FORCE_INLINE inline
+#endif
+
+// Restrict qualifier
+
+#if defined(_MSC_VER)
+#define ALLO_RESTRICT __restrict
+#else
+#define ALLO_RESTRICT restrict
+#endif
+
 enum allo_status {
   ALLO_OK = 0,
   ALLO_OOM,
@@ -238,7 +266,8 @@ enum allo_status {
 };
 
 struct allo__allocator_vtable {
-  enum allo_status (*alloc)(void **dest, void *ctx, size_t size, size_t align);
+  enum allo_status (*alloc)(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                            void *ALLO_RESTRICT ctx, size_t size, size_t align);
   void (*free)(void *ctx, void *ptr);
 };
 
@@ -247,12 +276,12 @@ struct allo_allocator {
   const struct allo__allocator_vtable *allo__vtable;
 };
 
-static inline enum allo_status allo_alloc(void **dest, struct allo_allocator a,
-                                          size_t size, size_t align) {
+static ALLO_FORCE_INLINE enum allo_status
+allo_alloc(void **dest, struct allo_allocator a, size_t size, size_t align) {
   return a.allo__vtable->alloc(dest, a.allo__ptr, size, align);
 }
 
-static inline void allo_free(struct allo_allocator a, void *ptr) {
+static ALLO_FORCE_INLINE void allo_free(struct allo_allocator a, void *ptr) {
   a.allo__vtable->free(a.allo__ptr, ptr);
 }
 
@@ -262,14 +291,15 @@ struct allo_bump {
   uintptr_t allo__cursor;
 };
 
-enum allo_status allo_bump_init(struct allo_bump *restrict b,
-                                void *restrict buf, size_t size);
+enum allo_status allo_bump_init(struct allo_bump *ALLO_RESTRICT b,
+                                void *ALLO_RESTRICT buf, size_t size);
 
-enum allo_status allo_bump_alloc(void *restrict *restrict dest,
-                                 struct allo_bump *restrict b, size_t size,
+enum allo_status allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                                 struct allo_bump *ALLO_RESTRICT b, size_t size,
                                  size_t align);
 
-enum allo_status allo_bump_set_cursor(struct allo_bump *b, const void *ptr);
+enum allo_status allo_bump_set_cursor(struct allo_bump *ALLO_RESTRICT b,
+                                      const void *ALLO_RESTRICT ptr);
 
 void allo_bump_reset(struct allo_bump *b);
 
@@ -283,14 +313,14 @@ struct allo_pool {
   size_t allo__align;
 };
 
-enum allo_status allo_pool_init(struct allo_pool *restrict p,
-                                void *restrict buf, size_t buf_size,
+enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
+                                void *ALLO_RESTRICT buf, size_t buf_size,
                                 size_t chunk_size, size_t align);
 
-enum allo_status allo_pool_alloc(void *restrict *restrict dest,
-                                 struct allo_pool *restrict p);
+enum allo_status allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                                 struct allo_pool *ALLO_RESTRICT p);
 
-void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr);
+void allo_pool_free(struct allo_pool *ALLO_RESTRICT p, void *ALLO_RESTRICT ptr);
 
 #endif // !ALLO_H
 
@@ -305,6 +335,7 @@ static inline bool allo__is_pow2(size_t n) {
 }
 
 static inline size_t allo__round_pow2(size_t n) {
+  assert(n > 0 && "n must be non-zero");
   --n;
 #if SIZE_MAX >= UINT8_MAX
   n |= n >> 1;
@@ -323,12 +354,14 @@ static inline size_t allo__round_pow2(size_t n) {
   return ++n;
 }
 
-static enum allo_status allo__bump_alloc_adapter(void **dest, void *ctx,
-                                                 size_t size, size_t align) {
+static enum allo_status
+allo__bump_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                         void *ALLO_RESTRICT ctx, size_t size, size_t align) {
   return allo_bump_alloc(dest, (struct allo_bump *)ctx, size, align);
 }
 
-static void allo__bump_free_adapter(void *ctx, void *ptr) {
+static void allo__bump_free_adapter(void *ALLO_RESTRICT ctx,
+                                    void *ALLO_RESTRICT ptr) {
   (void)ctx;
   (void)ptr;
 }
@@ -358,8 +391,8 @@ static inline void allo__assert_bump(struct allo_bump *b) {
   (void)b;
 }
 
-enum allo_status allo_bump_init(struct allo_bump *restrict b,
-                                void *restrict buf, size_t size) {
+enum allo_status allo_bump_init(struct allo_bump *ALLO_RESTRICT b,
+                                void *ALLO_RESTRICT buf, size_t size) {
   if (!b || !buf) {
     return ALLO_ERR_NULL;
   }
@@ -375,8 +408,8 @@ enum allo_status allo_bump_init(struct allo_bump *restrict b,
   return ALLO_OK;
 }
 
-enum allo_status allo_bump_alloc(void *restrict *restrict dest,
-                                 struct allo_bump *restrict b, size_t size,
+enum allo_status allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                                 struct allo_bump *ALLO_RESTRICT b, size_t size,
                                  size_t align) {
   assert(dest && "dest must not be NULL");
   allo__assert_bump(b);
@@ -399,7 +432,8 @@ enum allo_status allo_bump_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-enum allo_status allo_bump_set_cursor(struct allo_bump *b, const void *cursor) {
+enum allo_status allo_bump_set_cursor(struct allo_bump *ALLO_RESTRICT b,
+                                      const void *ALLO_RESTRICT cursor) {
   if (!b || !cursor) {
     return ALLO_ERR_NULL;
   }
@@ -461,8 +495,8 @@ static inline void allo__assert_pool(const struct allo_pool *p) {
   (void)p;
 }
 
-enum allo_status allo_pool_init(struct allo_pool *restrict p,
-                                void *restrict buf, size_t buf_size,
+enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
+                                void *ALLO_RESTRICT buf, size_t buf_size,
                                 size_t chunk_size, size_t align) {
   if (!p || !buf) {
     return ALLO_ERR_NULL;
@@ -518,8 +552,8 @@ enum allo_status allo_pool_init(struct allo_pool *restrict p,
   return ALLO_OK;
 }
 
-enum allo_status allo_pool_alloc(void *restrict *restrict dest,
-                                 struct allo_pool *restrict p) {
+enum allo_status allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                                 struct allo_pool *ALLO_RESTRICT p) {
   allo__assert_pool(p);
 
   *dest = NULL;
@@ -535,7 +569,8 @@ enum allo_status allo_pool_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-void allo_pool_free(struct allo_pool *restrict p, void *restrict ptr) {
+void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
+                    void *ALLO_RESTRICT ptr) {
   allo__assert_pool(p);
   assert(p->allo__start <= (uintptr_t)ptr &&
          "ptr must be >= start of memory region");

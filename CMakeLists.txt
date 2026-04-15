@@ -32,6 +32,7 @@ add_library(allo INTERFACE)
 target_include_directories(allo INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
+target_link_libraries(allo INTERFACE dev_config)
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
