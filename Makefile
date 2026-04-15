@@ -3,19 +3,21 @@ CMAKE_BUILD_TYPE ?= RelWithDebInfo
 BUILD_DIR := build
 INSTALL_DIR := dist
 
-.PHONY: all build install test clean
+.PHONY: all configure build install test clean
 
 all: build
 
-build:
+configure:
 	@cmake -B $(BUILD_DIR) \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) \
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-	@cmake --build $(BUILD_DIR) --parallel
 	@ln -sf $(BUILD_DIR)/compile_commands.json .
 
-install:
+build:
+	@cmake --build $(BUILD_DIR) --parallel
+
+install: build
 	@cmake --install $(BUILD_DIR)
 
 test: build
