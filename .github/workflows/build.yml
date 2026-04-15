@@ -43,12 +43,11 @@ jobs:
       - name: Configure
         run: >
           cmake -S . -B build
-          -G "MinGW Makefiles"
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DCMAKE_C_COMPILER=gcc
 
       - name: Build
-        run: cmake --build build --parallel
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
