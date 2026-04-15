@@ -10,6 +10,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+option(ENABLE_SANITIZERS "Enable UBSan and ASan" OFF)
+
 include(GNUInstallDirs)
 
 add_library(dev_config INTERFACE)
@@ -24,14 +26,15 @@ target_compile_options(dev_config INTERFACE
     -Wformat=2
     -Wimplicit-fallthrough
     -Wvla
-    $<$<CONFIG:Debug>:
+    $<$<CONFIG:Debug>:-g>
+    $<$<BOOL:${ENABLE_SANITIZERS}>:
         -fsanitize=address,undefined;
         -fno-omit-frame-pointer;
         -g
     >
 )
 target_link_options(dev_config INTERFACE
-    $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+    $<$<BOOL:${ENABLE_SANITIZERS}>:-fsanitize=address,undefined>
 )
 
 add_library(allo INTERFACE)

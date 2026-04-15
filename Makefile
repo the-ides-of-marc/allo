@@ -3,6 +3,12 @@ CMAKE_BUILD_TYPE ?= RelWithDebInfo
 BUILD_DIR := build
 INSTALL_DIR := dist
 
+ifeq ($(CMAKE_BUILD_TYPE), Debug)
+	ENABLE_SANITIZERS := ON
+else
+	ENABLE_SANITIZERS := OFF
+endif
+
 .PHONY: all configure build install test clean
 
 all: build
