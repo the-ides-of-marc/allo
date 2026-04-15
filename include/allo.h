@@ -237,24 +237,6 @@
 #error "platform not supported"
 #endif
 
-// Export functions
-
-#ifdef ALLO_PLATFORM_WINDOWS
-#ifdef ALLO_EXPORT
-#define ALLO_API __declspec(dllexport)
-#else
-#define ALLO_API __declspec(dllimport)
-#endif
-#endif
-
-#ifdef ALLO_PLATFORM_UNIX
-#if defined(__GNUC__) || defined(__clang__)
-#define ALLO_API __attribute__((visibility("default")))
-#else
-#define ALLO_API
-#endif
-#endif
-
 // Inlining
 
 #if defined(_MSC_VER)
