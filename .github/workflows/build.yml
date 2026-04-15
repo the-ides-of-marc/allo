@@ -8,7 +8,7 @@ on:
       - master
 
 jobs:
-  build:
+  linux-build:
     runs-on: ubuntu-latest
 
     strategy:
@@ -22,12 +22,37 @@ jobs:
       - name: Configure
         env:
           CC: ${{ matrix.compiler }}
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        run: cmake -S . -B build \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_C_COMPILER=${{ matrix.compiler }}
+          -DENABLE_SANITIZERS=${{ matrix.build_type == 'Debug' && 'OFF' || 'ON' }}
 
       - name: Build
         run: cmake --build build --parallel
 
       - name: Test
-        env:
-          ASAN_OPTIONS: "verbosity=1:debug=1"
+        run: ctest --test-dir build --output-on-failure
+
+  windows-build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -G "MinGW Makefiles"
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_C_COMPILER=gcc
+          -DENABLE_SANITIZERS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
         run: ctest --test-dir build --output-on-failure
