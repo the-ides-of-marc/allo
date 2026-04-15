@@ -14,29 +14,25 @@ include(GNUInstallDirs)
 
 add_library(dev_config INTERFACE)
 
-if(UNIX)
-    target_compile_options(dev_config INTERFACE
-        -Wall
-        -Wextra
-        -Werror
-        -Wpedantic
-        -Wconversion
-        -Wshadow
-        -Wformat=2
-        -Wimplicit-fallthrough
-        -Wvla
-        $<$<CONFIG:Debug>:
-            -fsanitize=address,undefined;
-            -fno-omit-frame-pointer;
-            -g
-        >
-    )
-    target_link_options(dev_config INTERFACE
-        $<$<CONFIG:Debug>:-fsanitize=address,undefined>
-    )
-elseif(MSVC)
-    target_compile_options(dev_config INTERFACE /W4 /WX)
-endif()
+target_compile_options(dev_config INTERFACE
+    -Wall
+    -Wextra
+    -Werror
+    -Wpedantic
+    -Wconversion
+    -Wshadow
+    -Wformat=2
+    -Wimplicit-fallthrough
+    -Wvla
+    $<$<CONFIG:Debug>:
+        -fsanitize=address,undefined;
+        -fno-omit-frame-pointer;
+        -g
+    >
+)
+target_link_options(dev_config INTERFACE
+    $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+)
 
 add_library(allo INTERFACE)
 add_library(allo::allo ALIAS allo)
