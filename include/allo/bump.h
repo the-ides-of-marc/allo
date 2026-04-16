@@ -3,6 +3,7 @@
 
 #include "allocator.h"
 #include "internal/defines.h"
+#include "internal/math_common.h"
 #include "status.h"
 #include <assert.h>
 #include <stddef.h>
