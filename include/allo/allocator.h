@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 // The vtable used by allo_allocator struct.
-struct allo__allocator_vtable {
+struct allo_allocator_vtable {
   enum allo_status (*alloc)(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                             void *ALLO_RESTRICT ctx, size_t size, size_t align);
   void (*free)(void *ctx, void *ptr);
@@ -15,7 +15,7 @@ struct allo__allocator_vtable {
 // Generic allocator type used when dynamic dispatch is needed.
 struct allo_allocator {
   void *allocator;
-  const struct allo__allocator_vtable *vtable;
+  const struct allo_allocator_vtable *vtable;
 };
 
 static ALLO_FORCE_INLINE enum allo_status

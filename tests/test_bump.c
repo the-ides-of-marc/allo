@@ -12,7 +12,7 @@ void test_init(void) {
   enum allo_status status = allo_bump_init(&b, buf, 0x100);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                 "allocator initialization should succeed");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
       buf, b.start,
@@ -81,7 +81,7 @@ void test_alloc_first_alloc(void) {
     enum allo_status status = allo_bump_init(&b, buf, 0x10);
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                   "allocator initialization should succeed");
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
 
     void *dest = NULL;
     status = allo_bump_alloc(&dest, &b, tests[i].size, tests[i].align);
@@ -91,7 +91,7 @@ void test_alloc_first_alloc(void) {
         "dest should be at the current cursor after allocation");
     TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % tests[i].align == 0,
                              "allocated address should be aligned");
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
   }
 }
 
@@ -149,7 +149,7 @@ void test_alloc_subsequent_allocs(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                   "allocator initialization should succeed");
     b.cursor -= tests[i].starting_offset;
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
 
     void *dest = NULL;
     status = allo_bump_alloc(&dest, &b, tests[i].size, tests[i].align);
@@ -217,7 +217,7 @@ void test_alloc_oom(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                   "allocator initialization should succeed");
     b.cursor -= tests[i].offset;
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
 
     void *dest = NULL;
     status = allo_bump_alloc(&dest, &b, tests[i].size, tests[i].align);
@@ -228,7 +228,7 @@ void test_alloc_oom(void) {
         "cursor should remain at its original position");
     TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % tests[i].align == 0,
                              "allocated address should be aligned");
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
   }
 }
 
@@ -318,7 +318,7 @@ void test_set_cursor(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                   "allocator initialization should succeed");
     b.cursor -= tests[i].offset;
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
 
     void *unwind_ptr = (void *)(b.start + tests[i].unwind_offset);
     status = allo_bump_set_cursor(&b, unwind_ptr);
@@ -327,7 +327,7 @@ void test_set_cursor(void) {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(unwind_ptr, b.cursor,
                                   "cursor should point to unwind destination");
 
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
   }
 }
 
@@ -361,7 +361,7 @@ void test_set_cursor_out_of_bounds(void) {
   enum allo_status status = allo_bump_init(&b, buf, 0x100);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                 "allocator initialization should succeed");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   uintptr_t out_of_bounds_start = (uintptr_t)buf - 1;
   uintptr_t out_of_bounds_end = (uintptr_t)buf + 0x100 + 1;
@@ -374,7 +374,7 @@ void test_set_cursor_out_of_bounds(void) {
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_ERR_OUT_OF_BOUNDS, status,
                                 "set cursor should fail due to out of bounds");
 
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 }
 
 void test_reset(void) {
@@ -396,10 +396,10 @@ void test_reset(void) {
     TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                   "allocator initialization should succeed");
     b.cursor -= tests[i].offset;
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
 
     allo_bump_reset(&b);
-    allo__assert_bump(&b);
+    allo_assert_bump(&b);
     TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end, b.cursor,
                                   "cursor should reset to the end");
   }
@@ -409,7 +409,7 @@ void test_sequential(void) {
   uint8_t buf[0x100] __attribute__((aligned(128)));
   struct allo_bump b;
   enum allo_status status = allo_bump_init(&b, buf, 0x100);
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   void *dest = NULL;
 
@@ -417,7 +417,7 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 1, b.cursor,
                                 "cursor should shift by 1");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   status = allo_bump_alloc(&dest, &b, 1, 8);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
@@ -426,7 +426,7 @@ void test_sequential(void) {
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 8 == 0, "cursor should be aligned");
   TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 8 == 0,
                            "allocated address should be aligned");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   status = allo_bump_alloc(&dest, &b, 8, 8);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
@@ -435,7 +435,7 @@ void test_sequential(void) {
   TEST_ASSERT_TRUE_MESSAGE(b.cursor % 8 == 0, "cursor should be aligned");
   TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 8 == 0,
                            "allocated address should be aligned");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   status = allo_bump_alloc(&dest, &b, 15, 16);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
@@ -445,7 +445,7 @@ void test_sequential(void) {
                            "cursor should be aligned");
   TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 16 == 0,
                            "allocated address should be aligned");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   status = allo_bump_alloc(&dest, &b, 1, 128);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
@@ -455,7 +455,7 @@ void test_sequential(void) {
                            "cursor should be aligned");
   TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 128 == 0,
                            "allocated address should be aligned");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   status = allo_bump_alloc(&dest, &b, 128, 128);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status, "allocation should succeed");
@@ -466,15 +466,15 @@ void test_sequential(void) {
                            "cursor should be aligned");
   TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 128 == 0,
                            "allocated address should be aligned");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   status = allo_bump_alloc(&dest, &b, 1, 1);
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OOM, status,
                                 "allocation should fail due to OOM");
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
 
   allo_bump_reset(&b);
-  allo__assert_bump(&b);
+  allo_assert_bump(&b);
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end, b.cursor,
                                 "cursor should be reset");
 

@@ -29,7 +29,7 @@ static void mock_free(void *ctx, void *ptr) {
   (void)ptr;
 }
 
-static struct allo__allocator_vtable mock_vtable = {
+static struct allo_allocator_vtable mock_vtable = {
     .alloc = &mock_alloc,
     .free = &mock_free,
 };
@@ -75,7 +75,7 @@ void test_allocator_from_fixed_bump(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
                                 "ptr should point to underlying allocator");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
-      &allo__bump_vtable, a.vtable,
+      &allo_bump_vtable, a.vtable,
       "vtable should point to bump allocator's vtable");
 }
 

@@ -6,11 +6,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-static ALLO_FORCE_INLINE bool allo__is_pow2(size_t n) {
+static ALLO_FORCE_INLINE bool allo_is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
 }
 
-static ALLO_FORCE_INLINE size_t allo__round_pow2(size_t n) {
+static ALLO_FORCE_INLINE size_t allo_round_pow2(size_t n) {
   assert(n > 0 && "n must be non-zero");
   --n;
 #if SIZE_MAX >= UINT8_MAX
