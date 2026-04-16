@@ -1,13 +1,10 @@
+#define ALLO_POOL_IMPLEMENTATION
+#include "allo/allo.h"
+#include "test_utils.h"
 #include "unity.h"
-#include "unity_internals.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-#define ALLO_IMPLEMENTATION
-#include "allo.h"
-
-#include "test_utils.h"
 
 // Tests that the chunk_size is always at least sizeof(void*) and aligned.
 void test_init_chunk_size_and_align(void) {

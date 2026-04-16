@@ -1,16 +1,18 @@
 #ifndef ALLO_ALLOCATOR_H
 #define ALLO_ALLOCATOR_H
 
-#include "defines.h"
+#include "internal/defines.h"
 #include "status.h"
 #include <stddef.h>
 
+// The vtable used by allo_allocator struct.
 struct allo__allocator_vtable {
   enum allo_status (*alloc)(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                             void *ALLO_RESTRICT ctx, size_t size, size_t align);
   void (*free)(void *ctx, void *ptr);
 };
 
+// Generic allocator type used when dynamic dispatch is needed.
 struct allo_allocator {
   void *allo__ptr;
   const struct allo__allocator_vtable *allo__vtable;

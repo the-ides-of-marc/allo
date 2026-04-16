@@ -1,12 +1,10 @@
-#include "unity_internals.h"
+#define ALLO_BUMP_IMPLEMENTATION
+#include "allo/allo.h"
+#include "unity.h"
 #include <assert.h>
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#define ALLO_IMPLEMENTATION
-#include "allo.h"
-#include "unity.h"
 
 void test_init(void) {
   uint8_t buf[0x100];

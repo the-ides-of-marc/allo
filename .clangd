@@ -2,12 +2,20 @@ CompileFlags:
   CompilationDatabase: "build"
 
 Diagnostics:
-  UnusedIncludes: Strict
-  MissingIncludes: Strict
+  UnusedIncludes: None
+  MissingIncludes: None
 
 ---
 
 If:
-  PathMatch: include/allo.h
+  PathMatch: include/allo/bump.h
 CompileFlags:
-  Add: [-DALLO_IMPLEMENTATION]
+  Add: [-DALLO_BUMP_IMPLEMENTATION]
+
+---
+
+If:
+  PathMatch: include/allo/pool.h
+CompileFlags:
+  Add: [-DALLO_POOL_IMPLEMENTATION]
+

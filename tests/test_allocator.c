@@ -1,12 +1,9 @@
-#include "unity_internals.h"
+#define ALLO_BUMP_IMPLEMENTATION
+#include "allo/allo.h"
+#include "unity.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#define ALLO_IMPLEMENTATION
-#include "allo.h"
-
-#include "unity.h"
 
 static const uintptr_t MOCK_BASE_ADDR = 0x1000;
 

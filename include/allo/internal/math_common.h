@@ -1,5 +1,5 @@
-#ifndef ALLO_MATH_H
-#define ALLO_MATH_H
+#ifndef ALLO_MATH_COMMON_H
+#define ALLO_MATH_COMMON_H
 
 #include "defines.h"
 #include <assert.h>
@@ -30,4 +30,4 @@ static ALLO_FORCE_INLINE size_t allo__round_pow2(size_t n) {
   return ++n;
 }
 
-#endif // !ALLO_MATH_H
+#endif // !ALLO_MATH_COMMON_H
