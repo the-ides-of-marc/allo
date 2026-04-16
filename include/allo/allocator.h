@@ -14,17 +14,17 @@ struct allo__allocator_vtable {
 
 // Generic allocator type used when dynamic dispatch is needed.
 struct allo_allocator {
-  void *allo__ptr;
-  const struct allo__allocator_vtable *allo__vtable;
+  void *allocator;
+  const struct allo__allocator_vtable *vtable;
 };
 
 static ALLO_FORCE_INLINE enum allo_status
 allo_alloc(void **dest, struct allo_allocator a, size_t size, size_t align) {
-  return a.allo__vtable->alloc(dest, a.allo__ptr, size, align);
+  return a.vtable->alloc(dest, a.allocator, size, align);
 }
 
 static ALLO_FORCE_INLINE void allo_free(struct allo_allocator a, void *ptr) {
-  a.allo__vtable->free(a.allo__ptr, ptr);
+  a.vtable->free(a.allocator, ptr);
 }
 
 #endif // !ALLO_ALLOCATOR_H

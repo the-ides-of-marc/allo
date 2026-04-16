@@ -10,11 +10,11 @@
 
 // Fixed size pool allocator.
 struct allo_pool {
-  void *allo__free_list;
-  uintptr_t allo__start;
-  uintptr_t allo__end;
-  size_t allo__chunk_size;
-  size_t allo__align;
+  void *free_list;
+  uintptr_t start;
+  uintptr_t end;
+  size_t chunk_size;
+  size_t align;
 };
 
 // Initializes a pool allocator that manages the memory region, `buf`, within
@@ -72,7 +72,7 @@ static inline void allo__assert_pool(const struct allo_pool *p) {
   assert(p->allo__start % p->allo__align == 0 && "start must be aligned");
   assert(p->allo__end % p->allo__align == 0 && "end must be aligned");
 
-  if (p->allo__free_list) {
+  if (p->free_list) {
     assert(p->allo__start <= (uintptr_t)p->allo__free_list &&
            "free list must be >= start of memory region");
     assert((uintptr_t)p->allo__free_list < p->allo__end &&
@@ -124,17 +124,17 @@ enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
     return ALLO_ERR_MEM_NOT_ALIGNED;
   }
 
-  p->allo__chunk_size = chunk_size;
-  p->allo__align = align;
-  p->allo__free_list = buf;
-  p->allo__start = (uintptr_t)buf;
-  p->allo__end = p->allo__start + chunk_count * p->allo__chunk_size;
+  p->chunk_size = chunk_size;
+  p->align = align;
+  p->free_list = buf;
+  p->start = (uintptr_t)buf;
+  p->end = p->start + chunk_count * p->chunk_size;
   assert((uintptr_t)p->allo__end <= (uintptr_t)buf + buf_size &&
          "end must be within input memory region");
 
   void **curr_chunk = buf;
   for (size_t i = 0; i < chunk_count - 1; ++i) {
-    void *next = (uint8_t *)curr_chunk + p->allo__chunk_size;
+    void *next = (uint8_t *)curr_chunk + p->chunk_size;
     *curr_chunk = next;
     curr_chunk = next;
   }
@@ -149,13 +149,13 @@ enum allo_status allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   allo__assert_pool(p);
 
   *dest = NULL;
-  void **addr = p->allo__free_list;
+  void **addr = p->free_list;
   if (!addr) {
     return ALLO_OOM;
   }
 
   *dest = addr;
-  p->allo__free_list = *addr;
+  p->free_list = *addr;
 
   allo__assert_pool(p);
   return ALLO_OK;
@@ -173,8 +173,8 @@ void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
   assert((uintptr_t)ptr % p->allo__align == 0 && "ptr must be aligned");
 
   void **next_ptr = ptr;
-  *next_ptr = p->allo__free_list;
-  p->allo__free_list = ptr;
+  *next_ptr = p->free_list;
+  p->free_list = ptr;
 
   allo__assert_pool(p);
 }

@@ -41,8 +41,8 @@ void tearDown(void) {}
 void test_alloc_and_free(void) {
   struct mock_state state = {0};
   struct allo_allocator allocator = {
-      .allo__ptr = &state,
-      .allo__vtable = &mock_vtable,
+      .allocator = &state,
+      .vtable = &mock_vtable,
   };
 
   void *dest = NULL;
@@ -72,10 +72,10 @@ void test_allocator_from_fixed_bump(void) {
   TEST_ASSERT_EQUAL_INT_MESSAGE(ALLO_OK, status,
                                 "allocation initialization should succeed");
   struct allo_allocator a = allo_allocator_from_bump(&b);
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allo__ptr,
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
                                 "ptr should point to underlying allocator");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
-      &allo__bump_vtable, a.allo__vtable,
+      &allo__bump_vtable, a.vtable,
       "vtable should point to bump allocator's vtable");
 }
 

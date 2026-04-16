@@ -10,9 +10,9 @@
 
 // Fixed size bump allocator.
 struct allo_bump {
-  uintptr_t allo__start;
-  uintptr_t allo__end;
-  uintptr_t allo__cursor;
+  uintptr_t start;
+  uintptr_t end;
+  uintptr_t cursor;
 };
 
 // Initializes the bump allocator `b` to manage `buf` from
@@ -69,9 +69,9 @@ enum allo_status allo_bump_init(struct allo_bump *ALLO_RESTRICT b,
     return ALLO_ERR_INVALID_SIZE;
   }
 
-  b->allo__start = (uintptr_t)buf;
-  b->allo__end = b->allo__start + size;
-  b->allo__cursor = b->allo__end;
+  b->start = (uintptr_t)buf;
+  b->end = b->start + size;
+  b->cursor = b->end;
 
   allo__assert_bump(b);
   return ALLO_OK;
@@ -86,15 +86,15 @@ enum allo_status allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   assert(align && "alignment must be non-zero");
   assert(allo__is_pow2(align) && "alignment must be a power of 2");
 
-  uintptr_t next_cursor = b->allo__cursor - size;
-  if (next_cursor > b->allo__cursor) {
+  uintptr_t next_cursor = b->cursor - size;
+  if (next_cursor > b->cursor) {
     return ALLO_OOM;
   }
   next_cursor = next_cursor & ~(align - 1);
-  if (next_cursor < b->allo__start) {
+  if (next_cursor < b->start) {
     return ALLO_OOM;
   }
-  b->allo__cursor = next_cursor;
+  b->cursor = next_cursor;
   allo__assert_bump(b);
 
   *dest = (void *)next_cursor;
@@ -110,10 +110,10 @@ enum allo_status allo_bump_set_cursor(struct allo_bump *ALLO_RESTRICT b,
   allo__assert_bump(b);
 
   uintptr_t c = (uintptr_t)cursor;
-  if (c < b->allo__start || c > b->allo__end) {
+  if (c < b->start || c > b->end) {
     return ALLO_ERR_OUT_OF_BOUNDS;
   }
-  b->allo__cursor = c;
+  b->cursor = c;
 
   allo__assert_bump(b);
   return ALLO_OK;
@@ -121,7 +121,7 @@ enum allo_status allo_bump_set_cursor(struct allo_bump *ALLO_RESTRICT b,
 
 void allo_bump_reset(struct allo_bump *b) {
   allo__assert_bump(b);
-  b->allo__cursor = b->allo__end;
+  b->cursor = b->end;
   allo__assert_bump(b);
 }
 
@@ -144,8 +144,8 @@ const struct allo__allocator_vtable allo__bump_vtable = {
 
 inline struct allo_allocator allo_allocator_from_bump(struct allo_bump *b) {
   return (struct allo_allocator){
-      .allo__ptr = b,
-      .allo__vtable = &allo__bump_vtable,
+      .allocator = b,
+      .vtable = &allo__bump_vtable,
   };
 }
 
