@@ -1,4 +1,4 @@
-CMAKE_BUILD_TYPE ?= RelWithDebInfo
+CMAKE_BUILD_TYPE ?= Debug
 ENABLE_SANITIZERS ?= ON
 
 BUILD_DIR := build
