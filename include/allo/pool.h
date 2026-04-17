@@ -99,7 +99,7 @@ enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
     return ALLO_ERR_INVALID_ALIGN;
   }
 
-  align = allo_round_pow2(align);
+  align = allo_math_round_pow2(align);
   align = align >= sizeof(void *) ? align : sizeof(void *);
   chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
   chunk_size = (chunk_size + align - 1) & ~(align - 1);
