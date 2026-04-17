@@ -82,7 +82,7 @@ enum allo_status allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   allo_assert_bump(b);
   assert(size && "size to allocate must be non-zero");
   assert(align && "alignment must be non-zero");
-  assert(allo_is_pow2(align) && "alignment must be a power of 2");
+  assert(allo_math_is_pow2(align) && "alignment must be a power of 2");
 
   uintptr_t next_cursor = b->cursor - size;
   if (next_cursor > b->cursor) {
