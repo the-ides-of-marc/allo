@@ -34,9 +34,4 @@ static ALLO_FORCE_INLINE size_t allo_math_round_pow2(size_t n) {
   return ++n;
 }
 
-// Returns if `addr` is aligned to `align`.
-static ALLO_FORCE_INLINE bool allo_math_is_aligned(void *addr, size_t align) {
-  return (uintptr_t)addr % align == 0;
-}
-
 #endif // !ALLO_MATH_COMMON_H

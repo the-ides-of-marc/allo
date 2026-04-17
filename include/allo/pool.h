@@ -55,7 +55,7 @@ static inline void allo_assert_pool(const struct allo_pool *p) {
   assert(p->align && "pool allocator alignment must be non-zero");
   assert(p->align >= sizeof(void *) &&
          "pool allocator alignment must be able to hold a pointer");
-  assert(allo_is_pow2(p->align) && "pool allocator must be a power of 2");
+  assert(allo_math_is_pow2(p->align) && "pool allocator must be a power of 2");
 
   assert(p->chunk_size && "chunk size must be non-zero");
   assert(p->chunk_size <= p->end - p->start &&
