@@ -104,7 +104,7 @@ enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
   chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
   chunk_size = (chunk_size + align - 1) & ~(align - 1);
 
-  assert(allo_is_pow2(align) && "alignment must be a power of 2");
+  assert(allo_math_is_pow2(align) && "alignment must be a power of 2");
   assert(align >= sizeof(void *) &&
          "alignment must be greater than sizeof(void*)");
   assert(chunk_size >= align &&
