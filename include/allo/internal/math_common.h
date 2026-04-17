@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 static ALLO_FORCE_INLINE bool allo_is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
@@ -28,6 +29,10 @@ static ALLO_FORCE_INLINE size_t allo_round_pow2(size_t n) {
   n |= n >> 32;
 #endif
   return ++n;
+}
+
+static ALLO_FORCE_INLINE bool allo_is_aligned(void *addr, size_t align) {
+    return (uintptr_t)addr % align == 0;
 }
 
 #endif // !ALLO_MATH_COMMON_H
