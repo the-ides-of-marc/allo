@@ -1,6 +1,7 @@
 #ifndef ALLO_POOL_H
 #define ALLO_POOL_H
 
+#include "allo/allocator.h"
 #include "internal/defines.h"
 #include "internal/math_common.h"
 #include "status.h"
@@ -54,16 +55,14 @@ static inline void allo_assert_pool(const struct allo_pool *p) {
   assert(p->align && "pool allocator alignment must be non-zero");
   assert(p->align >= sizeof(void *) &&
          "pool allocator alignment must be able to hold a pointer");
-  assert(allo_is_pow2(p->align) &&
-         "pool allocator must be a power of 2");
+  assert(allo_is_pow2(p->align) && "pool allocator must be a power of 2");
 
   assert(p->chunk_size && "chunk size must be non-zero");
   assert(p->chunk_size <= p->end - p->start &&
          "chunk size must not be greater than the memory region");
   assert(p->chunk_size >= sizeof(void *) &&
          "chunk size must be able to hold a pointer");
-  assert(p->chunk_size % p->align == 0 &&
-         "chunk size must be aligned");
+  assert(p->chunk_size % p->align == 0 && "chunk size must be aligned");
 
   assert(p->start && "start must not be NULL");
   assert(p->end && "end must not be NULL");
@@ -164,11 +163,9 @@ enum allo_status allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
 void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
                     void *ALLO_RESTRICT ptr) {
   allo_assert_pool(p);
-  assert(p->start <= (uintptr_t)ptr &&
-         "ptr must be >= start of memory region");
+  assert(p->start <= (uintptr_t)ptr && "ptr must be >= start of memory region");
   assert((uintptr_t)ptr < p->end && "ptr must be < end of memory region");
-  assert(((uintptr_t)ptr - (uintptr_t)p->start) % p->chunk_size ==
-             0 &&
+  assert(((uintptr_t)ptr - (uintptr_t)p->start) % p->chunk_size == 0 &&
          "ptr must be aligned to chunks");
   assert((uintptr_t)ptr % p->align == 0 && "ptr must be aligned");
 
@@ -177,6 +174,36 @@ void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
   p->free_list = ptr;
 
   allo_assert_pool(p);
+}
+
+static enum allo_status
+pool_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                   void *ALLO_RESTRICT ctx, size_t size, size_t align) {
+  struct allo_pool *pool = (struct allo_pool * ALLO_RESTRICT) ctx;
+  assert(pool->chunk_size == size &&
+         "size must match pool allocator's chunk size");
+  assert(pool->align == align &&
+         "alignment must match pool allocator's alignment");
+  (void)size;
+  (void)align;
+  return allo_pool_alloc(dest, pool);
+}
+
+static void pool_free_adapter(void *ALLO_RESTRICT ctx,
+                              void *ALLO_RESTRICT ptr) {
+  allo_pool_free((struct allo_pool * ALLO_RESTRICT) ctx, ptr);
+}
+
+const struct allo_allocator_vtable allo_pool_vtable = {
+    .alloc = pool_alloc_adapter,
+    .free = pool_free_adapter,
+};
+
+inline struct allo_allocator allo_allocator_from_pool(struct allo_pool *p) {
+  return (struct allo_allocator){
+      .allocator = p,
+      .vtable = &allo_pool_vtable,
+  };
 }
 
 #endif
