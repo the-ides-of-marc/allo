@@ -182,6 +182,8 @@ pool_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   struct allo_pool *pool = (struct allo_pool * ALLO_RESTRICT) ctx;
   assert(pool->chunk_size == size &&
          "size must match pool allocator's chunk size");
+  assert(pool->align == align &&
+         "alignment must match pool allocator's alignment");
   (void)size;
   (void)align;
   return allo_pool_alloc(dest, pool);
