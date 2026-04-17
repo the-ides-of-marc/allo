@@ -34,4 +34,16 @@ static ALLO_FORCE_INLINE size_t allo_math_round_pow2(size_t n) {
   return ++n;
 }
 
+// Returns if the address is aligned.
+static ALLO_FORCE_INLINE bool allo_math_is_addr_aligned(uintptr_t addr,
+                                                        size_t align) {
+  return addr % align == 0;
+}
+
+// Returns if the pointer is aligned.
+static ALLO_FORCE_INLINE bool allo_math_is_ptr_aligned(void *ptr,
+                                                       size_t align) {
+  return (uintptr_t)ptr % align == 0;
+}
+
 #endif // !ALLO_MATH_COMMON_H

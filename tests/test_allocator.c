@@ -1,3 +1,4 @@
+#include "allo/internal/math_common.h"
 #define ALLO_BUMP_IMPLEMENTATION
 #include "allo/allo.h"
 #include "unity.h"
@@ -53,7 +54,7 @@ void test_alloc_and_free(void) {
       "ptr should point to mocked allocation of base addr + size + align");
   TEST_ASSERT_EQUAL_size_t_MESSAGE(1, state.alloc_calls,
                                    "alloc counter should be incremented by 1");
-  TEST_ASSERT_TRUE_MESSAGE((uintptr_t)dest % 16 == 0,
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_ptr_aligned(dest, 16),
                            "allocated address should be aligned");
 
   allo_free(allocator, dest);
