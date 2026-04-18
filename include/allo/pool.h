@@ -38,11 +38,6 @@ enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
                                 void *ALLO_RESTRICT buf, size_t buf_size,
                                 size_t chunk_size, size_t align);
 
-// Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
-// The free list is then updated to point to the next free chunk of memory.
-enum allo_status allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                 struct allo_pool *ALLO_RESTRICT p);
-
 // Frees the memory allocated at `ptr`.
 // The free list is then updated to point to `ptr`.
 void allo_pool_free(struct allo_pool *ALLO_RESTRICT p, void *ALLO_RESTRICT ptr);
@@ -145,8 +140,11 @@ enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
   return ALLO_OK;
 }
 
-enum allo_status allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                 struct allo_pool *ALLO_RESTRICT p) {
+// Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
+// The free list is then updated to point to the next free chunk of memory.
+static inline enum allo_status
+allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                struct allo_pool *ALLO_RESTRICT p) {
   allo_assert_pool(p);
 
   *dest = NULL;
