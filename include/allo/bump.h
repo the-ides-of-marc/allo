@@ -23,13 +23,6 @@ struct allo_bump {
 enum allo_status allo_bump_init(struct allo_bump *ALLO_RESTRICT b,
                                 void *ALLO_RESTRICT buf, size_t size);
 
-// Tries to allocate `size` bytes at `align` alignment.
-// `size` must be > 0 and `align` must be a power of 2.
-// ALLO_OOM is returned if there is insufficient space to allocate the bytes.
-enum allo_status allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                 struct allo_bump *ALLO_RESTRICT b, size_t size,
-                                 size_t align);
-
 // Sets the allocator's cursor to point to the given `cursor` address.
 // ALLO_ERR_NULL is returned if `b` or `cursor` is NULL.
 // ALLO_ERR_OUT_OF_BOUNDS is returned if `cursor` is outside of the allocator's
@@ -75,9 +68,12 @@ enum allo_status allo_bump_init(struct allo_bump *ALLO_RESTRICT b,
   return ALLO_OK;
 }
 
-enum allo_status allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                 struct allo_bump *ALLO_RESTRICT b, size_t size,
-                                 size_t align) {
+// Tries to allocate `size` bytes at `align` alignment.
+// `size` must be > 0 and `align` must be a power of 2.
+// ALLO_OOM is returned if there is insufficient space to allocate the bytes.
+static inline enum allo_status
+allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                struct allo_bump *ALLO_RESTRICT b, size_t size, size_t align) {
   assert(dest && "dest must not be NULL");
   allo_assert_bump(b);
   assert(size && "size to allocate must be non-zero");
