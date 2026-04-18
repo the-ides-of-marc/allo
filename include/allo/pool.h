@@ -38,10 +38,6 @@ enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
                                 void *ALLO_RESTRICT buf, size_t buf_size,
                                 size_t chunk_size, size_t align);
 
-// Frees the memory allocated at `ptr`.
-// The free list is then updated to point to `ptr`.
-void allo_pool_free(struct allo_pool *ALLO_RESTRICT p, void *ALLO_RESTRICT ptr);
-
 #ifdef ALLO_POOL_IMPLEMENTATION
 
 static inline void allo_assert_pool(const struct allo_pool *p) {
@@ -160,8 +156,10 @@ allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   return ALLO_OK;
 }
 
-void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
-                    void *ALLO_RESTRICT ptr) {
+// Frees the memory allocated at `ptr`.
+// The free list is then updated to point to `ptr`.
+static inline void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
+                                  void *ALLO_RESTRICT ptr) {
   allo_assert_pool(p);
   assert(p->start <= (uintptr_t)ptr && "ptr must be >= start of memory region");
   assert((uintptr_t)ptr < p->end && "ptr must be < end of memory region");
