@@ -1,6 +1,7 @@
-#include "allo/internal/math_common.h"
 #define ALLO_BUMP_IMPLEMENTATION
+#define ALLO_ENABLE_ASSERT
 #include "allo/allo.h"
+#include "allo/internal/math_common.h"
 #include "unity.h"
 #include <assert.h>
 #include <stdalign.h>
