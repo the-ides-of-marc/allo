@@ -18,12 +18,12 @@ struct allo_allocator {
   const struct allo_allocator_vtable *vtable;
 };
 
-static ALLO_FORCE_INLINE enum allo_status
-allo_alloc(void **dest, struct allo_allocator a, size_t size, size_t align) {
+static inline enum allo_status allo_alloc(void **dest, struct allo_allocator a,
+                                          size_t size, size_t align) {
   return a.vtable->alloc(dest, a.allocator, size, align);
 }
 
-static ALLO_FORCE_INLINE void allo_free(struct allo_allocator a, void *ptr) {
+static inline void allo_free(struct allo_allocator a, void *ptr) {
   a.vtable->free(a.allocator, ptr);
 }
 
