@@ -8,13 +8,13 @@
 #include <stdint.h>
 
 // Returns if `n` is a power of 2.
-static ALLO_FORCE_INLINE bool allo_math_is_pow2(size_t n) {
+static inline bool allo_math_is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
 }
 
 // Returns the closest `m` such that `m` >= `n` and `m` is a power of 2.
 // `n` must not be zero.
-static ALLO_FORCE_INLINE size_t allo_math_round_pow2(size_t n) {
+static inline size_t allo_math_round_pow2(size_t n) {
   assert(n > 0 && "n must be non-zero");
   --n;
 #if SIZE_MAX >= UINT8_MAX
@@ -35,13 +35,13 @@ static ALLO_FORCE_INLINE size_t allo_math_round_pow2(size_t n) {
 }
 
 // Returns if the address is aligned.
-static ALLO_FORCE_INLINE bool allo_math_is_addr_aligned(uintptr_t addr,
+static inline bool allo_math_is_addr_aligned(uintptr_t addr,
                                                         size_t align) {
   return addr % align == 0;
 }
 
 // Returns if the pointer is aligned.
-static ALLO_FORCE_INLINE bool allo_math_is_ptr_aligned(void *ptr,
+static inline bool allo_math_is_ptr_aligned(void *ptr,
                                                        size_t align) {
   return (uintptr_t)ptr % align == 0;
 }
