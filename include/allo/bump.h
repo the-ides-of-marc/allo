@@ -5,7 +5,6 @@
 #include "internal/defines.h"
 #include "internal/math_common.h"
 #include "status.h"
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -42,12 +41,12 @@ struct allo_allocator allo_allocator_from_bump(struct allo_bump *b);
 #ifdef ALLO_BUMP_IMPLEMENTATION
 
 static inline void allo_assert_bump(struct allo_bump *b) {
-  assert(b && "bump allocator must not be NULL");
-  assert(b->start && "start of memory region must not be NULL");
-  assert(b->end && "end of memory region must not be NULL");
-  assert(b->start < b->end && "memory region property: start < end");
-  assert(b->start <= b->cursor && "memory region property: start <= cursor");
-  assert(b->cursor <= b->end && "memory region property: cursor <= end");
+  ALLO_ASSERT(b, "bump allocator must not be NULL");
+  ALLO_ASSERT(b->start, "start of memory region must not be NULL");
+  ALLO_ASSERT(b->end, "end of memory region must not be NULL");
+  ALLO_ASSERT(b->start < b->end, "memory region property: start < end");
+  ALLO_ASSERT(b->start <= b->cursor, "memory region property: start <= cursor");
+  ALLO_ASSERT(b->cursor <= b->end, "memory region property: cursor <= end");
   (void)b;
 }
 
@@ -74,11 +73,11 @@ enum allo_status allo_bump_init(struct allo_bump *ALLO_RESTRICT b,
 static inline enum allo_status
 allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                 struct allo_bump *ALLO_RESTRICT b, size_t size, size_t align) {
-  assert(dest && "dest must not be NULL");
+  ALLO_ASSERT(dest, "dest must not be NULL");
   allo_assert_bump(b);
-  assert(size && "size to allocate must be non-zero");
-  assert(align && "alignment must be non-zero");
-  assert(allo_math_is_pow2(align) && "alignment must be a power of 2");
+  ALLO_ASSERT(size, "size to allocate must be non-zero");
+  ALLO_ASSERT(align, "alignment must be non-zero");
+  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
 
   uintptr_t next_cursor = b->cursor - size;
   if (next_cursor > b->cursor) {
