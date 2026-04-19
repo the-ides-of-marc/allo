@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.25)
 
 project(allo
     VERSION 0.0.1
@@ -6,46 +6,57 @@ project(allo
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
 
 option(ENABLE_SANITIZERS "Enable UBSan and ASan" OFF)
 
 include(GNUInstallDirs)
 
-add_library(dev_config INTERFACE)
+function(setup_dev_flags target_name)
+    target_compile_options(${target_name}
+        PRIVATE
+            $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:
+                -Wall
+                -Wextra
+                -Werror
+                -Wpedantic
+                -Wconversion
+                -Wshadow
+                -Wformat=2
+                -Wimplicit-fallthrough
+                -Wvla
+                $<$<CONFIG:Debug>:-g>
+                $<$<BOOL:${ENABLE_SANITIZERS}>:
+                    -fsanitize=address,undefined
+                    -fno-omit-frame-pointer
+                    -g
+                >
+            >
+    )
+    target_link_options(${target_name}
+        PRIVATE
+            $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:
+                $<$<BOOL:${ENABLE_SANITIZERS}>:-fsanitize=address,undefined>
+            >
+    )
+endfunction()
 
-target_compile_options(dev_config INTERFACE
-    -Wall
-    -Wextra
-    -Werror
-    -Wpedantic
-    -Wconversion
-    -Wshadow
-    -Wformat=2
-    -Wimplicit-fallthrough
-    -Wvla
-    $<$<CONFIG:Debug>:-g>
-    $<$<BOOL:${ENABLE_SANITIZERS}>:
-        -fsanitize=address,undefined;
-        -fno-omit-frame-pointer;
-        -g
-    >
-)
-target_link_options(dev_config INTERFACE
-    $<$<BOOL:${ENABLE_SANITIZERS}>:-fsanitize=address,undefined>
-)
 
-add_library(allo INTERFACE)
+add_library(allo)
 add_library(allo::allo ALIAS allo)
-target_include_directories(allo INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_sources(allo
+    PRIVATE
+        src/bump.c
+        src/pool.c
 )
-target_link_libraries(allo INTERFACE
-    $<BUILD_INTERFACE:dev_config>
+target_include_directories(allo
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PRIVATE
+        src
 )
+setup_dev_flags(allo)
+target_compile_features(allo PUBLIC c_std_99)
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
@@ -58,7 +69,9 @@ install(DIRECTORY include/
 )
 install(TARGETS allo
     EXPORT allo-targets
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(EXPORT allo-targets
     FILE alloTargets.cmake
