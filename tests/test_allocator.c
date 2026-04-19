@@ -2,7 +2,6 @@
 #define ALLO_BUMP_IMPLEMENTATION
 #include "allo/allo.h"
 #include "unity.h"
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 

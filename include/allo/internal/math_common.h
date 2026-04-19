@@ -2,7 +2,6 @@
 #define ALLO_MATH_COMMON_H
 
 #include "defines.h"
-#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,7 +14,7 @@ static inline bool allo_math_is_pow2(size_t n) {
 // Returns the closest `m` such that `m` >= `n` and `m` is a power of 2.
 // `n` must not be zero.
 static inline size_t allo_math_round_pow2(size_t n) {
-  assert(n > 0 && "n must be non-zero");
+  ALLO_ASSERT(n > 0, "n must be non-zero");
   --n;
 #if SIZE_MAX >= UINT8_MAX
   n |= n >> 1;
@@ -35,14 +34,12 @@ static inline size_t allo_math_round_pow2(size_t n) {
 }
 
 // Returns if the address is aligned.
-static inline bool allo_math_is_addr_aligned(uintptr_t addr,
-                                                        size_t align) {
+static inline bool allo_math_is_addr_aligned(uintptr_t addr, size_t align) {
   return addr % align == 0;
 }
 
 // Returns if the pointer is aligned.
-static inline bool allo_math_is_ptr_aligned(void *ptr,
-                                                       size_t align) {
+static inline bool allo_math_is_ptr_aligned(void *ptr, size_t align) {
   return (uintptr_t)ptr % align == 0;
 }
 

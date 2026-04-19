@@ -3,7 +3,6 @@
 #include "allo/allo.h"
 #include "allo/internal/math_common.h"
 #include "unity.h"
-#include <assert.h>
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
