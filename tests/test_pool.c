@@ -1,4 +1,3 @@
-#define ALLO_POOL_IMPLEMENTATION
 #define ALLO_ENABLE_ASSERT
 #include "allo/allo.h"
 #include "test_utils.h"

@@ -17,28 +17,6 @@ struct allo_pool {
   size_t align;
 };
 
-// Initializes a pool allocator that manages the memory region, `buf`, within
-// [buf[0]..buf[buf_size-1]] and a given chunk size, `chunk_size`, and
-// alignment, `align`.
-// A Free list is initialized and points to the first chunk to be allocated.
-// `align` will be padded to the nearest power of 2 >= `align`.
-// `chunk_size` will be padded to the nearest multiple of the padded
-// `align`.
-// Both the padded `align` and padded `chunk_size` will be >= `sizeof(void *)`,
-// as required for the free list to operate.
-//
-// ALLO_ERR_NULL is returned if `p` or `buf` is NULL.
-// ALLO_ERR_INVALID_SIZE is returend if `buf_size` or `chunk_size` is 0 or if
-// the padded `chunk_size` exceeds `buf_size`.
-// ALLO_ERR_INVALID_ALIGN is returned if `align` is 0.
-// ALLO_ERR_MEM_NOT_ALIGNED is returned if the `buf`  is not aligned with the
-// rounded `align`.
-enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
-                                void *ALLO_RESTRICT buf, size_t buf_size,
-                                size_t chunk_size, size_t align);
-
-#ifdef ALLO_POOL_IMPLEMENTATION
-
 static inline void allo_assert_pool(const struct allo_pool *p) {
   ALLO_ASSERT(p, "pool allocator must not be NULL");
 
@@ -80,62 +58,25 @@ static inline void allo_assert_pool(const struct allo_pool *p) {
   (void)p;
 }
 
+// Initializes a pool allocator that manages the memory region, `buf`, within
+// [buf[0]..buf[buf_size-1]] and a given chunk size, `chunk_size`, and
+// alignment, `align`.
+// A Free list is initialized and points to the first chunk to be allocated.
+// `align` will be padded to the nearest power of 2 >= `align`.
+// `chunk_size` will be padded to the nearest multiple of the padded
+// `align`.
+// Both the padded `align` and padded `chunk_size` will be >= `sizeof(void *)`,
+// as required for the free list to operate.
+//
+// ALLO_ERR_NULL is returned if `p` or `buf` is NULL.
+// ALLO_ERR_INVALID_SIZE is returend if `buf_size` or `chunk_size` is 0 or if
+// the padded `chunk_size` exceeds `buf_size`.
+// ALLO_ERR_INVALID_ALIGN is returned if `align` is 0.
+// ALLO_ERR_MEM_NOT_ALIGNED is returned if the `buf`  is not aligned with the
+// rounded `align`.
 enum allo_status allo_pool_init(struct allo_pool *ALLO_RESTRICT p,
                                 void *ALLO_RESTRICT buf, size_t buf_size,
-                                size_t chunk_size, size_t align) {
-  if (!p || !buf) {
-    return ALLO_ERR_NULL;
-  }
-  if (!buf_size || !chunk_size) {
-    return ALLO_ERR_INVALID_SIZE;
-  }
-  if (!align) {
-    return ALLO_ERR_INVALID_ALIGN;
-  }
-
-  align = allo_math_round_pow2(align);
-  align = align >= sizeof(void *) ? align : sizeof(void *);
-  chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
-  chunk_size = (chunk_size + align - 1) & ~(align - 1);
-
-  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
-  ALLO_ASSERT(align >= sizeof(void *),
-              "alignment must be greater than sizeof(void*)");
-  ALLO_ASSERT(chunk_size >= align,
-              "chunk size must be at least the size of the alignment");
-  ALLO_ASSERT(chunk_size % align == 0,
-              "chunk size must be a multiple of alignment");
-
-  if (chunk_size > buf_size) {
-    return ALLO_ERR_INVALID_SIZE;
-  }
-
-  size_t chunk_count = buf_size / chunk_size;
-  ALLO_ASSERT(chunk_count > 0, "chunk count must be non-zero");
-
-  if (!allo_math_is_ptr_aligned(buf, align)) {
-    return ALLO_ERR_MEM_NOT_ALIGNED;
-  }
-
-  p->chunk_size = chunk_size;
-  p->align = align;
-  p->free_list = buf;
-  p->start = (uintptr_t)buf;
-  p->end = p->start + chunk_count * p->chunk_size;
-  ALLO_ASSERT((uintptr_t)p->end <= (uintptr_t)buf + buf_size,
-              "end must be within input memory region");
-
-  void **curr_chunk = buf;
-  for (size_t i = 0; i < chunk_count - 1; ++i) {
-    void *next = (uint8_t *)curr_chunk + p->chunk_size;
-    *curr_chunk = next;
-    curr_chunk = next;
-  }
-  *curr_chunk = NULL;
-
-  allo_assert_pool(p);
-  return ALLO_OK;
-}
+                                size_t chunk_size, size_t align);
 
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
 // The free list is then updated to point to the next free chunk of memory.
@@ -176,36 +117,6 @@ static inline void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
   allo_assert_pool(p);
 }
 
-static enum allo_status
-pool_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                   void *ALLO_RESTRICT ctx, size_t size, size_t align) {
-  struct allo_pool *pool = (struct allo_pool * ALLO_RESTRICT) ctx;
-  ALLO_ASSERT(pool->chunk_size == size,
-              "size must match pool allocator's chunk size");
-  ALLO_ASSERT(pool->align == align,
-              "alignment must match pool allocator's alignment");
-  (void)size;
-  (void)align;
-  return allo_pool_alloc(dest, pool);
-}
-
-static void pool_free_adapter(void *ALLO_RESTRICT ctx,
-                              void *ALLO_RESTRICT ptr) {
-  allo_pool_free((struct allo_pool * ALLO_RESTRICT) ctx, ptr);
-}
-
-const struct allo_allocator_vtable allo_pool_vtable = {
-    .alloc = pool_alloc_adapter,
-    .free = pool_free_adapter,
-};
-
-inline struct allo_allocator allo_allocator_from_pool(struct allo_pool *p) {
-  return (struct allo_allocator){
-      .allocator = p,
-      .vtable = &allo_pool_vtable,
-  };
-}
-
-#endif
+extern const struct allo_allocator_vtable allo_pool_vtable;
 
 #endif // !ALLO_POOL_H
