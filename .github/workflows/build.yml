@@ -22,10 +22,11 @@ jobs:
       - name: Configure
         env:
           CC: ${{ matrix.compiler }}
-        run: cmake -S . -B build \
+        run: > 
+          cmake -S . -B build
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DCMAKE_C_COMPILER=${{ matrix.compiler }}
-          -DENABLE_SANITIZERS=${{ matrix.build_type == 'Debug' && 'OFF' || 'ON' }}
+          -DENABLE_SANITIZERS=${{ matrix.build_type == 'Debug' && 'ON' || 'OFF' }}
 
       - name: Build
         run: cmake --build build --parallel
