@@ -16,11 +16,6 @@
 //
 // - Update vtable to have a free_all/reset function, that all allocators should
 //   be able to implement.
-//
-// - Add function that takes in allo_status and return a readable string.
-//
-// - Add macro to disable asserts so that users will not be forced to deal with
-//   library assertions.
 
 #include "allocator.h"
 #include "bump.h"

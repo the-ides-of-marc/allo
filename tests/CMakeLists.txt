@@ -11,7 +11,7 @@ FetchContent_MakeAvailable(unity)
 
 add_library(test_utils STATIC test_utils.c)
 target_include_directories(test_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(test_utils PRIVATE unity)
+target_link_libraries(test_utils PRIVATE unity allo)
 
 function(add_allo_test TEST_NAME)
     add_executable(${TEST_NAME} ${TEST_NAME}.c)
