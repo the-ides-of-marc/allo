@@ -17,9 +17,11 @@
 // - Update vtable to have a free_all/reset function, that all allocators should
 //   be able to implement.
 
+// IWYU pragma: begin_exports
 #include "allocator.h"
 #include "bump.h"
 #include "pool.h"
 #include "status.h"
+// IWYU pragma: end_exports
 
 #endif // !ALLO_H
