@@ -1,8 +1,6 @@
-#include "allo/internal/math_common.h"
-#include "allo/status.h"
-#include "test_utils.h"
-#define ALLO_BUMP_IMPLEMENTATION
 #include "allo/allo.h"
+#include "allo/internal/math_common.h"
+#include "test_utils.h"
 #include "unity.h"
 #include <stddef.h>
 #include <stdint.h>
