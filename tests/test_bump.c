@@ -33,7 +33,7 @@ void test_init_null_allocator(void) {
   uint8_t buf[0x100];
   allo_status status = allo_bump_init(NULL, buf, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_NULL, status,
+      ALLO_ERR_INVALID_NULL, status,
       "error should match for receiving a NULL allocator");
 }
 
@@ -41,7 +41,7 @@ void test_init_null_buffer(void) {
   allo_bump b;
   allo_status status = allo_bump_init(&b, NULL, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
+      ALLO_ERR_INVALID_NULL, status, "error should match for receiving a NULL buffer");
 }
 
 void test_init_zero_size(void) {
@@ -351,7 +351,7 @@ void test_set_cursor_null_allocator(void) {
 
   status = allo_bump_set_cursor(NULL, (void *)b.end);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_NULL, status, "set cursor should fail due to null allocator");
+      ALLO_ERR_INVALID_NULL, status, "set cursor should fail due to null allocator");
 }
 
 void test_set_cursor_null_cursor(void) {
@@ -363,7 +363,7 @@ void test_set_cursor_null_cursor(void) {
 
   status = allo_bump_set_cursor(&b, NULL);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_NULL, status, "set cursor should fail due to null cursor");
+      ALLO_ERR_INVALID_NULL, status, "set cursor should fail due to null cursor");
 }
 
 void test_set_cursor_out_of_bounds(void) {

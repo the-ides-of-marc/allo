@@ -109,13 +109,13 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
                                          size_t buf_size, size_t chunk_size,
                                          size_t align) {
   if (!p || !buf) {
-    return ALLO_ERR_NULL;
+    return ALLO_ERR_INVALID_NULL;
   }
   if (!buf_size || !chunk_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
   if (!align) {
-    return ALLO_ERR_INVALID_ALIGN;
+    return ALLO_ERR_INVALID_ALIGNMENT;
   }
 
   align = allo_math_round_pow2(align);
@@ -139,7 +139,7 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
   ALLO_ASSERT(chunk_count > 0, "chunk count must be non-zero");
 
   if (!allo_math_is_ptr_aligned(buf, align)) {
-    return ALLO_ERR_MEM_NOT_ALIGNED;
+    return ALLO_ERR_NOT_ALIGNED;
   }
 
   p->chunk_size = chunk_size;
