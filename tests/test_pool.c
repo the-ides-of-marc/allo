@@ -98,7 +98,7 @@ void test_init_null_allocator(void) {
   uint8_t buf[0x100];
   allo_status status = allo_pool_init(NULL, buf, 0x100, 0x10, 0x1);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_NULL, status,
+      ALLO_ERR_INVALID_NULL, status,
       "error should match for receiving a NULL allocator");
 }
 
@@ -106,7 +106,7 @@ void test_init_null_buffer(void) {
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, NULL, 0x100, 0x10, 0x1);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
+      ALLO_ERR_INVALID_NULL, status, "error should match for receiving a NULL buffer");
 }
 
 void test_init_zero_buf_size(void) {
@@ -132,7 +132,7 @@ void test_init_zero_alignment(void) {
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, 0x100, 0x10, 0x0);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_INVALID_ALIGN, status,
+      ALLO_ERR_INVALID_ALIGNMENT, status,
       "error should match for receiving zero alignment");
 }
 
@@ -151,7 +151,7 @@ void test_init_memory_not_aligned(void) {
   allo_status status =
       allo_pool_init(&p, unaligned_buf, buf_size, 0x10, align);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_MEM_NOT_ALIGNED, status,
+      ALLO_ERR_NOT_ALIGNED, status,
       "error should match for receiving a buffer that is not aligned");
 }
 

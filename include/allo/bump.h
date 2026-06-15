@@ -68,7 +68,7 @@ static inline void allo_assert_bump(allo_bump *b) {
 static inline allo_status allo_bump_init(allo_bump *ALLO_RESTRICT b,
                                          void *ALLO_RESTRICT buf, size_t size) {
   if (!b || !buf) {
-    return ALLO_ERR_NULL;
+    return ALLO_ERR_INVALID_NULL;
   }
   if (!size) {
     return ALLO_ERR_INVALID_SIZE;
@@ -110,7 +110,7 @@ static inline allo_status
 allo_bump_set_cursor(allo_bump *ALLO_RESTRICT b,
                      const void *ALLO_RESTRICT cursor) {
   if (!b || !cursor) {
-    return ALLO_ERR_NULL;
+    return ALLO_ERR_INVALID_NULL;
   }
 
   allo_assert_bump(b);
