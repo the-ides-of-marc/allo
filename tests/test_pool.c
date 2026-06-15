@@ -1,10 +1,13 @@
-#define ALLO_ENABLE_ASSERT
 #include "allo/allo.h"
 #include "test_utils.h"
 #include "unity.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+void setUp(void) {}
+
+void tearDown(void) {}
 
 // Tests that the chunk_size is always at least sizeof(void*) and aligned.
 void test_init_chunk_size_and_align(void) {
@@ -24,8 +27,8 @@ void test_init_chunk_size_and_align(void) {
       size_t bufsize = sizeof(void *) * 64;
       void *buf_aligned = malloc_aligned(&buf, bufsize, expected_align);
 
-      struct allo_pool p = {0};
-      enum allo_status status =
+      allo_pool p = {0};
+      allo_status status =
           allo_pool_init(&p, buf_aligned, bufsize, chunk_size, align);
 
       TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
@@ -72,8 +75,8 @@ void test_init_memory_region(void) {
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
-    struct allo_pool p = {0};
-    enum allo_status status =
+    allo_pool p = {0};
+    allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
@@ -93,23 +96,23 @@ void test_init_memory_region(void) {
 
 void test_init_null_allocator(void) {
   uint8_t buf[0x100];
-  enum allo_status status = allo_pool_init(NULL, buf, 0x100, 0x10, 0x1);
+  allo_status status = allo_pool_init(NULL, buf, 0x100, 0x10, 0x1);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_NULL, status,
       "error should match for receiving a NULL allocator");
 }
 
 void test_init_null_buffer(void) {
-  struct allo_pool p = {0};
-  enum allo_status status = allo_pool_init(&p, NULL, 0x100, 0x10, 0x1);
+  allo_pool p = {0};
+  allo_status status = allo_pool_init(&p, NULL, 0x100, 0x10, 0x1);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
 }
 
 void test_init_zero_buf_size(void) {
   uint8_t buf[0x100];
-  struct allo_pool p = {0};
-  enum allo_status status = allo_pool_init(&p, buf, 0, 0x10, 0x1);
+  allo_pool p = {0};
+  allo_status status = allo_pool_init(&p, buf, 0, 0x10, 0x1);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_INVALID_SIZE, status,
       "error should match for receiving a zero buf size");
@@ -117,8 +120,8 @@ void test_init_zero_buf_size(void) {
 
 void test_init_zero_chunk_size(void) {
   uint8_t buf[0x100];
-  struct allo_pool p = {0};
-  enum allo_status status = allo_pool_init(&p, buf, 0x100, 0x0, sizeof(void *));
+  allo_pool p = {0};
+  allo_status status = allo_pool_init(&p, buf, 0x100, 0x0, sizeof(void *));
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_INVALID_SIZE, status,
       "error should match for receiving a zero chunk size");
@@ -126,8 +129,8 @@ void test_init_zero_chunk_size(void) {
 
 void test_init_zero_alignment(void) {
   uint8_t buf[0x100];
-  struct allo_pool p = {0};
-  enum allo_status status = allo_pool_init(&p, buf, 0x100, 0x10, 0x0);
+  allo_pool p = {0};
+  allo_status status = allo_pool_init(&p, buf, 0x100, 0x10, 0x0);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_INVALID_ALIGN, status,
       "error should match for receiving zero alignment");
@@ -144,8 +147,8 @@ void test_init_memory_not_aligned(void) {
 
   buf_size -= (size_t)((uintptr_t)unaligned_buf - (uintptr_t)buf);
 
-  struct allo_pool p = {0};
-  enum allo_status status =
+  allo_pool p = {0};
+  allo_status status =
       allo_pool_init(&p, unaligned_buf, buf_size, 0x10, align);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_MEM_NOT_ALIGNED, status,
@@ -168,8 +171,8 @@ void test_alloc_first_alloc(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
 
-    struct allo_pool p = {0};
-    enum allo_status status =
+    allo_pool p = {0};
+    allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
@@ -214,8 +217,8 @@ void test_alloc_allocs_till_oom(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
 
-    struct allo_pool p = {0};
-    enum allo_status status =
+    allo_pool p = {0};
+    allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
@@ -266,8 +269,8 @@ void test_free_one(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
 
-    struct allo_pool p = {0};
-    enum allo_status status =
+    allo_pool p = {0};
+    allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
@@ -312,8 +315,8 @@ void test_free_sequential(void) {
     void *buf;
     void *buf_aligned = malloc_aligned(&buf, buf_size, align);
 
-    struct allo_pool p = {0};
-    enum allo_status status =
+    allo_pool p = {0};
+    allo_status status =
         allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
@@ -355,8 +358,8 @@ void test_sequential(void) {
   void *buf;
   void *buf_aligned = malloc_aligned(&buf, buf_size, align);
 
-  struct allo_pool p = {0};
-  enum allo_status status =
+  allo_pool p = {0};
+  allo_status status =
       allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocator initialization should be succeed");
@@ -420,10 +423,6 @@ void test_sequential(void) {
   allo_assert_pool(&p);
   free(buf);
 }
-
-void setUp(void) {}
-
-void tearDown(void) {}
 
 int main(void) {
   UNITY_BEGIN();

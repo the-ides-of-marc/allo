@@ -1,16 +1,19 @@
-#include "test_utils.h"
-#define ALLO_ENABLE_ASSERT
 #include "allo/allo.h"
 #include "allo/internal/math_common.h"
+#include "test_utils.h"
 #include "unity.h"
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
 
+void setUp(void) {}
+
+void tearDown(void) {}
+
 void test_init(void) {
   uint8_t buf[0x100];
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0x100);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocator initialization should succeed");
   allo_assert_bump(&b);
@@ -28,23 +31,23 @@ void test_init(void) {
 
 void test_init_null_allocator(void) {
   uint8_t buf[0x100];
-  enum allo_status status = allo_bump_init(NULL, buf, 0x100);
+  allo_status status = allo_bump_init(NULL, buf, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_NULL, status,
       "error should match for receiving a NULL allocator");
 }
 
 void test_init_null_buffer(void) {
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, NULL, 0x100);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, NULL, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_NULL, status, "error should match for receiving a NULL buffer");
 }
 
 void test_init_zero_size(void) {
   uint8_t buf[0x100];
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_INVALID_SIZE, status,
       "error should match for receiving a zero size");
@@ -79,8 +82,8 @@ void test_alloc_first_alloc(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     uint8_t buf[0x10];
-    struct allo_bump b;
-    enum allo_status status = allo_bump_init(&b, buf, 0x10);
+    allo_bump b;
+    allo_status status = allo_bump_init(&b, buf, 0x10);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should succeed");
     allo_assert_bump(&b);
@@ -148,8 +151,8 @@ void test_alloc_subsequent_allocs(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     uint8_t buf[0x100] __attribute__((aligned(16)));
-    struct allo_bump b;
-    enum allo_status status = allo_bump_init(&b, buf, 0x100);
+    allo_bump b;
+    allo_status status = allo_bump_init(&b, buf, 0x100);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should succeed");
     b.cursor -= tests[i].starting_offset;
@@ -218,8 +221,8 @@ void test_alloc_oom(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     uint8_t buf[0x100] __attribute__((aligned(16)));
-    struct allo_bump b;
-    enum allo_status status = allo_bump_init(&b, buf, 0x100);
+    allo_bump b;
+    allo_status status = allo_bump_init(&b, buf, 0x100);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should succeed");
     b.cursor -= tests[i].offset;
@@ -320,8 +323,8 @@ void test_set_cursor(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     uint8_t buf[0x100] __attribute__((aligned(16)));
-    struct allo_bump b;
-    enum allo_status status = allo_bump_init(&b, buf, 0x100);
+    allo_bump b;
+    allo_status status = allo_bump_init(&b, buf, 0x100);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should succeed");
     b.cursor -= tests[i].offset;
@@ -341,8 +344,8 @@ void test_set_cursor(void) {
 
 void test_set_cursor_null_allocator(void) {
   uint8_t buf[0x100] __attribute__((aligned(16)));
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0x100);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocator initialization should succeed");
 
@@ -353,8 +356,8 @@ void test_set_cursor_null_allocator(void) {
 
 void test_set_cursor_null_cursor(void) {
   uint8_t buf[0x100] __attribute__((aligned(16)));
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0x100);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocator initialization should succeed");
 
@@ -365,8 +368,8 @@ void test_set_cursor_null_cursor(void) {
 
 void test_set_cursor_out_of_bounds(void) {
   uint8_t buf[0x100] __attribute__((aligned(16)));
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0x100);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocator initialization should succeed");
   allo_assert_bump(&b);
@@ -401,8 +404,8 @@ void test_reset(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     uint8_t buf[0x4] __attribute__((aligned(4)));
-    struct allo_bump b;
-    enum allo_status status = allo_bump_init(&b, buf, 0x4);
+    allo_bump b;
+    allo_status status = allo_bump_init(&b, buf, 0x4);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should succeed");
     b.cursor -= tests[i].offset;
@@ -417,8 +420,8 @@ void test_reset(void) {
 
 void test_sequential(void) {
   uint8_t buf[0x100] __attribute__((aligned(128)));
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0x100);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0x100);
   allo_assert_bump(&b);
 
   void *dest = NULL;
@@ -501,10 +504,6 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 1, b.cursor,
                                 "allocatoun should shift by 1");
 }
-
-void setUp(void) {}
-
-void tearDown(void) {}
 
 int main(void) {
   UNITY_BEGIN();

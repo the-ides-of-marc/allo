@@ -23,8 +23,8 @@ void *malloc_aligned(void **dest, size_t size, size_t align) {
   return (void *)aligned_addr;
 }
 
-void test_utils_assert_status(enum allo_status expected,
-                              enum allo_status actual, const char *message,
+void test_utils_assert_status(allo_status expected,
+                              allo_status actual, const char *message,
                               size_t line) {
   enum { BUFSIZE = 1 << 6 };
   if (expected != actual) {

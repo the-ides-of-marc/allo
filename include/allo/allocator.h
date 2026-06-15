@@ -5,31 +5,55 @@
 #include "status.h"
 #include <stddef.h>
 
-// The vtable used by allo_allocator struct.
+// Allocator interface that provides common operations on allocator
+// implementations.
+// This is implemented with a fat pointer containing the allocator and its
+// VTable.
+typedef struct allo_allocator allo_allocator;
+
+// VTable struct containing the operations supported by the allo_allocator
+// interface.
+// This struct contains function pointers for each operation.
+typedef struct allo_allocator_vtable allo_allocator_vtable;
+
+// Allocates `size` bytes at `align` alignment in allocator `a`, and writes the
+// result to `dest`.
+// Returns an allo_status indicating the status of the operation.
+static inline allo_status allo_alloc(void **dest, allo_allocator a, size_t size,
+                                     size_t align);
+
+// Frees the memory at `ptr` in allocator `a`.
+// Returns an allo_status indicating the status of the operation.
+static inline allo_status allo_free(allo_allocator a, void *ptr);
+
+// Frees all memory allocated in allocator `a`.
+// Returns an allo_status indicating the status of the operation.
+static inline allo_status allo_free_all(allo_allocator a);
+
 struct allo_allocator_vtable {
-  enum allo_status (*alloc)(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                            void *ALLO_RESTRICT ctx, size_t size, size_t align);
-  void (*free)(void *ALLO_RESTRICT ctx, void *ALLO_RESTRICT ptr);
-  void (*free_all)(void *ctx);
+  allo_status (*alloc)(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                       void *ALLO_RESTRICT ctx, size_t size, size_t align);
+  allo_status (*free)(void *ALLO_RESTRICT ctx, void *ALLO_RESTRICT ptr);
+  allo_status (*free_all)(void *ctx);
 };
 
 // Generic allocator type used when dynamic dispatch is needed.
 struct allo_allocator {
   void *allocator;
-  const struct allo_allocator_vtable *vtable;
+  const allo_allocator_vtable *vtable;
 };
 
-static inline enum allo_status allo_alloc(void **dest, struct allo_allocator a,
-                                          size_t size, size_t align) {
+static inline allo_status allo_alloc(void **dest, allo_allocator a, size_t size,
+                                     size_t align) {
   return a.vtable->alloc(dest, a.allocator, size, align);
 }
 
-static inline void allo_free(struct allo_allocator a, void *ptr) {
-  a.vtable->free(a.allocator, ptr);
+static inline allo_status allo_free(allo_allocator a, void *ptr) {
+  return a.vtable->free(a.allocator, ptr);
 }
 
-static inline void allo_free_all(struct allo_allocator a) {
-  a.vtable->free_all(a.allocator);
+static inline allo_status allo_free_all(allo_allocator a) {
+  return a.vtable->free_all(a.allocator);
 }
 
 #endif // !ALLO_ALLOCATOR_H
