@@ -75,9 +75,14 @@ static void pool_free_adapter(void *ALLO_RESTRICT ctx,
   allo_pool_free((struct allo_pool * ALLO_RESTRICT) ctx, ptr);
 }
 
+static void pool_free_all_adapter(void *ctx) {
+  allo_pool_free_all((struct allo_pool *)ctx);
+}
+
 const struct allo_allocator_vtable allo_pool_vtable = {
     .alloc = pool_alloc_adapter,
     .free = pool_free_adapter,
+    .free_all = pool_free_all_adapter,
 };
 
 inline struct allo_allocator allo_allocator_from_pool(struct allo_pool *p) {
