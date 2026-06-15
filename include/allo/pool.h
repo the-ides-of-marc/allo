@@ -117,6 +117,12 @@ static inline void allo_pool_free(struct allo_pool *ALLO_RESTRICT p,
   allo_assert_pool(p);
 }
 
+static inline void allo_pool_free_all(struct allo_pool *p) {
+  allo_assert_pool(p);
+  p->free_list = &p->start;
+  allo_assert_pool(p);
+}
+
 extern const struct allo_allocator_vtable allo_pool_vtable;
 
 #endif // !ALLO_POOL_H

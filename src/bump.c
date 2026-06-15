@@ -53,9 +53,14 @@ static void bump_free_adapter(void *ALLO_RESTRICT ctx,
   (void)ptr;
 }
 
+static void bump_free_all_adapter(void *ctx) {
+  allo_bump_reset((struct allo_bump *)ctx);
+}
+
 const struct allo_allocator_vtable allo_bump_vtable = {
     .alloc = bump_alloc_adapter,
     .free = bump_free_adapter,
+    .free_all = bump_free_all_adapter,
 };
 
 inline struct allo_allocator allo_allocator_from_bump(struct allo_bump *b) {
@@ -64,5 +69,3 @@ inline struct allo_allocator allo_allocator_from_bump(struct allo_bump *b) {
       .vtable = &allo_bump_vtable,
   };
 }
-
-
