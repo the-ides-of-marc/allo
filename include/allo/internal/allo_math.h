@@ -1,7 +1,7 @@
-#ifndef ALLO_MATH_COMMON_H
-#define ALLO_MATH_COMMON_H
+#ifndef ALLO_MATH_H
+#define ALLO_MATH_H
 
-#include "defines.h"
+#include "allo/allo_config.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -33,14 +33,16 @@ static inline size_t allo_math_round_pow2(size_t n) {
   return ++n;
 }
 
-// Returns if the address is aligned.
-static inline bool allo_math_is_addr_aligned(uintptr_t addr, size_t align) {
+// Returns if the uintptr_t is aligned.
+static inline bool allo_math_is_aligned_uintptr(uintptr_t addr, size_t align) {
+  ALLO_ASSERT(align > 0, "alignment must not be 0");
   return addr % align == 0;
 }
 
 // Returns if the pointer is aligned.
-static inline bool allo_math_is_ptr_aligned(void *ptr, size_t align) {
+static inline bool allo_math_is_aligned_ptr(void *ptr, size_t align) {
+  ALLO_ASSERT(align > 0, "alignment must not be 0");
   return (uintptr_t)ptr % align == 0;
 }
 
-#endif // !ALLO_MATH_COMMON_H
+#endif // !ALLO_MATH_H

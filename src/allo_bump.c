@@ -1,4 +1,4 @@
-#include "allo/bump.h"
+#include "allo/allo_bump.h"
 
 static allo_status bump_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                                       void *ALLO_RESTRICT ctx, size_t size,

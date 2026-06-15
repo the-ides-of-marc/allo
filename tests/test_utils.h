@@ -1,7 +1,7 @@
 #ifndef ALLO_TEST_UTILS_H
 #define ALLO_TEST_UTILS_H
 
-#include "allo/status.h"
+#include "allo/allo_status.h"
 #include <stddef.h>
 #include <unity.h>
 

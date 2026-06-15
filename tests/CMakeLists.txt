@@ -33,9 +33,9 @@ endfunction()
 
 
 set(TESTS
-    test_allocator
-    test_bump
-    test_pool
+    test_allo_allocator
+    test_allo_bump
+    test_allo_pool
 )
 
 foreach(TEST ${TESTS})

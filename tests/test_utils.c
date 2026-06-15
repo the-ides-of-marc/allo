@@ -1,5 +1,5 @@
 #include "test_utils.h"
-#include "allo/status.h"
+#include "allo/allo_status.h"
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -23,9 +23,8 @@ void *malloc_aligned(void **dest, size_t size, size_t align) {
   return (void *)aligned_addr;
 }
 
-void test_utils_assert_status(allo_status expected,
-                              allo_status actual, const char *message,
-                              size_t line) {
+void test_utils_assert_status(allo_status expected, allo_status actual,
+                              const char *message, size_t line) {
   enum { BUFSIZE = 1 << 6 };
   if (expected != actual) {
     char buffer[BUFSIZE] = {0};
