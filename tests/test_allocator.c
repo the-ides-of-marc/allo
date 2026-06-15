@@ -1,21 +1,34 @@
 #include "allo/allo.h"
 #include "allo/internal/math_common.h"
+#include "allo/status.h"
 #include "test_utils.h"
 #include "unity.h"
 #include <stddef.h>
 #include <stdint.h>
+
+void setUp(void) {}
+
+void tearDown(void) {}
 
 static const uintptr_t MOCK_BASE_ADDR = 0x1000;
 
 struct mock_state {
   size_t alloc_calls;
   size_t free_calls;
+  size_t free_all_calls;
   void *ptr_last_allocated;
 };
 
-static enum allo_status mock_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                   void *ALLO_RESTRICT ctx, size_t size,
-                                   size_t align) {
+static void mock_state_init(struct mock_state *m) {
+  m->alloc_calls = 0;
+  m->free_calls = 0;
+  m->free_all_calls = 0;
+  m->ptr_last_allocated = NULL;
+}
+
+static allo_status mock_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                              void *ALLO_RESTRICT ctx, size_t size,
+                              size_t align) {
   struct mock_state *state = ctx;
   ++state->alloc_calls;
   *dest = (void *)(MOCK_BASE_ADDR + size + align);
@@ -23,30 +36,36 @@ static enum allo_status mock_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   return ALLO_OK;
 }
 
-static void mock_free(void *ctx, void *ptr) {
+static allo_status mock_free(void *ctx, void *ptr) {
   struct mock_state *state = ctx;
   ++state->free_calls;
   (void)ptr;
+  return ALLO_OK;
 }
 
-static struct allo_allocator_vtable mock_vtable = {
+static allo_status mock_free_all(void *ctx) {
+  struct mock_state *state = ctx;
+  ++state->free_all_calls;
+  return ALLO_OK;
+}
+
+static allo_allocator_vtable mock_vtable = {
     .alloc = &mock_alloc,
     .free = &mock_free,
+    .free_all = &mock_free_all,
 };
-
-void setUp(void) {}
-
-void tearDown(void) {}
 
 void test_alloc_and_free(void) {
   struct mock_state state = {0};
-  struct allo_allocator allocator = {
+  mock_state_init(&state);
+
+  allo_allocator allocator = {
       .allocator = &state,
       .vtable = &mock_vtable,
   };
 
   void *dest = NULL;
-  enum allo_status status = allo_alloc(&dest, allocator, 64, 16);
+  allo_status status = allo_alloc(&dest, allocator, 64, 16);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
@@ -68,11 +87,11 @@ void test_alloc_and_free(void) {
 
 void test_allocator_from_fixed_bump(void) {
   uint8_t buf[0x10] __attribute__((aligned(16)));
-  struct allo_bump b;
-  enum allo_status status = allo_bump_init(&b, buf, 0x10);
+  allo_bump b;
+  allo_status status = allo_bump_init(&b, buf, 0x10);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocation initialization should succeed");
-  struct allo_allocator a = allo_allocator_from_bump(&b);
+  allo_allocator a = allo_allocator_from_bump(&b);
   TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
                                 "ptr should point to underlying allocator");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(

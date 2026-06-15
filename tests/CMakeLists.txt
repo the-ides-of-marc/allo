@@ -21,6 +21,7 @@ function(add_allo_test TEST_NAME)
             unity
             test_utils
     )
+    target_compile_definitions(${TEST_NAME} PRIVATE ALLO_ENABLE_ASSERT)
     setup_dev_flags(${TEST_NAME})
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     set_tests_properties(${TEST_NAME}

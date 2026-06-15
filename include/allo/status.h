@@ -3,7 +3,7 @@
 
 // Enum representing all status codes used by the allo functions across the
 // library to indicate success/error.
-enum allo_status {
+typedef enum allo_status {
   // Indicates success.
   ALLO_OK = 0,
   // Indicates out of memory.
@@ -18,12 +18,12 @@ enum allo_status {
   ALLO_ERR_MEM_NOT_ALIGNED,
   // Indicates access out of bounds.
   ALLO_ERR_OUT_OF_BOUNDS,
-};
+} allo_status;
 
 // Returns a string literal representing the status.
-static inline const char *allo_status_str(enum allo_status status);
+static inline const char *allo_status_str(allo_status status);
 
-static inline const char *allo_status_str(enum allo_status status) {
+static inline const char *allo_status_str(allo_status status) {
   switch (status) {
   case ALLO_OK:
     return "OK";
