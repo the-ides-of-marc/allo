@@ -1,5 +1,6 @@
 #include "test_utils.h"
-#include "allo/status.h"
+#include "allo/allo_status.h"
+#include "allo/internal/allo_math.h"
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -12,7 +13,18 @@ static void test_utils_snprintf(char *restrict buffer, size_t maxlen,
                                 size_t *offset, const char *restrict format,
                                 ...) __attribute__((format(printf, 4, 5)));
 
-void *malloc_aligned(void **dest, size_t size, size_t align) {
+void *test_utils_malloc_aligned(void **dest, size_t size, size_t align,
+                                size_t line) {
+  if (!dest) {
+    UnityFail("pointer to destination should not be NULL", line);
+  }
+  if (!size) {
+    UnityFail("size must not be 0", line);
+  }
+  if (!allo_math_is_pow2(align)) {
+    UnityFail("alignment must be a power of 2", line);
+  }
+
   *dest = malloc(size + align);
   if (!*dest) {
     return NULL;
@@ -23,9 +35,8 @@ void *malloc_aligned(void **dest, size_t size, size_t align) {
   return (void *)aligned_addr;
 }
 
-void test_utils_assert_status(allo_status expected,
-                              allo_status actual, const char *message,
-                              size_t line) {
+void test_utils_assert_status(allo_status expected, allo_status actual,
+                              const char *message, size_t line) {
   enum { BUFSIZE = 1 << 6 };
   if (expected != actual) {
     char buffer[BUFSIZE] = {0};

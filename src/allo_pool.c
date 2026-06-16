@@ -1,5 +1,4 @@
-#include "allo/pool.h"
-#include "allo/status.h"
+#include "allo/allo_pool.h"
 
 static allo_status pool_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                                       void *ALLO_RESTRICT ctx, size_t size,

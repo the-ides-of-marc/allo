@@ -11,17 +11,12 @@
 // - Allocator interface (see allo/allocator.h)
 // - Fixed sized bump allocator (see allo/bump.h)
 // - Fixed size pool allocator (see allo/pool.h)
-//
-// TODO:
-//
-// - Update vtable to have a free_all/reset function, that all allocators should
-//   be able to implement.
 
 // IWYU pragma: begin_exports
-#include "allocator.h"
-#include "bump.h"
-#include "pool.h"
-#include "status.h"
+#include "allo_allocator.h"
+#include "allo_bump.h"
+#include "allo_pool.h"
+#include "allo_status.h"
 // IWYU pragma: end_exports
 
 #endif // !ALLO_H

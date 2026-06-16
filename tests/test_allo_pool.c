@@ -25,7 +25,7 @@ void test_init_chunk_size_and_align(void) {
 
       void *buf;
       size_t bufsize = sizeof(void *) * 64;
-      void *buf_aligned = malloc_aligned(&buf, bufsize, expected_align);
+      void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, bufsize, expected_align);
 
       allo_pool p = {0};
       allo_status status =
@@ -74,7 +74,7 @@ void test_init_memory_region(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
     allo_pool p = {0};
     allo_status status =
         allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
@@ -169,7 +169,7 @@ void test_alloc_first_alloc(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
 
     allo_pool p = {0};
     allo_status status =
@@ -215,7 +215,7 @@ void test_alloc_allocs_till_oom(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
 
     allo_pool p = {0};
     allo_status status =
@@ -267,7 +267,7 @@ void test_free_one(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = malloc_aligned(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
 
     allo_pool p = {0};
     allo_status status =
@@ -313,7 +313,7 @@ void test_free_sequential(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = malloc_aligned(&buf, buf_size, align);
+    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, buf_size, align);
 
     allo_pool p = {0};
     allo_status status =
@@ -356,7 +356,7 @@ void test_sequential(void) {
   const size_t chunk_size = 256;
 
   void *buf;
-  void *buf_aligned = malloc_aligned(&buf, buf_size, align);
+  void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, buf_size, align);
 
   allo_pool p = {0};
   allo_status status =
