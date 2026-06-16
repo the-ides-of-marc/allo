@@ -6,6 +6,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Returns the popcount of an uint8.
+static inline uint8_t allo_math_popcount_uint8(uint8_t n) {
+  n = n - ((n >> 1) & 0x55);
+  n = (n & 0x33) + ((n >> 2) & 0x33);
+  return (n + (n >> 4)) & 0x0F;
+}
+
 // Returns if `n` is a power of 2.
 static inline bool allo_math_is_pow2(size_t n) {
   return n > 0 && (n & (n - 1)) == 0;
