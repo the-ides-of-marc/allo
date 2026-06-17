@@ -47,10 +47,7 @@ jobs:
       - name: Configure
         run: >
           cmake -S . -B build
-          -G "MinGW Makefiles"
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -DCMAKE_C_COMPILER=gcc
-          -DENABLE_SANITIZERS=OFF
+          --config=${{ matrix.build }}
 
       - name: Build
         run: cmake --build build --parallel
