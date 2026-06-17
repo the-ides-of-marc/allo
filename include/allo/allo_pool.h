@@ -12,7 +12,7 @@
 typedef struct allo_pool allo_pool;
 
 // Asserts the state of a pool allocator.
-static inline void allo_assert_pool(const allo_pool *p);
+static inline void allo_pool_assert(const allo_pool *p);
 
 // Initializes a pool allocator that manages the memory region, `buf`, within
 // [buf[0]..buf[buf_size-1]] and a given chunk size, `chunk_size`, and
@@ -63,7 +63,7 @@ struct allo_pool {
   size_t align;
 };
 
-static inline void allo_assert_pool(const allo_pool *p) {
+static inline void allo_pool_assert(const allo_pool *p) {
   ALLO_ASSERT(p, "pool allocator must not be NULL");
 
   ALLO_ASSERT(p->align, "pool allocator alignment must be non-zero");
@@ -157,14 +157,14 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
   }
   *curr_chunk = NULL;
 
-  allo_assert_pool(p);
+  allo_pool_assert(p);
   return ALLO_OK;
 }
 
 static inline allo_status
 allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                 allo_pool *ALLO_RESTRICT p) {
-  allo_assert_pool(p);
+  allo_pool_assert(p);
 
   *dest = NULL;
   void **addr = p->free_list;
@@ -175,7 +175,7 @@ allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   *dest = addr;
   p->free_list = *addr;
 
-  allo_assert_pool(p);
+  allo_pool_assert(p);
   return ALLO_OK;
 }
 
@@ -183,7 +183,7 @@ allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
 // The free list is then updated to point to `ptr`.
 static inline void allo_pool_free(allo_pool *ALLO_RESTRICT p,
                                   void *ALLO_RESTRICT ptr) {
-  allo_assert_pool(p);
+  allo_pool_assert(p);
   ALLO_ASSERT(p->start <= (uintptr_t)ptr,
               "ptr must be >= start of memory region");
   ALLO_ASSERT((uintptr_t)ptr < p->end, "ptr must be < end of memory region");
@@ -195,17 +195,17 @@ static inline void allo_pool_free(allo_pool *ALLO_RESTRICT p,
   *next_ptr = p->free_list;
   p->free_list = ptr;
 
-  allo_assert_pool(p);
+  allo_pool_assert(p);
 }
 
 static inline void allo_pool_free_all(allo_pool *p) {
-  allo_assert_pool(p);
+  allo_pool_assert(p);
   p->free_list = &p->start;
-  allo_assert_pool(p);
+  allo_pool_assert(p);
 }
 
 static inline allo_allocator allo_allocator_from_pool(allo_pool *p) {
-  allo_assert_pool(p);
+  allo_pool_assert(p);
   return (allo_allocator){
       .allocator = p,
       .vtable = &allo_pool_vtable,
