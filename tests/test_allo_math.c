@@ -110,11 +110,45 @@ void test_allo_math_popcount_uint64(void) {
   }
 }
 
+void test_allo_math_ctz_size_t(void) {
+  typedef struct {
+    size_t n;
+    uint8_t expected;
+  } testcase;
+  testcase testcases[] = {
+      {0x0, sizeof(size_t)},
+      {0x1, 0},
+      {0x2, 1},
+      {0x3, 0},
+      {0x4, 2},
+      {0x5, 0},
+      {0x6, 1},
+      {0x7, 0},
+      {0x8, 3},
+      {0x9, 0},
+      {0xa, 1},
+  };
+  for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
+    uint8_t zeroes = allo_math_ctz_size_t(testcases[i].n);
+    if (testcases[i].expected != zeroes) {
+      enum { BUFSIZE = 1 << 6 };
+      char buf[BUFSIZE];
+      snprintf(buf, BUFSIZE, "n=%zu expected=%u actual=%u", testcases[i].n,
+               testcases[i].expected, zeroes);
+      TEST_FAIL_MESSAGE(buf);
+    }
+  }
+}
+
 int main(void) {
   UNITY_BEGIN();
+
   RUN_TEST(test_allo_math_popcount_uint8);
   RUN_TEST(test_allo_math_popcount_uint16);
   RUN_TEST(test_allo_math_popcount_uint32);
   RUN_TEST(test_allo_math_popcount_uint64);
+
+  RUN_TEST(test_allo_math_ctz_size_t);
+
   return UNITY_END();
 }

@@ -34,7 +34,7 @@ static inline uint8_t allo_math_popcount_uint64(uint64_t n) {
   return (uint8_t)((n * 0x0101010101010101) >> 56);
 }
 
-static inline size_t allo_math_popcount_size_t(size_t n) {
+static inline uint8_t allo_math_popcount_size_t(size_t n) {
 #if SIZE_MAX == UINT64_MAX
   return allo_math_popcount_uint64(n);
 #elif SIZE_MAX == UINT32_MAX
@@ -48,21 +48,12 @@ static inline size_t allo_math_popcount_size_t(size_t n) {
 #endif
 }
 
-// Returns the count of trailing zeroes in a uint8;
-static inline uint8_t allo_math_ctz_uint8(uint8_t n) {
-  uint8_t count = 0;
-  if (!(n & 0x0F)) {
-    count += 4;
-    n >>= 4;
+static inline uint8_t allo_math_ctz_size_t(size_t n) {
+  if (n == 0) {
+    return sizeof(size_t);
   }
-  if (!(n & 0x03)) {
-    count += 2;
-    n >>= 2;
-  }
-  if (!(n & 0x01)) {
-    ++count;
-  }
-  return count;
+  n ^= n - 1;
+  return allo_math_popcount_size_t(n) - 1;
 }
 
 // Returns if `n` is a power of 2.
