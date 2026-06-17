@@ -12,7 +12,7 @@
 typedef struct allo_bump allo_bump;
 
 // Asserts the state of a bump allocator.
-static inline void allo_assert_bump(allo_bump *b);
+static inline void allo_bump_assert(allo_bump *b);
 
 // Initializes the bump allocator `b` to manage `buf` from
 // [buf[0]..buf[size-1]]. The cursor is set to buf[size]. ALLO_ERR_NULL is
@@ -55,7 +55,7 @@ struct allo_bump {
   uintptr_t cursor;
 };
 
-static inline void allo_assert_bump(allo_bump *b) {
+static inline void allo_bump_assert(allo_bump *b) {
   ALLO_ASSERT(b, "bump allocator must not be NULL");
   ALLO_ASSERT(b->start, "start of memory region must not be NULL");
   ALLO_ASSERT(b->end, "end of memory region must not be NULL");
@@ -78,7 +78,7 @@ static inline allo_status allo_bump_init(allo_bump *ALLO_RESTRICT b,
   b->end = b->start + size;
   b->cursor = b->end;
 
-  allo_assert_bump(b);
+  allo_bump_assert(b);
   return ALLO_OK;
 }
 
@@ -86,7 +86,7 @@ static inline allo_status
 allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                 allo_bump *ALLO_RESTRICT b, size_t size, size_t align) {
   ALLO_ASSERT(dest, "dest must not be NULL");
-  allo_assert_bump(b);
+  allo_bump_assert(b);
   ALLO_ASSERT(size, "size to allocate must be non-zero");
   ALLO_ASSERT(align, "alignment must be non-zero");
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
@@ -100,7 +100,7 @@ allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
     return ALLO_OOM;
   }
   b->cursor = next_cursor;
-  allo_assert_bump(b);
+  allo_bump_assert(b);
 
   *dest = (void *)next_cursor;
   return ALLO_OK;
@@ -113,7 +113,7 @@ allo_bump_set_cursor(allo_bump *ALLO_RESTRICT b,
     return ALLO_ERR_INVALID_NULL;
   }
 
-  allo_assert_bump(b);
+  allo_bump_assert(b);
 
   uintptr_t c = (uintptr_t)cursor;
   if (c < b->start || c > b->end) {
@@ -121,18 +121,18 @@ allo_bump_set_cursor(allo_bump *ALLO_RESTRICT b,
   }
   b->cursor = c;
 
-  allo_assert_bump(b);
+  allo_bump_assert(b);
   return ALLO_OK;
 }
 
 static inline void allo_bump_reset(allo_bump *b) {
-  allo_assert_bump(b);
+  allo_bump_assert(b);
   b->cursor = b->end;
-  allo_assert_bump(b);
+  allo_bump_assert(b);
 }
 
 static inline allo_allocator allo_allocator_from_bump(allo_bump *b) {
-  allo_assert_bump(b);
+  allo_bump_assert(b);
   return (allo_allocator){
       .allocator = b,
       .vtable = &allo_bump_vtable,

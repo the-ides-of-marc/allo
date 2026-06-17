@@ -46,7 +46,7 @@ void test_init_chunk_size_and_align(void) {
       TEST_ASSERT_EQUAL_PTR_MESSAGE(p.start, p.free_list,
                                     "free list should point to the start");
 
-      allo_assert_pool(&p);
+      allo_pool_assert(&p);
 
       free(buf);
     }
@@ -177,7 +177,7 @@ void test_alloc_first_alloc(void) {
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
 
     TEST_ASSERT_NOT_NULL_MESSAGE(p.free_list, "free list should not be NULL");
     void *next = *(void **)p.free_list;
@@ -196,7 +196,7 @@ void test_alloc_first_alloc(void) {
     TEST_ASSERT_EQUAL_PTR_MESSAGE(
         next, p.free_list, "free list should be pointing to the next chunk");
 
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
     free(buf);
   }
 }
@@ -223,7 +223,7 @@ void test_alloc_allocs_till_oom(void) {
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
 
     size_t chunk_counts = (p.end - p.start) / p.chunk_size;
     void *dest;
@@ -248,7 +248,7 @@ void test_alloc_allocs_till_oom(void) {
     status = allo_pool_alloc(&dest, &p);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OOM, status,
                                           "allocation should fail due to OOM");
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
     free(buf);
   }
 }
@@ -275,7 +275,7 @@ void test_free_one(void) {
                        tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
 
     size_t chunk_count = (p.end - p.start) / p.chunk_size;
     void *dest;
@@ -294,7 +294,7 @@ void test_free_one(void) {
         to_remove, p.free_list,
         "free list should point to the latest freed chunk");
 
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
     free(buf);
   }
 }
@@ -320,7 +320,7 @@ void test_free_sequential(void) {
         allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
 
     for (size_t chunk = 0; chunk < 4; ++chunk) {
       void *dest;
@@ -345,7 +345,7 @@ void test_free_sequential(void) {
           "free list should point to the latest freed chunks");
     }
 
-    allo_assert_pool(&p);
+    allo_pool_assert(&p);
     free(buf);
   }
 }
@@ -363,7 +363,7 @@ void test_sequential(void) {
       allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_OK, status, "allocator initialization should be succeed");
-  allo_assert_pool(&p);
+  allo_pool_assert(&p);
 
   void *chunk_positions[4];
   for (size_t chunk = 0; chunk < 4; ++chunk) {
@@ -420,7 +420,7 @@ void test_sequential(void) {
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OOM, status,
                                         "allocation should fail due to OOM");
 
-  allo_assert_pool(&p);
+  allo_pool_assert(&p);
   free(buf);
 }
 
