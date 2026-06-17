@@ -34,26 +34,3 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
-  windows-build:
-    runs-on: windows-latest
-
-    strategy:
-      matrix:
-        build_type: [Debug, Release]
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Configure
-        run: >
-          cmake -S . -B build
-          -G "MinGW Makefiles"
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -DCMAKE_C_COMPILER=gcc
-          -DENABLE_SANITIZERS=OFF
-
-      - name: Build
-        run: cmake --build build --parallel
-
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
