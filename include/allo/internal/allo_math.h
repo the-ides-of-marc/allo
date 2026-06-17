@@ -6,11 +6,63 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Returns the popcount of an uint8.
 static inline uint8_t allo_math_popcount_uint8(uint8_t n) {
-  n = n - ((n >> 1) & 0x55);
+  n -= (n >> 1) & 0x55;
   n = (n & 0x33) + ((n >> 2) & 0x33);
-  return (n + (n >> 4)) & 0x0F;
+  n = (n + (n >> 4)) & 0x0f;
+  return n;
+}
+
+static inline uint8_t allo_math_popcount_uint16(uint16_t n) {
+  n -= (n >> 1) & 0x5555;
+  n = (n & 0x3333) + ((n >> 2) & 0x3333);
+  n = (n + (n >> 4)) & 0x0f0f;
+  return (uint8_t)((n * 0x0101) >> 8);
+}
+
+static inline uint8_t allo_math_popcount_uint32(uint32_t n) {
+  n -= (n >> 1) & 0x55555555;
+  n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+  n = (n + (n >> 4)) & 0x0f0f0f0f;
+  return (uint8_t)((n * 0x01010101) >> 24);
+}
+
+static inline uint8_t allo_math_popcount_uint64(uint64_t n) {
+  n -= (n >> 1) & 0x5555555555555555;
+  n = (n & 0x3333333333333333) + ((n >> 2) & 0x3333333333333333);
+  n = (n + (n >> 4)) & 0x0f0f0f0f0f0f0f0f;
+  return (uint8_t)((n * 0x0101010101010101) >> 56);
+}
+
+static inline size_t allo_math_popcount_size_t(size_t n) {
+#if SIZE_MAX == UINT64_MAX
+  return allo_math_popcount_uint64(n);
+#elif SIZE_MAX == UINT32_MAX
+  return allo_math_popcount_uint32(n);
+#elif SIZE_MAX == UINT16_MAX
+  return allo_math_popcount_uint16(n);
+#elif SIZE_MAX == UINT8_MAX
+  return allo_math_popcount_uint8(n);
+#else
+#error "unsupported size_t"
+#endif
+}
+
+// Returns the count of trailing zeroes in a uint8;
+static inline uint8_t allo_math_ctz_uint8(uint8_t n) {
+  uint8_t count = 0;
+  if (!(n & 0x0F)) {
+    count += 4;
+    n >>= 4;
+  }
+  if (!(n & 0x03)) {
+    count += 2;
+    n >>= 2;
+  }
+  if (!(n & 0x01)) {
+    ++count;
+  }
+  return count;
 }
 
 // Returns if `n` is a power of 2.
@@ -34,8 +86,10 @@ static inline size_t allo_math_round_pow2(size_t n) {
 #if SIZE_MAX >= UINT32_MAX
   n |= n >> 16;
 #endif
-#if SIZE_MAX >= UINT64_MAX
+#if SIZE_MAX == UINT64_MAX
   n |= n >> 32;
+#else
+#error "unsupported size_t"
 #endif
   return ++n;
 }
