@@ -86,15 +86,9 @@ static inline size_t allo_math_round_pow2(size_t n) {
 }
 
 // Returns if the uintptr_t is aligned.
-static inline bool allo_math_is_aligned_uintptr(uintptr_t addr, size_t align) {
+static inline bool allo_math_is_aligned(uintptr_t addr, size_t align) {
   ALLO_ASSERT(align > 0, "alignment must not be 0");
   return addr % align == 0;
-}
-
-// Returns if the pointer is aligned.
-static inline bool allo_math_is_aligned_ptr(void *ptr, size_t align) {
-  ALLO_ASSERT(align > 0, "alignment must not be 0");
-  return (uintptr_t)ptr % align == 0;
 }
 
 #endif // !ALLO_MATH_H

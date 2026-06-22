@@ -159,7 +159,7 @@ void test_allo_math_is_pow2(void) {
   }
 }
 
-void test_allo_math_is_aligned_uintptr_and_ptr(void) {
+void test_allo_math_is_aligned(void) {
 
   typedef struct {
     uintptr_t addr;
@@ -189,13 +189,7 @@ void test_allo_math_is_aligned_uintptr_and_ptr(void) {
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     bool is_aligned =
-        allo_math_is_aligned_uintptr(testcases[i].addr, testcases[i].align);
-    snprintf(buffer, BUFSIZE, "expected=%d actual=%d", testcases[i].expected,
-             is_aligned);
-    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, is_aligned, buffer);
-
-    is_aligned =
-        allo_math_is_aligned_ptr((void *)testcases[i].addr, testcases[i].align);
+        allo_math_is_aligned(testcases[i].addr, testcases[i].align);
     snprintf(buffer, BUFSIZE, "expected=%d actual=%d", testcases[i].expected,
              is_aligned);
     TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, is_aligned, buffer);
@@ -214,7 +208,7 @@ int main(void) {
 
   RUN_TEST(test_allo_math_is_pow2);
 
-  RUN_TEST(test_allo_math_is_aligned_uintptr_and_ptr);
+  RUN_TEST(test_allo_math_is_aligned);
 
   return UNITY_END();
 }
