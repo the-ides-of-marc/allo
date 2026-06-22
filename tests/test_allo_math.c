@@ -140,6 +140,68 @@ void test_allo_math_ctz_size_t(void) {
   }
 }
 
+void test_allo_math_is_pow2(void) {
+  TEST_ASSERT_FALSE_MESSAGE(allo_math_is_pow2(0), "zero is not a power of 2");
+
+  enum { BUFSIZE = 1 << 8 };
+  char buffer[BUFSIZE];
+
+  for (size_t i = 1; i != 0; i <<= 1) {
+    snprintf(buffer, BUFSIZE, "i=%zu is a power of 2", i);
+    TEST_ASSERT_TRUE_MESSAGE(allo_math_is_pow2(i), buffer);
+  }
+
+  size_t not_pow2[] = {3, 5, 7, 9, 11, 13, 14, 15, 17, 31, 33, 63, 65};
+
+  for (size_t i = 0; i < ALLO_ARR_LEN(not_pow2); ++i) {
+    snprintf(buffer, BUFSIZE, "i=%zu is not a power of 2", not_pow2[i]);
+    TEST_ASSERT_FALSE_MESSAGE(allo_math_is_pow2(not_pow2[i]), buffer);
+  }
+}
+
+void test_allo_math_is_aligned_uintptr_and_ptr(void) {
+
+  typedef struct {
+    uintptr_t addr;
+    size_t align;
+    bool expected;
+  } testcase;
+
+  testcase testcases[] = {
+      {0x0, 0x1, true}, {0x1, 0x1, true},  {0x2, 0x1, true},  {0x3, 0x1, true},
+      {0x4, 0x1, true}, {0x5, 0x1, true},  {0x6, 0x1, true},  {0x7, 0x1, true},
+      {0x8, 0x1, true}, {0x9, 0x1, true},  {0xa, 0x1, true},  {0xb, 0x1, true},
+      {0xc, 0x1, true}, {0xd, 0x1, true},  {0xe, 0x1, true},  {0xf, 0x1, true},
+
+      {0x0, 0x2, true}, {0x1, 0x2, false}, {0x2, 0x2, true},  {0x3, 0x2, false},
+      {0x4, 0x2, true}, {0x5, 0x2, false}, {0x6, 0x2, true},  {0x7, 0x2, false},
+      {0x8, 0x2, true}, {0x9, 0x2, false}, {0xa, 0x2, true},  {0xb, 0x2, false},
+      {0xc, 0x2, true}, {0xd, 0x2, false}, {0xe, 0x2, true},  {0xf, 0x2, false},
+
+      {0x0, 0x4, true}, {0x1, 0x4, false}, {0x2, 0x4, false}, {0x3, 0x4, false},
+      {0x4, 0x4, true}, {0x5, 0x4, false}, {0x6, 0x4, false}, {0x7, 0x4, false},
+      {0x8, 0x4, true}, {0x9, 0x4, false}, {0xa, 0x4, false}, {0xb, 0x4, false},
+      {0xc, 0x4, true}, {0xd, 0x4, false}, {0xe, 0x4, false}, {0xf, 0x4, false},
+  };
+
+  enum { BUFSIZE = 1 << 8 };
+  char buffer[BUFSIZE] = {0};
+
+  for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
+    bool is_aligned =
+        allo_math_is_aligned_uintptr(testcases[i].addr, testcases[i].align);
+    snprintf(buffer, BUFSIZE, "expected=%d actual=%d", testcases[i].expected,
+             is_aligned);
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, is_aligned, buffer);
+
+    is_aligned =
+        allo_math_is_aligned_ptr((void *)testcases[i].addr, testcases[i].align);
+    snprintf(buffer, BUFSIZE, "expected=%d actual=%d", testcases[i].expected,
+             is_aligned);
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, is_aligned, buffer);
+  }
+}
+
 int main(void) {
   UNITY_BEGIN();
 
@@ -149,6 +211,10 @@ int main(void) {
   RUN_TEST(test_allo_math_popcount_uint64);
 
   RUN_TEST(test_allo_math_ctz_size_t);
+
+  RUN_TEST(test_allo_math_is_pow2);
+
+  RUN_TEST(test_allo_math_is_aligned_uintptr_and_ptr);
 
   return UNITY_END();
 }
