@@ -86,9 +86,19 @@ static inline size_t allo_math_round_pow2(size_t n) {
 }
 
 // Returns if the uintptr_t is aligned.
-static inline bool allo_math_is_aligned(uintptr_t addr, size_t align) {
-  ALLO_ASSERT(align > 0, "alignment must not be 0");
-  return addr % align == 0;
+static inline bool allo_math_is_aligned(uintptr_t mem, size_t align) {
+  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
+  return mem % align == 0;
+}
+
+static inline uintptr_t allo_math_align_up(uintptr_t mem, size_t align) {
+  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
+  return (mem + align - 1) & ~(align - 1);
+}
+
+static inline uintptr_t allo_math_align_down(uintptr_t mem, size_t align) {
+  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
+  return mem & ~(align - 1);
 }
 
 #endif // !ALLO_MATH_H
