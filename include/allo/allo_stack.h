@@ -3,6 +3,8 @@
 
 #include "allo/allo_config.h"
 #include "allo/allo_status.h"
+#include "allo/internal/allo_defines.h"
+#include "allo/internal/allo_math.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -12,8 +14,18 @@ typedef struct allo_stack allo_stack;
 // Asserts the state of the stack allocator.
 static inline void allo_stack_assert(allo_stack *s);
 
-static inline allo_status allo_stack_init(allo_stack *s, void *buf,
+// Initializes the stack allocator `s` to manage `buf` from
+// `buf[0]..buf[bufsize-1]`.
+static inline allo_status allo_stack_init(allo_stack *ALLO_RESTRICT s,
+                                          void *ALLO_RESTRICT buf,
                                           size_t bufsize);
+
+// Tries to allocate `size` bytes at `align` alignment.
+// `size` must be > 0 and `align` must be a power of 2.
+// ALLO_OOM is returned if there is insufficient space to allocate the bytes.
+static inline allo_status
+allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                 allo_stack *ALLO_RESTRICT s, size_t size, size_t align);
 
 struct allo_stack {
   uintptr_t start;
@@ -32,7 +44,8 @@ static inline void allo_stack_assert(allo_stack *s) {
   (void)s;
 }
 
-static inline allo_status allo_stack_init(allo_stack *s, void *buf,
+static inline allo_status allo_stack_init(allo_stack *ALLO_RESTRICT s,
+                                          void *ALLO_RESTRICT buf,
                                           size_t bufsize) {
   if (!s || !buf) {
     return ALLO_ERR_INVALID_NULL;
@@ -43,10 +56,35 @@ static inline allo_status allo_stack_init(allo_stack *s, void *buf,
 
   s->start = (uintptr_t)buf;
   s->end = s->start + bufsize;
-  s->cursor = s->start;
+  s->cursor = s->end;
   s->last_alloc_size = 0;
 
   allo_stack_assert(s);
+  return ALLO_OK;
+}
+
+static inline allo_status
+allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
+                 allo_stack *ALLO_RESTRICT s, size_t size, size_t align) {
+  ALLO_ASSERT(dest, "dest must not be NULL");
+  ALLO_ASSERT(size, "size mut not be 0");
+  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
+  allo_stack_assert(s);
+
+  uintptr_t next_cursor = s->cursor - size;
+  if (next_cursor > s->cursor) {
+    return ALLO_OOM;
+  }
+  next_cursor = allo_math_align_down(next_cursor, align);
+  if (next_cursor < s->start) {
+    return ALLO_OOM;
+  }
+  s->last_alloc_size = s->cursor - next_cursor;
+  s->cursor = next_cursor;
+
+  allo_stack_assert(s);
+
+  *dest = (void *)s->cursor;
   return ALLO_OK;
 }
 

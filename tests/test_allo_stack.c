@@ -1,6 +1,9 @@
 #include "allo/allo_stack.h"
 #include "allo/allo_status.h"
+#include "allo/internal/allo_common.h"
+#include "allo/internal/allo_math.h"
 #include "test_utils.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <unity.h>
 #include <unity_internals.h>
@@ -20,16 +23,59 @@ void test_allo_stack_init(void) {
                             "start should be at the beginning of the buffer");
   TEST_ASSERT_EQUAL_MESSAGE((uintptr_t)buf + BUFSIZE, s.end,
                             "end should be at the end of the buffer");
-  TEST_ASSERT_EQUAL_MESSAGE((uintptr_t)buf, s.cursor,
-                            "cursor should be at the beginning of the buffer");
+  TEST_ASSERT_EQUAL_MESSAGE((uintptr_t)s.end, s.cursor,
+                            "cursor should be at the end of the buffer");
   TEST_ASSERT_EQUAL_MESSAGE(0, s.last_alloc_size,
                             "last alloc size should be empty");
+}
+
+void test_allo_stack_alloc_no_alignment_shifting(void) {
+  enum { BUFSIZE = 1 << 10 };
+  uint8_t buf[BUFSIZE] __attribute__((aligned(32)));
+  allo_stack s = {0};
+  allo_status status = allo_stack_init(&s, buf, BUFSIZE);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "initialization should succeed");
+  void *dest = NULL;
+  status = allo_stack_alloc(&dest, &s, 32, 32);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "allocation should succeed");
+  TEST_ASSERT_EQUAL_MESSAGE(
+      dest, s.cursor, "allocated pointer should be the same as the cursor");
+  TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 32, s.cursor,
+                            "cursor should have moved by 32");
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 32),
+                           "allocated pointer should be aligned");
+  TEST_ASSERT_EQUAL_MESSAGE(32, s.last_alloc_size, "allocated size must be 32");
+}
+
+void test_allo_stack_alloc_with_alignment_shifting(void) {
+  enum { BUFSIZE = 1 << 10 };
+  uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
+  allo_stack s = {0};
+  allo_status status = allo_stack_init(&s, buf, BUFSIZE);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "initialization should succeed");
+  void *dest = NULL;
+  status = allo_stack_alloc(&dest, &s, 1, 8);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "allocation should succeed");
+  TEST_ASSERT_EQUAL_MESSAGE(
+      dest, s.cursor, "allocated pointer should be the same as the cursor");
+  TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 8, s.cursor,
+                            "cursor should have moved by 8");
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 8),
+                           "allocated pointer should be aligned");
+  TEST_ASSERT_EQUAL_MESSAGE(8, s.last_alloc_size, "allocated size must be 8");
 }
 
 int main(void) {
   UNITY_BEGIN();
 
   RUN_TEST(test_allo_stack_init);
+
+  RUN_TEST(test_allo_stack_alloc_no_alignment_shifting);
+  RUN_TEST(test_allo_stack_alloc_with_alignment_shifting);
 
   return UNITY_END();
 }
