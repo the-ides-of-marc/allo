@@ -31,7 +31,7 @@ void *test_utils_malloc_aligned(void **dest, size_t size, size_t align,
   }
 
   uintptr_t addr = (uintptr_t)*dest;
-  uintptr_t aligned_addr = (addr + align - 1) & ~(align - 1);
+  uintptr_t aligned_addr = allo_math_align_up(addr, align);
   return (void *)aligned_addr;
 }
 

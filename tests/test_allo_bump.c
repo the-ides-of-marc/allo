@@ -41,7 +41,8 @@ void test_init_null_buffer(void) {
   allo_bump b;
   allo_status status = allo_bump_init(&b, NULL, 0x100);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_INVALID_NULL, status, "error should match for receiving a NULL buffer");
+      ALLO_ERR_INVALID_NULL, status,
+      "error should match for receiving a NULL buffer");
 }
 
 void test_init_zero_size(void) {
@@ -96,8 +97,9 @@ void test_alloc_first_alloc(void) {
         dest, b.cursor,
         "dest should be at the current cursor after allocation");
 
-    TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, tests[i].align),
-                             "allocated address should be aligned");
+    TEST_ASSERT_TRUE_MESSAGE(
+        allo_math_is_aligned((uintptr_t)dest, tests[i].align),
+        "allocated address should be aligned");
     allo_bump_assert(&b);
   }
 }
@@ -166,14 +168,15 @@ void test_alloc_subsequent_allocs(void) {
         dest, b.cursor,
         "dest should be at the current cursor after allocation");
     TEST_ASSERT_TRUE_MESSAGE(
-        allo_math_is_aligned_uintptr((b.end - tests[i].expected_offset),
+        allo_math_is_aligned((b.end - tests[i].expected_offset),
                                      tests[i].align),
         "expected cursor position should be aligned");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - tests[i].expected_offset, b.cursor,
                                   "cursor should be at the expected offset");
 
-    TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, tests[i].align),
-                             "allocated address should be aligned");
+    TEST_ASSERT_TRUE_MESSAGE(
+        allo_math_is_aligned((uintptr_t)dest, tests[i].align),
+        "allocated address should be aligned");
   }
 }
 
@@ -236,8 +239,9 @@ void test_alloc_oom(void) {
         b.end - tests[i].offset, b.cursor,
         "cursor should remain at its original position");
 
-    TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, tests[i].align),
-                             "allocated address should be aligned");
+    TEST_ASSERT_TRUE_MESSAGE(
+        allo_math_is_aligned((uintptr_t)dest, tests[i].align),
+        "allocated address should be aligned");
     allo_bump_assert(&b);
   }
 }
@@ -351,7 +355,8 @@ void test_set_cursor_null_allocator(void) {
 
   status = allo_bump_set_cursor(NULL, (void *)b.end);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_INVALID_NULL, status, "set cursor should fail due to null allocator");
+      ALLO_ERR_INVALID_NULL, status,
+      "set cursor should fail due to null allocator");
 }
 
 void test_set_cursor_null_cursor(void) {
@@ -363,7 +368,8 @@ void test_set_cursor_null_cursor(void) {
 
   status = allo_bump_set_cursor(&b, NULL);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_INVALID_NULL, status, "set cursor should fail due to null cursor");
+      ALLO_ERR_INVALID_NULL, status,
+      "set cursor should fail due to null cursor");
 }
 
 void test_set_cursor_out_of_bounds(void) {
@@ -438,9 +444,9 @@ void test_sequential(void) {
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 8, b.cursor,
                                 "cursor should shift to an alignment of 8");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_uintptr(b.cursor, 8),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned(b.cursor, 8),
                            "cursor should be aligned");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, 8),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 8),
                            "allocated address should be aligned");
   allo_bump_assert(&b);
 
@@ -449,9 +455,9 @@ void test_sequential(void) {
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 16, b.cursor,
                                 "cursor should shift to an alignment of 8");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_uintptr(b.cursor, 8),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned(b.cursor, 8),
                            "cursor should be aligned");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, 8),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 8),
                            "allocated address should be aligned");
   allo_bump_assert(&b);
 
@@ -460,9 +466,9 @@ void test_sequential(void) {
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 32, b.cursor,
                                 "cursor should shift to an alignment of 16");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_uintptr(b.cursor, 16),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned(b.cursor, 16),
                            "cursor should be aligned");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, 16),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 16),
                            "allocated address should be aligned");
   allo_bump_assert(&b);
 
@@ -471,9 +477,9 @@ void test_sequential(void) {
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - 128, b.cursor,
                                 "cursor should shift to an alignment of 128");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_uintptr(b.cursor, 128),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned(b.cursor, 128),
                            "cursor should be aligned");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, 128),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 128),
                            "allocated address should be aligned");
   allo_bump_assert(&b);
 
@@ -483,9 +489,9 @@ void test_sequential(void) {
   TEST_ASSERT_EQUAL_PTR_MESSAGE(b.start, b.cursor,
                                 "cursor should shift to an alignment of 128 "
                                 "and at the start of the memory range");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_uintptr(b.cursor, 128),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned(b.cursor, 128),
                            "cursor should be aligned");
-  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned_ptr(dest, 128),
+  TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 128),
                            "allocated address should be aligned");
   allo_bump_assert(&b);
 

@@ -1,4 +1,6 @@
 #include "allo/allo.h"
+#include "allo/internal/allo_common.h"
+#include "allo/internal/allo_math.h"
 #include "test_utils.h"
 #include "unity.h"
 #include <stddef.h>
@@ -16,16 +18,16 @@ void test_init_chunk_size_and_align(void) {
     for (size_t i = 0; i < sizeof(alignments) / sizeof(alignments[0]); ++i) {
       size_t align = alignments[i];
 
-      size_t expected_align = align >= sizeof(void *) ? align : sizeof(void *);
+      size_t expected_align = ALLO_MAX(align, sizeof(void *));
 
-      size_t expected_chunk_size =
-          chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
+      size_t expected_chunk_size = ALLO_MAX(chunk_size, sizeof(void *));
       expected_chunk_size =
-          (expected_chunk_size + expected_align - 1) & ~(expected_align - 1);
+          allo_math_align_up(expected_chunk_size, expected_align);
 
       void *buf;
       size_t bufsize = sizeof(void *) * 64;
-      void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, bufsize, expected_align);
+      void *buf_aligned =
+          TEST_UTILS_MALLOC_ALIGNED(&buf, bufsize, expected_align);
 
       allo_pool p = {0};
       allo_status status =
@@ -74,11 +76,11 @@ void test_init_memory_region(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned =
+        TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
     allo_pool p = {0};
-    allo_status status =
-        allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
-                       tests[i].align);
+    allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
+                                        tests[i].chunk_size, tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(buf_aligned, p.start,
@@ -106,7 +108,8 @@ void test_init_null_buffer(void) {
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, NULL, 0x100, 0x10, 0x1);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
-      ALLO_ERR_INVALID_NULL, status, "error should match for receiving a NULL buffer");
+      ALLO_ERR_INVALID_NULL, status,
+      "error should match for receiving a NULL buffer");
 }
 
 void test_init_zero_buf_size(void) {
@@ -142,14 +145,13 @@ void test_init_memory_not_aligned(void) {
 
   size_t align = sizeof(void *);
 
-  uintptr_t aligned_buf = ((uintptr_t)buf + align - 1) & ~(align - 1);
+  uintptr_t aligned_buf = allo_math_align_up((uintptr_t)buf, align);
   uint8_t *unaligned_buf = (uint8_t *)(aligned_buf + 1);
 
   buf_size -= (size_t)((uintptr_t)unaligned_buf - (uintptr_t)buf);
 
   allo_pool p = {0};
-  allo_status status =
-      allo_pool_init(&p, unaligned_buf, buf_size, 0x10, align);
+  allo_status status = allo_pool_init(&p, unaligned_buf, buf_size, 0x10, align);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
       ALLO_ERR_NOT_ALIGNED, status,
       "error should match for receiving a buffer that is not aligned");
@@ -169,12 +171,12 @@ void test_alloc_first_alloc(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned =
+        TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
 
     allo_pool p = {0};
-    allo_status status =
-        allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
-                       tests[i].align);
+    allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
+                                        tests[i].chunk_size, tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);
@@ -215,12 +217,12 @@ void test_alloc_allocs_till_oom(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned =
+        TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
 
     allo_pool p = {0};
-    allo_status status =
-        allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
-                       tests[i].align);
+    allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
+                                        tests[i].chunk_size, tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);
@@ -267,12 +269,12 @@ void test_free_one(void) {
 
   for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
     void *buf;
-    void *buf_aligned = TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
+    void *buf_aligned =
+        TEST_UTILS_MALLOC_ALIGNED(&buf, tests[i].buf_size, tests[i].align);
 
     allo_pool p = {0};
-    allo_status status =
-        allo_pool_init(&p, buf_aligned, tests[i].buf_size, tests[i].chunk_size,
-                       tests[i].align);
+    allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
+                                        tests[i].chunk_size, tests[i].align);
     TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);

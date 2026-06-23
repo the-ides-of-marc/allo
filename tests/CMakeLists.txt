@@ -33,6 +33,7 @@ endfunction()
 
 
 set(TESTS
+    test_allo_common
     test_allo_math
     test_allo_allocator
     test_allo_bump
