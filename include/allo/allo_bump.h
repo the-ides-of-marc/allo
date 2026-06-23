@@ -95,7 +95,7 @@ allo_bump_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   if (next_cursor > b->cursor) {
     return ALLO_OOM;
   }
-  next_cursor = next_cursor & ~(align - 1);
+  next_cursor = allo_math_align_down(next_cursor, align);
   if (next_cursor < b->start) {
     return ALLO_OOM;
   }

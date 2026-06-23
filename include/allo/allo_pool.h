@@ -86,8 +86,7 @@ static inline void allo_pool_assert(const allo_pool *p) {
 
   ALLO_ASSERT(allo_math_is_aligned(p->start, p->align),
               "start must be aligned");
-  ALLO_ASSERT(allo_math_is_aligned(p->end, p->align),
-              "end must be aligned");
+  ALLO_ASSERT(allo_math_is_aligned(p->end, p->align), "end must be aligned");
 
   if (p->free_list) {
     ALLO_ASSERT(p->start <= (uintptr_t)p->free_list,
@@ -120,7 +119,7 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
   align = allo_math_round_pow2(align);
   align = align >= sizeof(void *) ? align : sizeof(void *);
   chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
-  chunk_size = (chunk_size + align - 1) & ~(align - 1);
+  chunk_size = allo_math_align_up(chunk_size, align);
 
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
   ALLO_ASSERT(align >= sizeof(void *),

@@ -198,7 +198,7 @@ void test_allo_math_is_aligned(void) {
 
 void test_allo_math_align_up(void) {
   typedef struct {
-    uintptr_t mem;
+    uintptr_t n;
     size_t align;
     uintptr_t expected;
   } testcase;
@@ -225,16 +225,16 @@ void test_allo_math_align_up(void) {
   char buffer[BUFSIZE] = {0};
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
-    uintptr_t mem = allo_math_align_up(testcases[i].mem, testcases[i].align);
-    snprintf(buffer, BUFSIZE, "expected=0x%lx actual=0x%lx mem=0x%lx align=%zu",
-             mem, testcases[i].expected, testcases[i].mem, testcases[i].align);
-    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, mem, buffer);
+    uintptr_t n = allo_math_align_up(testcases[i].n, testcases[i].align);
+    snprintf(buffer, BUFSIZE, "expected=0x%lx actual=0x%lx n=0x%lx align=%zu",
+             n, testcases[i].expected, testcases[i].n, testcases[i].align);
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, n, buffer);
   }
 }
 
 void test_allo_math_align_down(void) {
   typedef struct {
-    uintptr_t mem;
+    uintptr_t n;
     size_t align;
     uintptr_t expected;
   } testcase;
@@ -261,10 +261,10 @@ void test_allo_math_align_down(void) {
   char buffer[BUFSIZE] = {0};
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
-    uintptr_t mem = allo_math_align_down(testcases[i].mem, testcases[i].align);
-    snprintf(buffer, BUFSIZE, "expected=0x%lx actual=0x%lx mem=0x%lx align=%zu",
-             mem, testcases[i].expected, testcases[i].mem, testcases[i].align);
-    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, mem, buffer);
+    uintptr_t n = allo_math_align_down(testcases[i].n, testcases[i].align);
+    snprintf(buffer, BUFSIZE, "expected=0x%lx actual=0x%lx n=0x%lx align=%zu",
+             n, testcases[i].expected, testcases[i].n, testcases[i].align);
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, n, buffer);
   }
 }
 
