@@ -2,6 +2,7 @@
 #define ALLO_POOL_H
 
 #include "allo/allo_allocator.h"
+#include "allo/internal/allo_common.h"
 #include "allo_status.h"
 #include "internal/allo_defines.h"
 #include "internal/allo_math.h"
@@ -116,10 +117,8 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
     return ALLO_ERR_INVALID_ALIGNMENT;
   }
 
-  align = allo_math_round_pow2(align);
-  align = align >= sizeof(void *) ? align : sizeof(void *);
-  chunk_size = chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
-  chunk_size = allo_math_align_up(chunk_size, align);
+  align = allo_math_round_pow2(ALLO_MAX(align, sizeof(void *)));
+  chunk_size = allo_math_align_up(ALLO_MAX(chunk_size, sizeof(void *)), align);
 
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
   ALLO_ASSERT(align >= sizeof(void *),

@@ -1,4 +1,5 @@
 #include "allo/allo.h"
+#include "allo/internal/allo_common.h"
 #include "allo/internal/allo_math.h"
 #include "test_utils.h"
 #include "unity.h"
@@ -17,10 +18,9 @@ void test_init_chunk_size_and_align(void) {
     for (size_t i = 0; i < sizeof(alignments) / sizeof(alignments[0]); ++i) {
       size_t align = alignments[i];
 
-      size_t expected_align = align >= sizeof(void *) ? align : sizeof(void *);
+      size_t expected_align = ALLO_MAX(align, sizeof(void *));
 
-      size_t expected_chunk_size =
-          chunk_size >= sizeof(void *) ? chunk_size : sizeof(void *);
+      size_t expected_chunk_size = ALLO_MAX(chunk_size, sizeof(void *));
       expected_chunk_size =
           allo_math_align_up(expected_chunk_size, expected_align);
 
