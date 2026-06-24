@@ -1,6 +1,7 @@
 #ifndef ALLO_STACK_H
 #define ALLO_STACK_H
 
+#include "allo/allo_allocator.h"
 #include "allo/allo_config.h"
 #include "allo/allo_status.h"
 #include "allo/internal/allo_defines.h"
@@ -33,6 +34,8 @@ static inline void allo_stack_free(allo_stack *s);
 
 // Frees all memory allocated on allocator `s`.
 static inline void allo_stack_free_all(allo_stack *s);
+
+extern const allo_allocator_vtable allo_allocator_stack_vtable;
 
 struct allo_stack {
   uintptr_t start;
