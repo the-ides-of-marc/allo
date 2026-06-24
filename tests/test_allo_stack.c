@@ -1,6 +1,5 @@
 #include "allo/allo_stack.h"
 #include "allo/allo_status.h"
-#include "allo/internal/allo_common.h"
 #include "allo/internal/allo_math.h"
 #include "test_utils.h"
 #include <stddef.h>
@@ -25,8 +24,6 @@ void test_allo_stack_init(void) {
                             "end should be at the end of the buffer");
   TEST_ASSERT_EQUAL_MESSAGE((uintptr_t)s.end, s.cursor,
                             "cursor should be at the end of the buffer");
-  TEST_ASSERT_EQUAL_MESSAGE(0, s.last_alloc_size,
-                            "last alloc size should be empty");
 }
 
 void test_allo_stack_alloc_no_alignment_shifting(void) {
@@ -41,12 +38,15 @@ void test_allo_stack_alloc_no_alignment_shifting(void) {
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_MESSAGE(
-      dest, s.cursor, "allocated pointer should be the same as the cursor");
-  TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 32, s.cursor,
-                            "cursor should have moved by 32");
+      (uintptr_t)dest - sizeof(uintptr_t), s.cursor,
+      "allocated pointer should be the same as the cursor");
+  TEST_ASSERT_EQUAL_MESSAGE(
+      buf + BUFSIZE - 32 - sizeof(uintptr_t), s.cursor,
+      "cursor should have moved by 32 and the uintptr header");
+  TEST_ASSERT_EQUAL_MESSAGE(32 + sizeof(uintptr_t), *(uintptr_t *)s.cursor,
+                            "size of the header must match");
   TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 32),
                            "allocated pointer should be aligned");
-  TEST_ASSERT_EQUAL_MESSAGE(32, s.last_alloc_size, "allocated size must be 32");
 }
 
 void test_allo_stack_alloc_with_alignment_shifting(void) {
@@ -61,12 +61,15 @@ void test_allo_stack_alloc_with_alignment_shifting(void) {
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_MESSAGE(
-      dest, s.cursor, "allocated pointer should be the same as the cursor");
-  TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 8, s.cursor,
-                            "cursor should have moved by 8");
+      allo_math_align_down((uintptr_t)dest - sizeof(uintptr_t),
+                           alignof(uintptr_t)),
+      s.cursor, "allocated pointer should be the same as the cursor");
+  TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 8 - sizeof(uintptr_t), s.cursor,
+                            "cursor should have moved by 8 and the header");
+  TEST_ASSERT_EQUAL_MESSAGE(8 + sizeof(uintptr_t), *(uintptr_t *)s.cursor,
+                            "size of the header must match");
   TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 8),
                            "allocated pointer should be aligned");
-  TEST_ASSERT_EQUAL_MESSAGE(8, s.last_alloc_size, "allocated size must be 8");
 }
 
 int main(void) {
