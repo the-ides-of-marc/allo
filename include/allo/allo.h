@@ -16,6 +16,7 @@
 #include "allo_allocator.h"
 #include "allo_bump.h"
 #include "allo_pool.h"
+#include "allo_stack.h"
 #include "allo_status.h"
 // IWYU pragma: end_exports
 
