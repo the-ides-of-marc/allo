@@ -8,9 +8,10 @@
 // to use via dynamic dispatch.
 //
 // Allocator implementations:
-// - Allocator interface (see allo/allocator.h)
-// - Fixed sized bump allocator (see allo/bump.h)
-// - Fixed size pool allocator (see allo/pool.h)
+// - Allocator interface (see allo/allo_allocator.h)
+// - Fixed sized bump allocator (see allo/allo_bump.h)
+// - Fixed sized stack allocator (see allo/allo_stack.h)
+// - Fixed sized pool allocator (see allo/allo_pool.h)
 
 // IWYU pragma: begin_exports
 #include "allo_allocator.h"
