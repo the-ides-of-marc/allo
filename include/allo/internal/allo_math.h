@@ -79,8 +79,6 @@ static inline size_t allo_math_round_pow2(size_t n) {
 #endif
 #if SIZE_MAX == UINT64_MAX
   n |= n >> 32;
-#else
-#error "unsupported size_t"
 #endif
   return ++n;
 }
