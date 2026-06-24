@@ -80,7 +80,7 @@ void test_allo_stack_free_empty(void) {
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "initialization should succeed");
   allo_stack_assert(&s);
-  status = allo_stack_free(&s);
+  allo_stack_free(&s);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "free should be a no-op");
   allo_stack_assert(&s);
@@ -95,15 +95,37 @@ void test_allo_stack_free_not_empty(void) {
                                         "initialization should succeed");
 
   void *dest = NULL;
-  status = allo_stack_alloc(&dest, &s, 8, 8);
+  allo_stack_alloc(&dest, &s, 8, 8);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "allocation should succeed");
 
   allo_stack_assert(&s);
-  status = allo_stack_free(&s);
+  allo_stack_free(&s);
   TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
                                         "free should be a no-op");
   allo_stack_assert(&s);
+}
+
+void test_allo_stack_free_all(void) {
+  enum { BUFSIZE = 1 << 10 };
+  uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
+  allo_stack s = {0};
+  allo_status status = allo_stack_init(&s, buf, BUFSIZE);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "initialization should succeed");
+
+  void *dest = NULL;
+  status = allo_stack_alloc(&dest, &s, 32, 8);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "allocation should succeed");
+  allo_stack_alloc(&dest, &s, 32, 8);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "allocation should succeed");
+
+  allo_stack_free_all(&s);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "free all should succeed");
+  TEST_ASSERT_EQUAL_MESSAGE(s.end, s.cursor, "cursor must be at the end");
 }
 
 int main(void) {
@@ -116,6 +138,8 @@ int main(void) {
 
   RUN_TEST(test_allo_stack_free_empty);
   RUN_TEST(test_allo_stack_free_not_empty);
+
+  RUN_TEST(test_allo_stack_free_all);
 
   return UNITY_END();
 }

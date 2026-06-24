@@ -29,7 +29,10 @@ allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                  allo_stack *ALLO_RESTRICT s, size_t size, size_t align);
 
 // Frees the latest allocation.
-static inline allo_status allo_stack_free(allo_stack *s);
+static inline void allo_stack_free(allo_stack *s);
+
+// Frees all memory allocated on allocator `s`.
+static inline void allo_stack_free_all(allo_stack *s);
 
 struct allo_stack {
   uintptr_t start;
@@ -89,11 +92,11 @@ allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   return ALLO_OK;
 }
 
-static inline allo_status allo_stack_free(allo_stack *s) {
+static inline void allo_stack_free(allo_stack *s) {
   allo_stack_assert(s);
 
   if (s->cursor == s->end) {
-    return ALLO_OK;
+    return;
   }
 
   uintptr_t next_cursor = *(uintptr_t *)s->cursor;
@@ -103,7 +106,13 @@ static inline allo_status allo_stack_free(allo_stack *s) {
   s->cursor = next_cursor;
 
   allo_stack_assert(s);
-  return ALLO_OK;
+  return;
+}
+
+static inline void allo_stack_free_all(allo_stack *s) {
+  allo_stack_assert(s);
+  s->cursor = s->end;
+  allo_stack_assert(s);
 }
 
 #endif // !ALLO_STACK_H
