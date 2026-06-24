@@ -28,6 +28,9 @@ static inline allo_status
 allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
                  allo_stack *ALLO_RESTRICT s, size_t size, size_t align);
 
+// Frees the latest allocation.
+static inline allo_status allo_stack_free(allo_stack *s);
+
 struct allo_stack {
   uintptr_t start;
   uintptr_t end;
@@ -37,8 +40,8 @@ struct allo_stack {
 static inline void allo_stack_assert(allo_stack *s) {
   ALLO_ASSERT(s, "stack allocator must not be NULL");
   ALLO_ASSERT(s->start < s->end, "start must be < end");
-  ALLO_ASSERT(s->start <= s->cursor, "start must be < cursor");
-  ALLO_ASSERT(s->cursor <= s->end, "cursor must be < end");
+  ALLO_ASSERT(s->start <= s->cursor, "start must be <= cursor");
+  ALLO_ASSERT(s->cursor <= s->end, "cursor must be <= end");
   (void)s;
 }
 
@@ -79,8 +82,24 @@ allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   *dest = (void *)next_cursor;
   next_cursor =
       allo_math_align_down(next_cursor - sizeof(uintptr_t), alignof(uintptr_t));
-  uintptr_t blksize = s->cursor - next_cursor;
-  *(uintptr_t *)next_cursor = blksize;
+  *(uintptr_t *)next_cursor = s->cursor;
+  s->cursor = next_cursor;
+
+  allo_stack_assert(s);
+  return ALLO_OK;
+}
+
+static inline allo_status allo_stack_free(allo_stack *s) {
+  allo_stack_assert(s);
+
+  if (s->cursor == s->end) {
+    return ALLO_OK;
+  }
+
+  uintptr_t next_cursor = *(uintptr_t *)s->cursor;
+  ALLO_ASSERT(s->start <= next_cursor, "start must be <= next cursor");
+  ALLO_ASSERT(next_cursor <= s->end, "next cursor must be <= end");
+
   s->cursor = next_cursor;
 
   allo_stack_assert(s);

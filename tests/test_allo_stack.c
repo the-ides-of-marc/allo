@@ -43,7 +43,7 @@ void test_allo_stack_alloc_no_alignment_shifting(void) {
   TEST_ASSERT_EQUAL_MESSAGE(
       buf + BUFSIZE - 32 - sizeof(uintptr_t), s.cursor,
       "cursor should have moved by 32 and the uintptr header");
-  TEST_ASSERT_EQUAL_MESSAGE(32 + sizeof(uintptr_t), *(uintptr_t *)s.cursor,
+  TEST_ASSERT_EQUAL_MESSAGE(s.end, *(uintptr_t *)s.cursor,
                             "size of the header must match");
   TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 32),
                            "allocated pointer should be aligned");
@@ -66,10 +66,44 @@ void test_allo_stack_alloc_with_alignment_shifting(void) {
       s.cursor, "allocated pointer should be the same as the cursor");
   TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 8 - sizeof(uintptr_t), s.cursor,
                             "cursor should have moved by 8 and the header");
-  TEST_ASSERT_EQUAL_MESSAGE(8 + sizeof(uintptr_t), *(uintptr_t *)s.cursor,
+  TEST_ASSERT_EQUAL_MESSAGE(s.end, *(uintptr_t *)s.cursor,
                             "size of the header must match");
   TEST_ASSERT_TRUE_MESSAGE(allo_math_is_aligned((uintptr_t)dest, 8),
                            "allocated pointer should be aligned");
+}
+
+void test_allo_stack_free_empty(void) {
+  enum { BUFSIZE = 1 << 10 };
+  uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
+  allo_stack s = {0};
+  allo_status status = allo_stack_init(&s, buf, BUFSIZE);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "initialization should succeed");
+  allo_stack_assert(&s);
+  status = allo_stack_free(&s);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "free should be a no-op");
+  allo_stack_assert(&s);
+}
+
+void test_allo_stack_free_not_empty(void) {
+  enum { BUFSIZE = 1 << 10 };
+  uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
+  allo_stack s = {0};
+  allo_status status = allo_stack_init(&s, buf, BUFSIZE);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "initialization should succeed");
+
+  void *dest = NULL;
+  status = allo_stack_alloc(&dest, &s, 8, 8);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "allocation should succeed");
+
+  allo_stack_assert(&s);
+  status = allo_stack_free(&s);
+  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+                                        "free should be a no-op");
+  allo_stack_assert(&s);
 }
 
 int main(void) {
@@ -79,6 +113,9 @@ int main(void) {
 
   RUN_TEST(test_allo_stack_alloc_no_alignment_shifting);
   RUN_TEST(test_allo_stack_alloc_with_alignment_shifting);
+
+  RUN_TEST(test_allo_stack_free_empty);
+  RUN_TEST(test_allo_stack_free_not_empty);
 
   return UNITY_END();
 }
