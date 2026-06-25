@@ -2,7 +2,6 @@
 #define ALLO_ALLOCATOR_H
 
 #include "allo_status.h"
-#include "internal/allo_defines.h"
 #include <stddef.h>
 
 // Allocator interface that provides common operations on allocator
@@ -31,9 +30,9 @@ static inline allo_status allo_free(allo_allocator a, void *ptr);
 static inline allo_status allo_free_all(allo_allocator a);
 
 struct allo_allocator_vtable {
-  allo_status (*alloc)(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                       void *ALLO_RESTRICT ctx, size_t size, size_t align);
-  allo_status (*free)(void *ALLO_RESTRICT ctx, void *ALLO_RESTRICT ptr);
+  allo_status (*alloc)(void *restrict *restrict dest, void *restrict ctx,
+                       size_t size, size_t align);
+  allo_status (*free)(void *restrict ctx, void *restrict ptr);
   allo_status (*free_all)(void *ctx);
 };
 

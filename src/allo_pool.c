@@ -1,9 +1,9 @@
 #include "allo/allo_pool.h"
 
-static allo_status pool_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                      void *ALLO_RESTRICT ctx, size_t size,
+static allo_status pool_alloc_adapter(void *restrict *restrict dest,
+                                      void *restrict ctx, size_t size,
                                       size_t align) {
-  allo_pool *pool = (allo_pool * ALLO_RESTRICT) ctx;
+  allo_pool *pool = (allo_pool *restrict)ctx;
   ALLO_ASSERT(pool->chunk_size == size,
               "size must match pool allocator's chunk size");
   ALLO_ASSERT(pool->align == align,
@@ -13,9 +13,8 @@ static allo_status pool_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
   return allo_pool_alloc(dest, pool);
 }
 
-static allo_status pool_free_adapter(void *ALLO_RESTRICT ctx,
-                                     void *ALLO_RESTRICT ptr) {
-  allo_pool_free((allo_pool * ALLO_RESTRICT) ctx, ptr);
+static allo_status pool_free_adapter(void *restrict ctx, void *restrict ptr) {
+  allo_pool_free((allo_pool *restrict)ctx, ptr);
   return ALLO_OK;
 }
 

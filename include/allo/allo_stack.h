@@ -4,7 +4,6 @@
 #include "allo/allo_allocator.h"
 #include "allo/allo_config.h"
 #include "allo/allo_status.h"
-#include "allo/internal/allo_defines.h"
 #include "allo/internal/allo_math.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -17,16 +16,15 @@ static inline void allo_stack_assert(allo_stack *s);
 
 // Initializes the stack allocator `s` to manage `buf` from
 // `buf[0]..buf[bufsize-1]`.
-static inline allo_status allo_stack_init(allo_stack *ALLO_RESTRICT s,
-                                          void *ALLO_RESTRICT buf,
-                                          size_t bufsize);
+static inline allo_status allo_stack_init(allo_stack *restrict s,
+                                          void *restrict buf, size_t bufsize);
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
-static inline allo_status
-allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                 allo_stack *ALLO_RESTRICT s, size_t size, size_t align);
+static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
+                                           allo_stack *restrict s, size_t size,
+                                           size_t align);
 
 // Frees the latest allocation.
 static inline void allo_stack_free(allo_stack *s);
@@ -50,9 +48,8 @@ static inline void allo_stack_assert(allo_stack *s) {
   (void)s;
 }
 
-static inline allo_status allo_stack_init(allo_stack *ALLO_RESTRICT s,
-                                          void *ALLO_RESTRICT buf,
-                                          size_t bufsize) {
+static inline allo_status allo_stack_init(allo_stack *restrict s,
+                                          void *restrict buf, size_t bufsize) {
   if (!s || !buf) {
     return ALLO_ERR_INVALID_NULL;
   }
@@ -68,9 +65,9 @@ static inline allo_status allo_stack_init(allo_stack *ALLO_RESTRICT s,
   return ALLO_OK;
 }
 
-static inline allo_status
-allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                 allo_stack *ALLO_RESTRICT s, size_t size, size_t align) {
+static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
+                                           allo_stack *restrict s, size_t size,
+                                           size_t align) {
   ALLO_ASSERT(dest, "dest must not be NULL");
   ALLO_ASSERT(size, "size mut not be 0");
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");

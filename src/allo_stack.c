@@ -1,14 +1,14 @@
 #include "allo/allo_stack.h"
 #include "allo/allo_status.h"
 
-static allo_status
-allo_stack_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                         void *ALLO_RESTRICT ctx, size_t size, size_t align) {
+static allo_status allo_stack_alloc_adapter(void *restrict *restrict dest,
+                                            void *restrict ctx, size_t size,
+                                            size_t align) {
   return allo_stack_alloc(dest, (allo_stack *)ctx, size, align);
 }
 
-static allo_status allo_stack_free_adapter(void *ALLO_RESTRICT ctx,
-                                           void *ALLO_RESTRICT ptr) {
+static allo_status allo_stack_free_adapter(void *restrict ctx,
+                                           void *restrict ptr) {
   (void)ptr;
   allo_stack_free((allo_stack *)ctx);
   return ALLO_OK;
