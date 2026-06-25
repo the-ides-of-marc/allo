@@ -25,9 +25,8 @@ static void mock_state_init(struct mock_state *m) {
   m->ptr_last_allocated = NULL;
 }
 
-static allo_status mock_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                              void *ALLO_RESTRICT ctx, size_t size,
-                              size_t align) {
+static allo_status mock_alloc(void *restrict *restrict dest, void *restrict ctx,
+                              size_t size, size_t align) {
   struct mock_state *state = ctx;
   ++state->alloc_calls;
   *dest = (void *)(MOCK_BASE_ADDR + size + align);

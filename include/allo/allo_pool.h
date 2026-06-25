@@ -4,7 +4,6 @@
 #include "allo/allo_allocator.h"
 #include "allo/internal/allo_common.h"
 #include "allo_status.h"
-#include "internal/allo_defines.h"
 #include "internal/allo_math.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -31,21 +30,18 @@ static inline void allo_pool_assert(const allo_pool *p);
 // ALLO_ERR_INVALID_ALIGN is returned if `align` is 0.
 // ALLO_ERR_MEM_NOT_ALIGNED is returned if the `buf`  is not aligned with the
 // rounded `align`.
-static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
-                                         void *ALLO_RESTRICT buf,
-                                         size_t buf_size, size_t chunk_size,
-                                         size_t align);
+static inline allo_status allo_pool_init(allo_pool *restrict p,
+                                         void *restrict buf, size_t buf_size,
+                                         size_t chunk_size, size_t align);
 
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
 // The free list is then updated to point to the next free chunk of memory.
-static inline allo_status
-allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                allo_pool *ALLO_RESTRICT p);
+static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
+                                          allo_pool *restrict p);
 
 // Frees the memory allocated at `ptr`.
 // The free list is then updated to point to `ptr`.
-static inline void allo_pool_free(allo_pool *ALLO_RESTRICT p,
-                                  void *ALLO_RESTRICT ptr);
+static inline void allo_pool_free(allo_pool *restrict p, void *restrict ptr);
 
 // Frees all memory allocated on allocator `p`.
 static inline void allo_pool_free_all(allo_pool *p);
@@ -122,10 +118,9 @@ static inline void allo_pool_freelist_reset_(allo_pool *p) {
   allo_pool_assert(p);
 }
 
-static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
-                                         void *ALLO_RESTRICT buf,
-                                         size_t buf_size, size_t chunk_size,
-                                         size_t align) {
+static inline allo_status allo_pool_init(allo_pool *restrict p,
+                                         void *restrict buf, size_t buf_size,
+                                         size_t chunk_size, size_t align) {
   if (!p || !buf) {
     return ALLO_ERR_INVALID_NULL;
   }
@@ -170,9 +165,8 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
   return ALLO_OK;
 }
 
-static inline allo_status
-allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                allo_pool *ALLO_RESTRICT p) {
+static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
+                                          allo_pool *restrict p) {
   allo_pool_assert(p);
 
   *dest = NULL;
@@ -190,8 +184,7 @@ allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
 
 // Frees the memory allocated at `ptr`.
 // The free list is then updated to point to `ptr`.
-static inline void allo_pool_free(allo_pool *ALLO_RESTRICT p,
-                                  void *ALLO_RESTRICT ptr) {
+static inline void allo_pool_free(allo_pool *restrict p, void *restrict ptr) {
   allo_pool_assert(p);
   ALLO_ASSERT(ptr, "ptr must not be NULL");
   ALLO_ASSERT(p->start <= (uintptr_t)ptr,

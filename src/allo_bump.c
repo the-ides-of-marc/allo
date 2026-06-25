@@ -1,13 +1,12 @@
 #include "allo/allo_bump.h"
 
-static allo_status bump_alloc_adapter(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
-                                      void *ALLO_RESTRICT ctx, size_t size,
+static allo_status bump_alloc_adapter(void *restrict *restrict dest,
+                                      void *restrict ctx, size_t size,
                                       size_t align) {
   return allo_bump_alloc(dest, (allo_bump *)ctx, size, align);
 }
 
-static allo_status bump_free_adapter(void *ALLO_RESTRICT ctx,
-                                     void *ALLO_RESTRICT ptr) {
+static allo_status bump_free_adapter(void *restrict ctx, void *restrict ptr) {
   (void)ctx;
   (void)ptr;
   return ALLO_OK;
