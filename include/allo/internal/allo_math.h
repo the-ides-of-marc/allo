@@ -99,4 +99,6 @@ static inline uintptr_t allo_math_align_down(uintptr_t n, size_t align) {
   return n & ~(align - 1);
 }
 
+#define ALLO_MATH_ALIGNOF(T) __alignof__(T)
+
 #endif // !ALLO_MATH_H
