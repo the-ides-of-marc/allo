@@ -56,7 +56,7 @@ target_include_directories(allo
         src
 )
 setup_dev_flags(allo)
-target_compile_features(allo PUBLIC c_std_11)
+target_compile_features(allo PUBLIC c_std_99)
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
