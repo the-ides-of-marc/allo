@@ -9,8 +9,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(unity)
 
-add_library(allo_test STATIC test_utils.c)
-target_include_directories(allo_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(allo_test STATIC allo_test/test_utils.c)
+target_include_directories(allo_test PUBLIC allo_test)
 target_link_libraries(allo_test PRIVATE unity allo)
 
 function(add_allo_test TEST_NAME)

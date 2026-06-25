@@ -1,6 +1,6 @@
 #include "allo/allo.h"
 #include "allo/internal/allo_math.h"
-#include "test_utils.h"
+#include "allo_test/test_utils.h"
 #include "unity.h"
 #include <stdalign.h>
 #include <stddef.h>
@@ -169,7 +169,7 @@ void test_alloc_subsequent_allocs(void) {
         "dest should be at the current cursor after allocation");
     TEST_ASSERT_TRUE_MESSAGE(
         allo_math_is_aligned((b.end - tests[i].expected_offset),
-                                     tests[i].align),
+                             tests[i].align),
         "expected cursor position should be aligned");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end - tests[i].expected_offset, b.cursor,
                                   "cursor should be at the expected offset");
