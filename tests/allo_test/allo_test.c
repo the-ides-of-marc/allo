@@ -1,11 +1,4 @@
 #include "allo_test.h"
-#include "allo/internal/allo_math.h"
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unity.h>
-#include <unity_internals.h>
 
-
+const size_t allo_test_alignments[] = {1,      1 << 1, 1 << 2, 1 << 3,
+                                       1 << 4, 1 << 5, 1 << 6};
