@@ -12,6 +12,11 @@ option(ENABLE_SANITIZERS "Enable UBSan and ASan" OFF)
 include(GNUInstallDirs)
 
 function(setup_dev_flags target_name)
+    set_target_properties(${target_name} PROPERTIES
+        C_STANDARD 99
+        C_STANDARD_REQUIRED ON
+        C_EXTENSIONS OFF
+    )
     target_compile_options(${target_name}
         PRIVATE
             $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:
