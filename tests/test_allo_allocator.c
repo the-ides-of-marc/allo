@@ -64,8 +64,7 @@ void test_alloc_and_free(void) {
 
   void *dest = NULL;
   allo_status status = allo_alloc(&dest, allocator, 64, 16);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "allocation should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(
       MOCK_BASE_ADDR + 64 + 16, dest,
       "ptr should point to mocked allocation of base addr + size + align");
@@ -87,8 +86,8 @@ void test_allocator_from_fixed_bump(void) {
   uint8_t buf[0x10] __attribute__((aligned(16)));
   allo_bump b;
   allo_status status = allo_bump_init(&b, buf, 0x10);
-  ALLO_TEST_ASSERT_STATUS_MSG(
-      ALLO_OK, status, "allocation initialization should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
+                              "allocation initialization should succeed");
   allo_allocator a = allo_allocator_from_bump(&b);
   TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
                                 "ptr should point to underlying allocator");

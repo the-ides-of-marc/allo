@@ -31,12 +31,10 @@ void test_allo_stack_alloc_no_alignment_shifting(void) {
   uint8_t buf[BUFSIZE] __attribute__((aligned(32)));
   allo_stack s = {0};
   allo_status status = allo_stack_init(&s, buf, BUFSIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "initialization should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "initialization should succeed");
   void *dest = NULL;
   status = allo_stack_alloc(&dest, &s, 32, 32);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "allocation should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "allocation should succeed");
   TEST_ASSERT_EQUAL_MESSAGE(
       (uintptr_t)dest - sizeof(uintptr_t), s.cursor,
       "allocated pointer should be the same as the cursor");
@@ -54,12 +52,10 @@ void test_allo_stack_alloc_with_alignment_shifting(void) {
   uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
   allo_stack s = {0};
   allo_status status = allo_stack_init(&s, buf, BUFSIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "initialization should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "initialization should succeed");
   void *dest = NULL;
   status = allo_stack_alloc(&dest, &s, 1, 8);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "allocation should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "allocation should succeed");
   TEST_ASSERT_EQUAL_MESSAGE(
       allo_math_align_down((uintptr_t)dest - sizeof(uintptr_t),
                            ALLO_MATH_ALIGNOF(uintptr_t)),
@@ -77,12 +73,10 @@ void test_allo_stack_free_empty(void) {
   uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
   allo_stack s = {0};
   allo_status status = allo_stack_init(&s, buf, BUFSIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "initialization should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "initialization should succeed");
   allo_stack_assert(&s);
   allo_stack_free(&s);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "free should be a no-op");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "free should be a no-op");
   allo_stack_assert(&s);
 }
 
@@ -91,18 +85,15 @@ void test_allo_stack_free_not_empty(void) {
   uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
   allo_stack s = {0};
   allo_status status = allo_stack_init(&s, buf, BUFSIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "initialization should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "initialization should succeed");
 
   void *dest = NULL;
   allo_stack_alloc(&dest, &s, 8, 8);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "allocation should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "allocation should succeed");
 
   allo_stack_assert(&s);
   allo_stack_free(&s);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "free should be a no-op");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "free should be a no-op");
   allo_stack_assert(&s);
 }
 
@@ -111,20 +102,16 @@ void test_allo_stack_free_all(void) {
   uint8_t buf[BUFSIZE] __attribute__((aligned(8)));
   allo_stack s = {0};
   allo_status status = allo_stack_init(&s, buf, BUFSIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "initialization should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "initialization should succeed");
 
   void *dest = NULL;
   status = allo_stack_alloc(&dest, &s, 32, 8);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "allocation should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "allocation should succeed");
   allo_stack_alloc(&dest, &s, 32, 8);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "allocation should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "allocation should succeed");
 
   allo_stack_free_all(&s);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                                        "free all should succeed");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "free all should succeed");
   TEST_ASSERT_EQUAL_MESSAGE(s.end, s.cursor, "cursor must be at the end");
 }
 
