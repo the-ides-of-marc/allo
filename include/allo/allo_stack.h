@@ -6,7 +6,6 @@
 #include "allo/allo_status.h"
 #include "allo/internal/allo_defines.h"
 #include "allo/internal/allo_math.h"
-#include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -86,8 +85,8 @@ allo_stack_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
     return ALLO_OOM;
   }
   *dest = (void *)next_cursor;
-  next_cursor =
-      allo_math_align_down(next_cursor - sizeof(uintptr_t), alignof(uintptr_t));
+  next_cursor = allo_math_align_down(next_cursor - sizeof(uintptr_t),
+                                     ALLO_MATH_ALIGNOF(uintptr_t));
   *(uintptr_t *)next_cursor = s->cursor;
   s->cursor = next_cursor;
 

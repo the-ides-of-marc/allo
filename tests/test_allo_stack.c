@@ -62,7 +62,7 @@ void test_allo_stack_alloc_with_alignment_shifting(void) {
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_MESSAGE(
       allo_math_align_down((uintptr_t)dest - sizeof(uintptr_t),
-                           alignof(uintptr_t)),
+                           ALLO_MATH_ALIGNOF(uintptr_t)),
       s.cursor, "allocated pointer should be the same as the cursor");
   TEST_ASSERT_EQUAL_MESSAGE(buf + BUFSIZE - 8 - sizeof(uintptr_t), s.cursor,
                             "cursor should have moved by 8 and the header");
