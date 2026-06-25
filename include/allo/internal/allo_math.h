@@ -79,8 +79,6 @@ static inline size_t allo_math_round_pow2(size_t n) {
 #endif
 #if SIZE_MAX == UINT64_MAX
   n |= n >> 32;
-#else
-#error "unsupported size_t"
 #endif
   return ++n;
 }
@@ -100,5 +98,7 @@ static inline uintptr_t allo_math_align_down(uintptr_t n, size_t align) {
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
   return n & ~(align - 1);
 }
+
+#define ALLO_MATH_ALIGNOF(T) __alignof__(T)
 
 #endif // !ALLO_MATH_H

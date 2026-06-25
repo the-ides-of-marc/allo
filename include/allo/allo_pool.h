@@ -81,6 +81,9 @@ static inline void allo_pool_assert(const allo_pool *p) {
   ALLO_ASSERT(p->chunk_size % p->align == 0,
               "chunk size must be a multiple of alignment");
 
+  ALLO_ASSERT((p->end - p->start) / p->chunk_size,
+              "chunk count must be non-zero");
+
   ALLO_ASSERT(p->start, "start must not be NULL");
   ALLO_ASSERT(p->end, "end must not be NULL");
   ALLO_ASSERT(p->start < p->end, "start must be lesser than end");
@@ -101,6 +104,22 @@ static inline void allo_pool_assert(const allo_pool *p) {
                 "free list must be aligned");
   }
   (void)p;
+}
+
+static inline void allo_pool_freelist_reset_(allo_pool *p) {
+  allo_pool_assert(p);
+
+  size_t chunk_count = (p->end - p->start) / p->chunk_size;
+  void **curr_chunk = (void **)p->start;
+  for (size_t i = 0; i < chunk_count - 1; ++i) {
+    void *next = (uint8_t *)curr_chunk + p->chunk_size;
+    *curr_chunk = next;
+    curr_chunk = next;
+  }
+  *curr_chunk = NULL;
+
+  p->free_list = (void *)p->start;
+  allo_pool_assert(p);
 }
 
 static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
@@ -141,19 +160,11 @@ static inline allo_status allo_pool_init(allo_pool *ALLO_RESTRICT p,
 
   p->chunk_size = chunk_size;
   p->align = align;
-  p->free_list = buf;
   p->start = (uintptr_t)buf;
   p->end = p->start + chunk_count * p->chunk_size;
   ALLO_ASSERT((uintptr_t)p->end <= (uintptr_t)buf + buf_size,
               "end must be within input memory region");
-
-  void **curr_chunk = buf;
-  for (size_t i = 0; i < chunk_count - 1; ++i) {
-    void *next = (uint8_t *)curr_chunk + p->chunk_size;
-    *curr_chunk = next;
-    curr_chunk = next;
-  }
-  *curr_chunk = NULL;
+  allo_pool_freelist_reset_(p);
 
   allo_pool_assert(p);
   return ALLO_OK;
@@ -182,6 +193,7 @@ allo_pool_alloc(void *ALLO_RESTRICT *ALLO_RESTRICT dest,
 static inline void allo_pool_free(allo_pool *ALLO_RESTRICT p,
                                   void *ALLO_RESTRICT ptr) {
   allo_pool_assert(p);
+  ALLO_ASSERT(ptr, "ptr must not be NULL");
   ALLO_ASSERT(p->start <= (uintptr_t)ptr,
               "ptr must be >= start of memory region");
   ALLO_ASSERT((uintptr_t)ptr < p->end, "ptr must be < end of memory region");
@@ -199,7 +211,7 @@ static inline void allo_pool_free(allo_pool *ALLO_RESTRICT p,
 
 static inline void allo_pool_free_all(allo_pool *p) {
   allo_pool_assert(p);
-  p->free_list = &p->start;
+  allo_pool_freelist_reset_(p);
   allo_pool_assert(p);
 }
 
