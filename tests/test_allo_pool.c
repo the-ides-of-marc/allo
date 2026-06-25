@@ -33,9 +33,9 @@ void test_init_chunk_size_and_align(void) {
       allo_status status =
           allo_pool_init(&p, buf_aligned, bufsize, chunk_size, align);
 
-      TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+      ALLO_TEST_ASSERT_STATUS_MSG(
           ALLO_OK, status, "allocator initialization should succeed");
-      TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+      ALLO_TEST_ASSERT_STATUS_MSG(
           ALLO_OK, status, "allocator initialization should succeed");
 
       TEST_ASSERT_EQUAL_size_t_MESSAGE(expected_chunk_size, p.chunk_size,
@@ -81,7 +81,7 @@ void test_init_memory_region(void) {
     allo_pool p = {0};
     allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
                                         tests[i].chunk_size, tests[i].align);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+    ALLO_TEST_ASSERT_STATUS_MSG(
         ALLO_OK, status, "allocator initialization should be succeed");
     TEST_ASSERT_EQUAL_PTR_MESSAGE(buf_aligned, p.start,
                                   "allocator start should match");
@@ -99,7 +99,7 @@ void test_init_memory_region(void) {
 void test_init_null_allocator(void) {
   uint8_t buf[0x100];
   allo_status status = allo_pool_init(NULL, buf, 0x100, 0x10, 0x1);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_ERR_INVALID_NULL, status,
       "error should match for receiving a NULL allocator");
 }
@@ -107,7 +107,7 @@ void test_init_null_allocator(void) {
 void test_init_null_buffer(void) {
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, NULL, 0x100, 0x10, 0x1);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_ERR_INVALID_NULL, status,
       "error should match for receiving a NULL buffer");
 }
@@ -116,7 +116,7 @@ void test_init_zero_buf_size(void) {
   uint8_t buf[0x100];
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, 0, 0x10, 0x1);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_ERR_INVALID_SIZE, status,
       "error should match for receiving a zero buf size");
 }
@@ -125,7 +125,7 @@ void test_init_zero_chunk_size(void) {
   uint8_t buf[0x100];
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, 0x100, 0x0, sizeof(void *));
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_ERR_INVALID_SIZE, status,
       "error should match for receiving a zero chunk size");
 }
@@ -134,7 +134,7 @@ void test_init_zero_alignment(void) {
   uint8_t buf[0x100];
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, 0x100, 0x10, 0x0);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_ERR_INVALID_ALIGNMENT, status,
       "error should match for receiving zero alignment");
 }
@@ -152,7 +152,7 @@ void test_init_memory_not_aligned(void) {
 
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, unaligned_buf, buf_size, 0x10, align);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_ERR_NOT_ALIGNED, status,
       "error should match for receiving a buffer that is not aligned");
 }
@@ -177,7 +177,7 @@ void test_alloc_first_alloc(void) {
     allo_pool p = {0};
     allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
                                         tests[i].chunk_size, tests[i].align);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+    ALLO_TEST_ASSERT_STATUS_MSG(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);
 
@@ -186,7 +186,7 @@ void test_alloc_first_alloc(void) {
 
     void *dest;
     status = allo_pool_alloc(&dest, &p);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                           "allocation should succeed");
 
     TEST_ASSERT_EQUAL_PTR_MESSAGE(p.start, dest,
@@ -223,7 +223,7 @@ void test_alloc_allocs_till_oom(void) {
     allo_pool p = {0};
     allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
                                         tests[i].chunk_size, tests[i].align);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+    ALLO_TEST_ASSERT_STATUS_MSG(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);
 
@@ -233,7 +233,7 @@ void test_alloc_allocs_till_oom(void) {
 
       void *next = *(void **)p.free_list;
       status = allo_pool_alloc(&dest, &p);
-      TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                             "allocation should succeed");
 
       TEST_ASSERT_NOT_EQUAL_MESSAGE(
@@ -248,7 +248,7 @@ void test_alloc_allocs_till_oom(void) {
         p.free_list, "free list should now point to NULL as allocator is full");
 
     status = allo_pool_alloc(&dest, &p);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OOM, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OOM, status,
                                           "allocation should fail due to OOM");
     allo_pool_assert(&p);
     free(buf);
@@ -275,7 +275,7 @@ void test_free_one(void) {
     allo_pool p = {0};
     allo_status status = allo_pool_init(&p, buf_aligned, tests[i].buf_size,
                                         tests[i].chunk_size, tests[i].align);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+    ALLO_TEST_ASSERT_STATUS_MSG(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);
 
@@ -283,7 +283,7 @@ void test_free_one(void) {
     void *dest;
     for (size_t chunk = 0; chunk < chunk_count; ++chunk) {
       status = allo_pool_alloc(&dest, &p);
-      TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                             "allocation should succeed");
     }
 
@@ -320,14 +320,14 @@ void test_free_sequential(void) {
     allo_pool p = {0};
     allo_status status =
         allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
-    TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+    ALLO_TEST_ASSERT_STATUS_MSG(
         ALLO_OK, status, "allocator initialization should be succeed");
     allo_pool_assert(&p);
 
     for (size_t chunk = 0; chunk < 4; ++chunk) {
       void *dest;
       status = allo_pool_alloc(&dest, &p);
-      TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                             "allocation should succeed");
     }
     TEST_ASSERT_EQUAL_PTR_MESSAGE(NULL, p.free_list,
@@ -363,7 +363,7 @@ void test_sequential(void) {
   allo_pool p = {0};
   allo_status status =
       allo_pool_init(&p, buf_aligned, buf_size, chunk_size, align);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(
+  ALLO_TEST_ASSERT_STATUS_MSG(
       ALLO_OK, status, "allocator initialization should be succeed");
   allo_pool_assert(&p);
 
@@ -375,7 +375,7 @@ void test_sequential(void) {
   void *dest;
 
   status = allo_pool_alloc(&dest, &p);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(chunk_positions[0], dest,
                                 "first chunk should be allocated");
@@ -383,7 +383,7 @@ void test_sequential(void) {
                                 "free list should point to the second chunk");
 
   status = allo_pool_alloc(&dest, &p);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(chunk_positions[1], dest,
                                 "second chunk should be allocated");
@@ -391,7 +391,7 @@ void test_sequential(void) {
                                 "free list should point to the second chunk");
 
   status = allo_pool_alloc(&dest, &p);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(chunk_positions[2], dest,
                                 "third chunk should be allocated");
@@ -403,7 +403,7 @@ void test_sequential(void) {
                                 "free list should point to the second chunk");
 
   status = allo_pool_alloc(&dest, &p);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(chunk_positions[2], dest,
                                 "third chunk should be allocated");
@@ -411,7 +411,7 @@ void test_sequential(void) {
                                 "free list should point to the second chunk");
 
   status = allo_pool_alloc(&dest, &p);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OK, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
                                         "allocation should succeed");
   TEST_ASSERT_EQUAL_PTR_MESSAGE(chunk_positions[3], dest,
                                 "fourth chunk should be allocated");
@@ -419,7 +419,7 @@ void test_sequential(void) {
                                 "free list should point to the second chunk");
 
   status = allo_pool_alloc(&dest, &p);
-  TEST_UTILS_ASSERT_ALLO_STATUS_MESSAGE(ALLO_OOM, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OOM, status,
                                         "allocation should fail due to OOM");
 
   allo_pool_assert(&p);
