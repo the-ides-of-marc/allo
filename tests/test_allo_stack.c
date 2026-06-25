@@ -1,7 +1,7 @@
 #include "allo/allo_stack.h"
 #include "allo/allo_status.h"
 #include "allo/internal/allo_math.h"
-#include "allo_test/test_utils.h"
+#include "allo_test/allo_test.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <unity.h>

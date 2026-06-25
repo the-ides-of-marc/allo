@@ -9,7 +9,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(unity)
 
-add_library(allo_test STATIC allo_test/test_utils.c)
+add_library(allo_test STATIC
+    allo_test/allo_test.c
+    allo_test/allo_test_assert.c
+    allo_test/allo_test_io.c
+)
 target_include_directories(allo_test PUBLIC allo_test)
 target_link_libraries(allo_test PRIVATE unity allo)
 
