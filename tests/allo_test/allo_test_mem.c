@@ -4,8 +4,7 @@
 #include <stdlib.h>
 #include <unity_internals.h>
 
-void *allo_test_mem_alloc(void **dest, size_t size, size_t align,
-                                size_t line) {
+void *allo_test_mem_alloc(void **dest, size_t size, size_t align, size_t line) {
   if (!dest) {
     UnityFail("pointer to destination should not be NULL", line);
   }

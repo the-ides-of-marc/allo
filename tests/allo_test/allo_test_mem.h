@@ -8,6 +8,6 @@
 // If malloc returns NULL, it is written to `*dest` and the return is also NULL.
 void *allo_test_mem_alloc(void **dest, size_t size, size_t align, size_t line);
 #define ALLO_TEST_MEM_ALLOC(dest, size, align)                                 \
-  allo_test_mem_malloc_aligned((dest), (size), (align), __LINE__);
+  allo_test_mem_alloc((dest), (size), (align), __LINE__);
 
 #endif // !ALLO_TEST_MEM_H
