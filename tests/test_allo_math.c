@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <unity.h>
-#include <unity_internals.h>
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -22,13 +21,8 @@ void test_allo_math_popcount_uint8(void) {
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uint8_t popcount = allo_math_popcount_uint8(testcases[i].n);
-    if (testcases[i].expected != popcount) {
-      enum { BUFSIZE = 1 << 6 };
-      char buf[BUFSIZE];
-      snprintf(buf, BUFSIZE, "n=%.02x expected=%u actual=%u", testcases[i].n,
-               testcases[i].expected, popcount);
-      TEST_FAIL_MESSAGE(buf);
-    }
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, popcount,
+                              "popcount must match");
   }
 }
 
@@ -46,13 +40,8 @@ void test_allo_math_popcount_uint16(void) {
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uint8_t popcount = allo_math_popcount_uint16(testcases[i].n);
-    if (testcases[i].expected != popcount) {
-      enum { BUFSIZE = 1 << 6 };
-      char buf[BUFSIZE];
-      snprintf(buf, BUFSIZE, "n=%.04x expected=%u actual=%u", testcases[i].n,
-               testcases[i].expected, popcount);
-      TEST_FAIL_MESSAGE(buf);
-    }
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, popcount,
+                              "popcount must match");
   }
 }
 
@@ -71,13 +60,8 @@ void test_allo_math_popcount_uint32(void) {
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uint8_t popcount = allo_math_popcount_uint32(testcases[i].n);
-    if (testcases[i].expected != popcount) {
-      enum { BUFSIZE = 1 << 6 };
-      char buf[BUFSIZE];
-      snprintf(buf, BUFSIZE, "n=%.08x expected=%u actual=%u", testcases[i].n,
-               testcases[i].expected, popcount);
-      TEST_FAIL_MESSAGE(buf);
-    }
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, popcount,
+                              "popcount must match");
   }
 }
 
@@ -100,13 +84,8 @@ void test_allo_math_popcount_uint64(void) {
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uint8_t popcount = allo_math_popcount_uint64(testcases[i].n);
-    if (testcases[i].expected != popcount) {
-      enum { BUFSIZE = 1 << 6 };
-      char buf[BUFSIZE];
-      snprintf(buf, BUFSIZE, "n=%lx expected=%u actual=%u", testcases[i].n,
-               testcases[i].expected, popcount);
-      TEST_FAIL_MESSAGE(buf);
-    }
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, popcount,
+                              "popcount must match");
   }
 }
 
@@ -130,47 +109,47 @@ void test_allo_math_ctz_size_t(void) {
   };
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uint8_t zeroes = allo_math_ctz_size_t(testcases[i].n);
-    if (testcases[i].expected != zeroes) {
-      enum { BUFSIZE = 1 << 6 };
-      char buf[BUFSIZE];
-      snprintf(buf, BUFSIZE, "n=%zu expected=%u actual=%u", testcases[i].n,
-               testcases[i].expected, zeroes);
-      TEST_FAIL_MESSAGE(buf);
-    }
+    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, zeroes,
+                              "zeroes must match");
   }
 }
 
 void test_allo_math_is_pow2(void) {
   TEST_ASSERT_FALSE_MESSAGE(allo_math_is_pow2(0), "zero is not a power of 2");
 
-  enum { BUFSIZE = 1 << 8 };
-  char buffer[BUFSIZE];
+  enum { BUF_SIZE = 1 << 8 };
+  char buf[BUF_SIZE];
 
   for (size_t i = 1; i != 0; i <<= 1) {
-    snprintf(buffer, BUFSIZE, "i=%zu is a power of 2", i);
-    TEST_ASSERT_TRUE_MESSAGE(allo_math_is_pow2(i), buffer);
+    if (!allo_math_is_pow2(i)) {
+      snprintf(buf, BUF_SIZE, "i=%zu is a power of 2", i);
+      TEST_FAIL_MESSAGE(buf);
+    }
   }
 
   size_t not_pow2[] = {3, 5, 7, 9, 11, 13, 14, 15, 17, 31, 33, 63, 65};
 
   for (size_t i = 0; i < ALLO_ARR_LEN(not_pow2); ++i) {
-    snprintf(buffer, BUFSIZE, "i=%zu is not a power of 2", not_pow2[i]);
-    TEST_ASSERT_FALSE_MESSAGE(allo_math_is_pow2(not_pow2[i]), buffer);
+    if (allo_math_is_pow2(not_pow2[i])) {
+      snprintf(buf, BUF_SIZE, "i=%zu is not a power of 2", not_pow2[i]);
+      TEST_FAIL_MESSAGE(buf);
+    }
   }
 }
 
 void test_allo_math_round_pow2(void) {
-  enum { BUFSIZE = 1 << 10 };
-  char buf[BUFSIZE] = {0};
+  enum { BUF_SIZE = 1 << 10 };
+  char buf[BUF_SIZE] = {0};
 
   for (size_t shift = 0; shift < ALLO_MIN(5, SIZE_MAX); ++shift) {
     size_t expected = 1 << shift;
     for (size_t n = (expected >> 1) + 1; n <= expected; ++n) {
       size_t rounded = allo_math_round_pow2(n);
-      int written =
-          snprintf(buf, BUFSIZE, "expected=%zu actual=%zu", expected, rounded);
-      TEST_ASSERT_TRUE_MESSAGE(written < BUFSIZE, "test message was truncated");
-      TEST_ASSERT_EQUAL_MESSAGE(expected, rounded, buf);
+      if (expected != rounded) {
+        snprintf(buf, BUF_SIZE, "expected=%zu rounded=%zu n=%zu", expected,
+                 rounded, n);
+        TEST_FAIL_MESSAGE(buf);
+      }
     }
   }
 }
@@ -200,15 +179,17 @@ void test_allo_math_is_aligned(void) {
       {0xc, 0x4, true}, {0xd, 0x4, false}, {0xe, 0x4, false}, {0xf, 0x4, false},
   };
 
-  enum { BUFSIZE = 1 << 8 };
-  char buffer[BUFSIZE] = {0};
+  enum { BUF_SIZE = 1 << 8 };
+  char buf[BUF_SIZE] = {0};
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     bool is_aligned =
         allo_math_is_aligned(testcases[i].mem, testcases[i].align);
-    snprintf(buffer, BUFSIZE, "expected=%d actual=%d mem=0x%lx",
-             testcases[i].expected, is_aligned, testcases[i].mem);
-    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, is_aligned, buffer);
+    if (testcases[i].expected != is_aligned) {
+      snprintf(buf, BUF_SIZE, "expected=%d actual=%d mem=0x%lx",
+               testcases[i].expected, is_aligned, testcases[i].mem);
+      TEST_FAIL_MESSAGE(buf);
+    }
   }
 }
 
@@ -237,14 +218,16 @@ void test_allo_math_align_up(void) {
 
   };
 
-  enum { BUFSIZE = 1 << 8 };
-  char buffer[BUFSIZE] = {0};
+  enum { BUF_SIZE = 1 << 8 };
+  char buf[BUF_SIZE] = {0};
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uintptr_t n = allo_math_align_up(testcases[i].n, testcases[i].align);
-    snprintf(buffer, BUFSIZE, "expected=0x%lx actual=0x%lx n=0x%lx align=%zu",
-             n, testcases[i].expected, testcases[i].n, testcases[i].align);
-    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, n, buffer);
+    if (testcases[i].expected != n) {
+      snprintf(buf, BUF_SIZE, "expected=0x%lx actual=0x%lx n=0x%lx align=%zu",
+               n, testcases[i].expected, testcases[i].n, testcases[i].align);
+      TEST_FAIL_MESSAGE(buf);
+    }
   }
 }
 
@@ -273,14 +256,16 @@ void test_allo_math_align_down(void) {
 
   };
 
-  enum { BUFSIZE = 1 << 8 };
-  char buffer[BUFSIZE] = {0};
+  enum { BUF_SIZE = 1 << 8 };
+  char buf[BUF_SIZE] = {0};
 
   for (size_t i = 0; i < ALLO_ARR_LEN(testcases); ++i) {
     uintptr_t n = allo_math_align_down(testcases[i].n, testcases[i].align);
-    snprintf(buffer, BUFSIZE, "expected=0x%lx actual=0x%lx n=0x%lx align=%zu",
-             n, testcases[i].expected, testcases[i].n, testcases[i].align);
-    TEST_ASSERT_EQUAL_MESSAGE(testcases[i].expected, n, buffer);
+    if (testcases[i].expected != n) {
+      snprintf(buf, BUF_SIZE, "expected=0x%lx actual=0x%lx n=0x%lx align=%zu",
+               n, testcases[i].expected, testcases[i].n, testcases[i].align);
+      TEST_FAIL_MESSAGE(buf);
+    }
   }
 }
 
