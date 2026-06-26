@@ -4,7 +4,7 @@
 
 void allo_test_assert_status(allo_status expected, allo_status actual,
                              const char *message, size_t line) {
-  enum { BUFSIZE = 1 << 6 };
+  enum { BUFSIZE = 1 << 10 };
   if (expected != actual) {
     char buf[BUFSIZE] = {0};
     size_t offset = 0;

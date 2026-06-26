@@ -18,22 +18,21 @@ static inline void allo_bump_assert(allo_bump *b);
 // returned if `b` or `buf` is NULL. ALLO_ERR_INVALID_SIZE is returned if `size`
 // is 0.
 static inline allo_status allo_bump_init(allo_bump *restrict b,
-                                         void *restrict buf, size_t size);
+                                         void *restrict buf, size_t buf_size);
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
-static inline allo_status
-allo_bump_alloc(void *restrict *restrict dest,
-                allo_bump *restrict b, size_t size, size_t align);
+static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
+                                          allo_bump *restrict b, size_t size,
+                                          size_t align);
 
 // Sets the allocator's cursor to point to the given `cursor` address.
 // ALLO_ERR_NULL is returned if `b` or `cursor` is NULL.
 // ALLO_ERR_OUT_OF_BOUNDS is returned if `cursor` is outside of the allocator's
 // memory region.
-static inline allo_status
-allo_bump_set_cursor(allo_bump *restrict b,
-                     const void *restrict cursor);
+static inline allo_status allo_bump_set_cursor(allo_bump *restrict b,
+                                               const void *restrict cursor);
 
 // Resets the allocator by setting the cursor back to its beginning position,
 // buf[size].
@@ -65,25 +64,25 @@ static inline void allo_bump_assert(allo_bump *b) {
 }
 
 static inline allo_status allo_bump_init(allo_bump *restrict b,
-                                         void *restrict buf, size_t size) {
+                                         void *restrict buf, size_t buf_size) {
   if (!b || !buf) {
     return ALLO_ERR_INVALID_NULL;
   }
-  if (!size) {
+  if (!buf_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
 
   b->start = (uintptr_t)buf;
-  b->end = b->start + size;
+  b->end = b->start + buf_size;
   b->cursor = b->end;
 
   allo_bump_assert(b);
   return ALLO_OK;
 }
 
-static inline allo_status
-allo_bump_alloc(void *restrict *restrict dest,
-                allo_bump *restrict b, size_t size, size_t align) {
+static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
+                                          allo_bump *restrict b, size_t size,
+                                          size_t align) {
   ALLO_ASSERT(dest, "dest must not be NULL");
   allo_bump_assert(b);
   ALLO_ASSERT(size, "size to allocate must be non-zero");
@@ -105,9 +104,8 @@ allo_bump_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-static inline allo_status
-allo_bump_set_cursor(allo_bump *restrict b,
-                     const void *restrict cursor) {
+static inline allo_status allo_bump_set_cursor(allo_bump *restrict b,
+                                               const void *restrict cursor) {
   if (!b || !cursor) {
     return ALLO_ERR_INVALID_NULL;
   }
