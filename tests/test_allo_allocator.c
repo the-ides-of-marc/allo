@@ -82,23 +82,8 @@ void test_alloc_and_free(void) {
       "freed pointer should be correctly tracked by mock free");
 }
 
-void test_allocator_from_fixed_bump(void) {
-  uint8_t buf[0x10] __attribute__((aligned(16)));
-  allo_bump b;
-  allo_status status = allo_bump_init(&b, buf, 0x10);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status,
-                              "allocation initialization should succeed");
-  allo_allocator a = allo_allocator_from_bump(&b);
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
-                                "ptr should point to underlying allocator");
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(
-      &allo_bump_vtable, a.vtable,
-      "vtable should point to bump allocator's vtable");
-}
-
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_alloc_and_free);
-  RUN_TEST(test_allocator_from_fixed_bump);
   return UNITY_END();
 }

@@ -1,4 +1,5 @@
 #include "allo/allo.h"
+#include "allo/allo_allocator.h"
 #include "allo/allo_bump.h"
 #include "allo/allo_status.h"
 #include "allo/internal/allo_common.h"
@@ -266,7 +267,7 @@ static void test_allo_bump_buf_alignments(void) {
     void *buf = NULL;
     void *aligned_buf = ALLO_TEST_MEM_ALLOC(&buf, BUF_SIZE, aligns[align_i]);
 
-    allo_bump b;
+    allo_bump b = {0};
     allo_status status = allo_bump_init(&b, aligned_buf, BUF_SIZE);
     ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
     allo_bump_assert(&b);
@@ -297,6 +298,22 @@ static void test_allo_bump_buf_alignments(void) {
   }
 }
 
+// Tests creating an allocator interface from a concrete bump allocator.
+static void test_allo_allocator_from_bump(void) {
+  uint8_t buf[BUF_SIZE] = {0};
+  allo_bump b = {0};
+  allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+  allo_bump_assert(&b);
+
+  allo_allocator a = allo_allocator_from_bump(&b);
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
+                                "underlying allocator must match");
+  TEST_ASSERT_EQUAL_PTR_MESSAGE(&allo_bump_vtable, a.vtable,
+                                "vtable must match");
+  allo_bump_assert(a.allocator);
+}
+
 int main(void) {
   UNITY_BEGIN();
 
@@ -317,6 +334,8 @@ int main(void) {
   RUN_TEST(test_allo_bump_reset);
 
   RUN_TEST(test_allo_bump_buf_alignments);
+
+  RUN_TEST(test_allo_allocator_from_bump);
 
   return UNITY_END();
 }
