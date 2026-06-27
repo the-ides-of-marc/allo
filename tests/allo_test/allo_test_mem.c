@@ -17,7 +17,7 @@ void *allo_test_mem_alloc(void **dest, size_t size, size_t align, size_t line) {
 
   *dest = malloc(size + align);
   if (!*dest) {
-    return NULL;
+    UnityFail("allocation failed", line);
   }
 
   uintptr_t addr = (uintptr_t)*dest;

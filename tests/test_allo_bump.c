@@ -5,10 +5,13 @@
 #include "allo/internal/allo_math.h"
 #include "allo_test/allo_test.h"
 #include "allo_test_assert.h"
+#include "allo_test_mem.h"
 #include "unity.h"
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <unity_internals.h>
 
 void setUp(void) {}
 
@@ -16,9 +19,12 @@ void tearDown(void) {}
 
 enum { BUF_SIZE = 1 << 10 };
 
+const size_t aligns[] = {1, 1 << 1, 1 << 2, 1 << 3, 1 << 4};
+const size_t sizes[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+
 static void test_allo_bump_init_ok(void) {
-  uint8_t buf[BUF_SIZE];
-  allo_bump b;
+  uint8_t buf[BUF_SIZE] = {0};
+  allo_bump b = {0};
   allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
   allo_bump_assert(&b);
@@ -32,32 +38,29 @@ static void test_allo_bump_init_ok(void) {
 }
 
 static void test_allo_bump_init_null_allocator(void) {
-  uint8_t buf[BUF_SIZE];
+  uint8_t buf[BUF_SIZE] = {0};
   allo_status status = allo_bump_init(NULL, buf, BUF_SIZE);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
 }
 
 static void test_allo_bump_init_null_buf(void) {
-  allo_bump b;
+  allo_bump b = {0};
   allo_status status = allo_bump_init(&b, NULL, BUF_SIZE);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
 }
 
 static void test_allo_bump_init_zero_buf_size(void) {
-  uint8_t buf[BUF_SIZE];
-  allo_bump b;
+  uint8_t buf[BUF_SIZE] = {0};
+  allo_bump b = {0};
   allo_status status = allo_bump_init(&b, buf, 0);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
 }
 
 static void test_allo_bump_alloc_empty_allocator(void) {
-  const size_t sizes[] = {1, 2, 3, 4, 5, 6, 7, 8};
-  const size_t aligns[] = {1, 2, 4, 8, 16};
-
   for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
       uint8_t buf[BUF_SIZE] = {0};
-      allo_bump b;
+      allo_bump b = {0};
       allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
       ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
       allo_bump_assert(&b);
@@ -78,8 +81,6 @@ static void test_allo_bump_alloc_empty_allocator(void) {
 }
 
 static void test_allo_bump_alloc_non_empty_allocator(void) {
-  const size_t sizes[] = {1, 2, 3, 4, 5, 6, 7, 8};
-  const size_t aligns[] = {1, 2, 4, 8, 16};
   const size_t cursor_offsets[] = {1, 2, 4, 8, 16};
 
   for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
@@ -87,8 +88,8 @@ static void test_allo_bump_alloc_non_empty_allocator(void) {
       for (const size_t *cursor_offset = cursor_offsets;
            cursor_offset < cursor_offsets + ALLO_ARR_LEN(cursor_offsets);
            ++cursor_offset) {
-        uint8_t buf[BUF_SIZE];
-        allo_bump b;
+        uint8_t buf[BUF_SIZE] = {0};
+        allo_bump b = {0};
         allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_bump_assert(&b);
@@ -119,7 +120,6 @@ static void test_allo_bump_alloc_non_empty_allocator(void) {
 
 static void test_allo_bump_alloc_oom(void) {
   const size_t size = 8;
-  const size_t aligns[] = {1, 2, 4, 8, 16};
   const uintptr_t offsets[] = {0, 1, 2, 3, 4, 5, 6, 7};
 
   for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
@@ -127,8 +127,8 @@ static void test_allo_bump_alloc_oom(void) {
       TEST_ASSERT_TRUE_MESSAGE(offsets[offset_i] < size,
                                "free space in allocator must be less than size "
                                "to allocate to cause OOM");
-      uint8_t buf[BUF_SIZE];
-      allo_bump b;
+      uint8_t buf[BUF_SIZE] = {0};
+      allo_bump b = {0};
       allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
       ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
       allo_bump_assert(&b);
@@ -151,8 +151,8 @@ static void test_allo_bump_set_cursor_ok(void) {
   size_t offsets[] = {0, BUF_SIZE / 2, BUF_SIZE};
 
   for (size_t offset_i = 0; offset_i < ALLO_ARR_LEN(offsets); ++offset_i) {
-    uint8_t buf[BUF_SIZE];
-    allo_bump b;
+    uint8_t buf[BUF_SIZE] = {0};
+    allo_bump b = {0};
     allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
     ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
     allo_bump_assert(&b);
@@ -171,8 +171,8 @@ static void test_allo_bump_set_cursor_null_allocator(void) {
   size_t offsets[] = {0, BUF_SIZE / 2, BUF_SIZE};
 
   for (size_t offset_i = 0; offset_i < ALLO_ARR_LEN(offsets); ++offset_i) {
-    uint8_t buf[BUF_SIZE];
-    allo_bump b;
+    uint8_t buf[BUF_SIZE] = {0};
+    allo_bump b = {0};
     allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
     ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
     allo_bump_assert(&b);
@@ -186,8 +186,8 @@ static void test_allo_bump_set_cursor_null_allocator(void) {
 }
 
 static void test_allo_bump_set_cursor_null_cursor(void) {
-  uint8_t buf[BUF_SIZE];
-  allo_bump b;
+  uint8_t buf[BUF_SIZE] = {0};
+  allo_bump b = {0};
   allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
   allo_bump_assert(&b);
@@ -202,8 +202,8 @@ static void test_allo_bump_set_cursor_out_of_bounds(void) {
                       -1u * (BUF_SIZE * 2)};
 
   for (size_t offset_i = 0; offset_i < ALLO_ARR_LEN(offsets); ++offset_i) {
-    uint8_t buf[BUF_SIZE];
-    allo_bump b;
+    uint8_t buf[BUF_SIZE] = {0};
+    allo_bump b = {0};
     allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
     ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
     allo_bump_assert(&b);
@@ -220,8 +220,8 @@ void test_allo_bump_reset(void) {
   size_t offsets[] = {0, BUF_SIZE / 2, BUF_SIZE};
 
   for (size_t offset_i = 0; offset_i < ALLO_ARR_LEN(offsets); ++offset_i) {
-    uint8_t buf[BUF_SIZE];
-    allo_bump b;
+    uint8_t buf[BUF_SIZE] = {0};
+    allo_bump b = {0};
     allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
     ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
     allo_bump_assert(&b);
@@ -234,6 +234,42 @@ void test_allo_bump_reset(void) {
     allo_bump_assert(&b);
     TEST_ASSERT_EQUAL_PTR_MESSAGE(b.end, b.cursor,
                                   "cursor must be reset to the end");
+  }
+}
+
+static void test_allo_bump_buf_alignments(void) {
+  for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+    void *buf = NULL;
+    void *aligned_buf = ALLO_TEST_MEM_ALLOC(&buf, BUF_SIZE, aligns[align_i]);
+
+    allo_bump b;
+    allo_status status = allo_bump_init(&b, aligned_buf, BUF_SIZE);
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+    allo_bump_assert(&b);
+
+    void *dest = NULL;
+    for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+      for (size_t align_j = 0; align_j < ALLO_ARR_LEN(aligns); ++align_j) {
+        status = allo_bump_alloc(&dest, &b, sizes[size_i], aligns[align_j]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        allo_bump_assert(&b);
+      }
+    }
+
+    status = allo_bump_set_cursor(&b, (void *)b.start);
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "set cursor must succeed");
+    allo_bump_assert(&b);
+    status = allo_bump_set_cursor(&b, (void *)b.end);
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "set cursor must succeed");
+    allo_bump_assert(&b);
+    status = allo_bump_set_cursor(&b, (void *)((b.end + b.start) / 2));
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "set cursor must succeed");
+    allo_bump_assert(&b);
+
+    allo_bump_reset(&b);
+    allo_bump_assert(&b);
+
+    free(buf);
   }
 }
 
@@ -255,6 +291,8 @@ int main(void) {
   RUN_TEST(test_allo_bump_set_cursor_out_of_bounds);
 
   RUN_TEST(test_allo_bump_reset);
+
+  RUN_TEST(test_allo_bump_buf_alignments);
 
   return UNITY_END();
 }
