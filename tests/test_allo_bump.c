@@ -17,11 +17,18 @@ void setUp(void) {}
 
 void tearDown(void) {}
 
-enum { BUF_SIZE = 1 << 10 };
+enum {
+  // Buffer size for all test cases.
+  BUF_SIZE = 1 << 10
+};
 
+// Alignments for buffers and allocations that tests will use.
 const size_t aligns[] = {1, 1 << 1, 1 << 2, 1 << 3, 1 << 4};
+
+// Sizes for allocations that tests will use.
 const size_t sizes[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
+// Tests that allocator has the correct state on a successful init.
 static void test_allo_bump_init_ok(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_bump b = {0};
@@ -37,18 +44,21 @@ static void test_allo_bump_init_ok(void) {
                                 "cursor must = end of memory range");
 }
 
+// Tests when init takes in a null allocator.
 static void test_allo_bump_init_null_allocator(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_status status = allo_bump_init(NULL, buf, BUF_SIZE);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
 }
 
+// Tests when init takes in a null buffer.
 static void test_allo_bump_init_null_buf(void) {
   allo_bump b = {0};
   allo_status status = allo_bump_init(&b, NULL, BUF_SIZE);
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
 }
 
+// Tests when init takes in a zero sized buffer.
 static void test_allo_bump_init_zero_buf_size(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_bump b = {0};
@@ -56,6 +66,8 @@ static void test_allo_bump_init_zero_buf_size(void) {
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
 }
 
+// Tests the state of the allocator and allocated memory on a successful init on
+// an empty allocator.
 static void test_allo_bump_alloc_empty_allocator(void) {
   for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
@@ -80,6 +92,8 @@ static void test_allo_bump_alloc_empty_allocator(void) {
   }
 }
 
+// Tests the state of the allocator and allocated memory on a successful init on
+// an non-empty allocator.
 static void test_allo_bump_alloc_non_empty_allocator(void) {
   const size_t cursor_offsets[] = {1, 2, 4, 8, 16};
 
@@ -118,6 +132,8 @@ static void test_allo_bump_alloc_non_empty_allocator(void) {
   }
 }
 
+// Tests when allocation is attempted on an allocator with insufficient free
+// memory.
 static void test_allo_bump_alloc_oom(void) {
   const size_t size = 8;
   const uintptr_t offsets[] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -147,6 +163,7 @@ static void test_allo_bump_alloc_oom(void) {
   }
 }
 
+// Tests when setting the cursor of the allocator is successful and valid.
 static void test_allo_bump_set_cursor_ok(void) {
   size_t offsets[] = {0, BUF_SIZE / 2, BUF_SIZE};
 
@@ -167,6 +184,7 @@ static void test_allo_bump_set_cursor_ok(void) {
   }
 }
 
+// Tests when setting the cursor on a null allocator.
 static void test_allo_bump_set_cursor_null_allocator(void) {
   size_t offsets[] = {0, BUF_SIZE / 2, BUF_SIZE};
 
@@ -185,6 +203,7 @@ static void test_allo_bump_set_cursor_null_allocator(void) {
   }
 }
 
+// Tests when setting the cursor with NULL.
 static void test_allo_bump_set_cursor_null_cursor(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_bump b = {0};
@@ -197,6 +216,8 @@ static void test_allo_bump_set_cursor_null_cursor(void) {
                               "operation must fail");
 }
 
+// Tests when setting the cursor with an address that is outside the memory
+// region managed by the allocator.
 static void test_allo_bump_set_cursor_out_of_bounds(void) {
   size_t offsets[] = {BUF_SIZE * 2, BUF_SIZE + 1, -1u * (BUF_SIZE + 1),
                       -1u * (BUF_SIZE * 2)};
@@ -216,6 +237,7 @@ static void test_allo_bump_set_cursor_out_of_bounds(void) {
   }
 }
 
+// Tests when resetting the cursor.
 void test_allo_bump_reset(void) {
   size_t offsets[] = {0, BUF_SIZE / 2, BUF_SIZE};
 
@@ -237,6 +259,8 @@ void test_allo_bump_reset(void) {
   }
 }
 
+// Tests initializing and using the allocator on buffers aligned to different
+// values.
 static void test_allo_bump_buf_alignments(void) {
   for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
     void *buf = NULL;
