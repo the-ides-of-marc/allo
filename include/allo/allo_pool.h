@@ -37,7 +37,7 @@ static inline allo_status allo_pool_init(allo_pool *restrict p,
 // Returns the maximum number of chunks this pool can allocate.
 static inline size_t allo_pool_chunk_cap(const allo_pool *p);
 
-// Returns the number of free chunks remaining in this pool
+// Returns the number of free chunks remaining in this pool.
 static inline size_t allo_pool_free_chunks(const allo_pool *p);
 
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
