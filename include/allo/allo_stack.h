@@ -15,9 +15,9 @@ typedef struct allo_stack allo_stack;
 static inline void allo_stack_assert(allo_stack *s);
 
 // Initializes the stack allocator `s` to manage `buf` from
-// `buf[0]..buf[bufsize-1]`.
+// `buf[0]..buf[buf_size-1]`.
 static inline allo_status allo_stack_init(allo_stack *restrict s,
-                                          void *restrict buf, size_t bufsize);
+                                          void *restrict buf, size_t buf_size);
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
@@ -53,16 +53,16 @@ static inline void allo_stack_assert(allo_stack *s) {
 }
 
 static inline allo_status allo_stack_init(allo_stack *restrict s,
-                                          void *restrict buf, size_t bufsize) {
+                                          void *restrict buf, size_t buf_size) {
   if (!s || !buf) {
     return ALLO_ERR_INVALID_NULL;
   }
-  if (!bufsize) {
+  if (!buf_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
 
   s->start = (uintptr_t)buf;
-  s->end = s->start + bufsize;
+  s->end = s->start + buf_size;
   s->cursor = s->end;
 
   allo_stack_assert(s);
