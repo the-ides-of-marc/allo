@@ -7,6 +7,7 @@
 #include "allo_test_assert.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <unity.h>
 #include <unity_internals.h>
 
@@ -170,6 +171,7 @@ static void test_allo_stack_alloc_oom(void) {
   }
 }
 
+// Tests when freeing memory from the allocator.
 static void test_allo_stack_free(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_stack s = {0};
@@ -202,6 +204,7 @@ static void test_allo_stack_free(void) {
   }
 }
 
+// Tests when freeing all the memory of the allocator at once.
 static void test_allo_stack_free_all(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_stack s = {0};
@@ -225,6 +228,38 @@ static void test_allo_stack_free_all(void) {
   allo_stack_assert(&s);
 }
 
+// Tests initializing and using the allocator on buffers aligned to different
+// values.
+static void test_allo_stack_buf_alignments(void) {
+  for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+    void *buf = NULL;
+    void *aligned_buf = ALLO_TEST_MEM_ALLOC(&buf, BUF_SIZE, aligns[align_i]);
+
+    allo_stack s = {0};
+    allo_status status = allo_stack_init(&s, aligned_buf, BUF_SIZE);
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+    allo_stack_assert(&s);
+
+    void *dest = NULL;
+    for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+      for (size_t align_j = 0; align_j < ALLO_ARR_LEN(aligns); ++align_j) {
+        status = allo_stack_alloc(&dest, &s, sizes[size_i], aligns[align_j]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        allo_stack_assert(&s);
+      }
+    }
+
+    allo_stack_free(&s);
+    allo_stack_assert(&s);
+
+    allo_stack_free_all(&s);
+    allo_stack_assert(&s);
+
+    free(buf);
+  }
+}
+
+// Tests creating an allocator interface from a concrete stack allocator.
 static void test_allo_allocator_from_stack(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_stack s = {0};
@@ -254,6 +289,8 @@ int main(void) {
   RUN_TEST(test_allo_stack_free);
 
   RUN_TEST(test_allo_stack_free_all);
+
+  RUN_TEST(test_allo_stack_buf_alignments);
 
   RUN_TEST(test_allo_allocator_from_stack);
 
