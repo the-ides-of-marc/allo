@@ -19,7 +19,7 @@ static allo_status allo_stack_free_all_adapter(void *ctx) {
   return ALLO_OK;
 }
 
-const allo_allocator_vtable allo_allocator_stack_vtable = {
+const allo_allocator_vtable allo_stack_vtable = {
     .alloc = allo_stack_alloc_adapter,
     .free = allo_stack_free_adapter,
     .free_all = allo_stack_free_all_adapter,

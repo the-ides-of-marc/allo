@@ -32,7 +32,11 @@ static inline void allo_stack_free(allo_stack *s);
 // Frees all memory allocated on allocator `s`.
 static inline void allo_stack_free_all(allo_stack *s);
 
-extern const allo_allocator_vtable allo_allocator_stack_vtable;
+// Returns a allocator type from a stack allocator.
+static inline allo_allocator allo_allocator_from_stack(allo_stack *s);
+
+// VTable for stack allocator.
+extern const allo_allocator_vtable allo_stack_vtable;
 
 struct allo_stack {
   uintptr_t start;
@@ -112,6 +116,14 @@ static inline void allo_stack_free_all(allo_stack *s) {
   allo_stack_assert(s);
   s->cursor = s->end;
   allo_stack_assert(s);
+}
+
+static inline allo_allocator allo_allocator_from_stack(allo_stack *s) {
+  allo_stack_assert(s);
+  return (allo_allocator){
+      .allocator = s,
+      .vtable = &allo_stack_vtable,
+  };
 }
 
 #endif // !ALLO_STACK_H
