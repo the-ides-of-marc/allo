@@ -245,6 +245,7 @@ static void test_allo_pool_chunk_cap(void) {
 
         TEST_ASSERT_EQUAL_MESSAGE(chunks[chunk_i], allo_pool_chunk_cap(&p),
                                   "chunk capacity must match");
+        free(buf);
       }
     }
   }
