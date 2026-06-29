@@ -10,7 +10,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(unity)
 
 add_library(allo_test STATIC
-    allo_test/allo_test.c
     allo_test/allo_test_assert.c
     allo_test/allo_test_io.c
     allo_test/allo_test_mem.c

@@ -3,8 +3,6 @@
 
 #include <stddef.h>
 
-extern const size_t allo_test_alignments[];
-
 // IWYU pragma: begin_exports
 #include "allo_test_assert.h"
 #include "allo_test_io.h"
