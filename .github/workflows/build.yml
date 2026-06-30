@@ -34,13 +34,13 @@ jobs:
           clang-format --version
 
       - name: Run formatter check
-        run: > 
+        run: >
           find include src tests
           -type f \( -name "*.c" -o -name "*.h" \)
           -exec clang-format --dry-run {} +
 
       - name: Configure
-        run: > 
+        run: >
           cmake -S . -B build
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -DCMAKE_C_COMPILER=$COMPILER
