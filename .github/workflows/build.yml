@@ -26,12 +26,10 @@ jobs:
         run: sudo apt update
 
       - name: Install dependencies
-        run: > sudo apt install
-          $COMPILER
-          clang-format
+        run: sudo apt install $COMPILER clang-format
 
       - name: List versions
-        run:
+        run: |
           $COMPILER --version
           clang-format --version
 
