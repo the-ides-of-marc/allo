@@ -26,7 +26,7 @@ jobs:
         run: sudo apt update
 
       - name: Install dependencies
-        run: sudo apt install $COMPILER clang-format
+        run: sudo apt install $COMPILER clang-format-19
 
       - name: List versions
         run: |
