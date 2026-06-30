@@ -15,9 +15,9 @@ typedef struct allo_stack allo_stack;
 static inline void allo_stack_assert(allo_stack *s);
 
 // Initializes the stack allocator `s` to manage `buf` from
-// `buf[0]..buf[bufsize-1]`.
+// `buf[0]..buf[buf_size-1]`.
 static inline allo_status allo_stack_init(allo_stack *restrict s,
-                                          void *restrict buf, size_t bufsize);
+                                          void *restrict buf, size_t buf_size);
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
@@ -32,7 +32,11 @@ static inline void allo_stack_free(allo_stack *s);
 // Frees all memory allocated on allocator `s`.
 static inline void allo_stack_free_all(allo_stack *s);
 
-extern const allo_allocator_vtable allo_allocator_stack_vtable;
+// Returns a allocator type from a stack allocator.
+static inline allo_allocator allo_allocator_from_stack(allo_stack *s);
+
+// VTable for stack allocator.
+extern const allo_allocator_vtable allo_stack_vtable;
 
 struct allo_stack {
   uintptr_t start;
@@ -49,16 +53,16 @@ static inline void allo_stack_assert(allo_stack *s) {
 }
 
 static inline allo_status allo_stack_init(allo_stack *restrict s,
-                                          void *restrict buf, size_t bufsize) {
+                                          void *restrict buf, size_t buf_size) {
   if (!s || !buf) {
     return ALLO_ERR_INVALID_NULL;
   }
-  if (!bufsize) {
+  if (!buf_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
 
   s->start = (uintptr_t)buf;
-  s->end = s->start + bufsize;
+  s->end = s->start + buf_size;
   s->cursor = s->end;
 
   allo_stack_assert(s);
@@ -112,6 +116,14 @@ static inline void allo_stack_free_all(allo_stack *s) {
   allo_stack_assert(s);
   s->cursor = s->end;
   allo_stack_assert(s);
+}
+
+static inline allo_allocator allo_allocator_from_stack(allo_stack *s) {
+  allo_stack_assert(s);
+  return (allo_allocator){
+      .allocator = s,
+      .vtable = &allo_stack_vtable,
+  };
 }
 
 #endif // !ALLO_STACK_H

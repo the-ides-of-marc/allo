@@ -2,7 +2,7 @@
 #define ALLO_POOL_H
 
 #include "allo/allo_allocator.h"
-#include "allo/internal/allo_common.h"
+#include "allo/allo_config.h"
 #include "allo_status.h"
 #include "internal/allo_math.h"
 #include <stddef.h>
@@ -33,6 +33,12 @@ static inline void allo_pool_assert(const allo_pool *p);
 static inline allo_status allo_pool_init(allo_pool *restrict p,
                                          void *restrict buf, size_t buf_size,
                                          size_t chunk_size, size_t align);
+
+// Returns the maximum number of chunks this pool can allocate.
+static inline size_t allo_pool_chunk_cap(const allo_pool *p);
+
+// Returns the number of free chunks remaining in this pool.
+static inline size_t allo_pool_free_chunks(const allo_pool *p);
 
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
 // The free list is then updated to point to the next free chunk of memory.
@@ -127,31 +133,29 @@ static inline allo_status allo_pool_init(allo_pool *restrict p,
   if (!buf_size || !chunk_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
-  if (!align) {
+  if (!align || align < sizeof(void *) || !allo_math_is_pow2(align)) {
     return ALLO_ERR_INVALID_ALIGNMENT;
   }
-
-  align = allo_math_round_pow2(ALLO_MAX(align, sizeof(void *)));
-  chunk_size = allo_math_align_up(ALLO_MAX(chunk_size, sizeof(void *)), align);
-
-  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
-  ALLO_ASSERT(align >= sizeof(void *),
-              "alignment must be greater than sizeof(void*)");
-  ALLO_ASSERT(chunk_size >= align,
-              "chunk size must be at least the size of the alignment");
-  ALLO_ASSERT(chunk_size % align == 0,
-              "chunk size must be a multiple of alignment");
-
-  if (chunk_size > buf_size) {
+  if (chunk_size < sizeof(void *) || chunk_size % align != 0 ||
+      chunk_size > buf_size) {
     return ALLO_ERR_INVALID_SIZE;
   }
-
-  size_t chunk_count = buf_size / chunk_size;
-  ALLO_ASSERT(chunk_count > 0, "chunk count must be non-zero");
-
   if (!allo_math_is_aligned((uintptr_t)buf, align)) {
     return ALLO_ERR_NOT_ALIGNED;
   }
+
+  ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
+  ALLO_ASSERT(align >= sizeof(void *), "alignment must >= sizeof(void*)");
+  ALLO_ASSERT(chunk_size >= sizeof(void *), "chunk size must <= sizeof(void*)");
+  ALLO_ASSERT(chunk_size % align == 0,
+              "chunk size must be a multiple of alignment");
+  ALLO_ASSERT(
+      chunk_size >= align,
+      "chunk size must >= align to prevent padding between aligned chunks");
+  ALLO_ASSERT(chunk_size <= buf_size,
+              "chunk size must <= buf size to fit at least 1 chunk");
+
+  size_t chunk_count = buf_size / chunk_size;
 
   p->chunk_size = chunk_size;
   p->align = align;
@@ -163,6 +167,22 @@ static inline allo_status allo_pool_init(allo_pool *restrict p,
 
   allo_pool_assert(p);
   return ALLO_OK;
+}
+
+static inline size_t allo_pool_chunk_cap(const allo_pool *p) {
+  allo_pool_assert(p);
+  size_t count = (p->end - p->start) / p->chunk_size;
+  ALLO_ASSERT(count > 0, "pool allocator must fit at least 1 chunk");
+  return count;
+}
+
+static inline size_t allo_pool_free_chunks(const allo_pool *p) {
+  allo_pool_assert(p);
+  size_t chunks = 0;
+  for (void **ptr = p->free_list; ptr; ptr = *ptr) {
+    ++chunks;
+  }
+  return chunks;
 }
 
 static inline allo_status allo_pool_alloc(void *restrict *restrict dest,

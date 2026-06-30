@@ -1,0 +1,13 @@
+#ifndef ALLO_TEST_ASSERT_H
+#define ALLO_TEST_ASSERT_H
+
+#include "allo/allo_status.h"
+#include <stddef.h>
+#include <stdint.h>
+
+void allo_test_assert_status(allo_status expected, allo_status actual,
+                             const char *message, size_t line);
+#define ALLO_TEST_ASSERT_STATUS_MSG(expected, actual, message)                 \
+  allo_test_assert_status((expected), (actual), (message), __LINE__)
+
+#endif // !ALLO_TEST_ASSERT_H
