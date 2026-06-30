@@ -18,6 +18,7 @@ jobs:
 
     env:
       COMPILER: ${{ matrix.compiler.name }}-${{ matrix.compiler.version }}
+      CLANG_FORMAT: clang-format-19
 
     steps:
       - uses: actions/checkout@v6
@@ -26,18 +27,18 @@ jobs:
         run: sudo apt update
 
       - name: Install dependencies
-        run: sudo apt install $COMPILER clang-format-19
+        run: sudo apt install $COMPILER $CLANG_FORMAT
 
       - name: List versions
         run: |
           $COMPILER --version
-          clang-format --version
+          $CLANG_FORMAT --version
 
       - name: Run formatter check
         run: >
           find include src tests
           -type f \( -name "*.c" -o -name "*.h" \)
-          -exec clang-format --dry-run {} +
+          -exec $CLANG_FORMAT --dry-run {} +
 
       - name: Configure
         run: >
