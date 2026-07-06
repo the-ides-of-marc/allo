@@ -1,8 +1,8 @@
 CMAKE_BUILD_TYPE ?= Debug
 ENABLE_SANITIZERS ?= ON
 
-BUILD_DIR := build
-INSTALL_DIR := dist
+BUILD_DIR ?= build
+INSTALL_DIR ?= dist
 
 .PHONY: all configure build install test clean
 

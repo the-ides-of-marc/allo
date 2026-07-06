@@ -15,6 +15,8 @@ common allocator operations.
 Each allocator provides its own vtable found in its own source file.
 > Not all allocators support every operation provided by `allo_allocator`.
 
+See [BUILD.md](BUILD.md) for building the library from source.
+
 ## Usage
 
 All operations that can succeed or fail return `allo_status` which is a enumeration of statuses
