@@ -1,4 +1,5 @@
 #include "allo/allo_bump.h"
+#include "allo/allo_status.h"
 
 static allo_status bump_alloc_adapter(void *restrict *restrict dest,
                                       void *restrict ctx, size_t size,
@@ -9,7 +10,7 @@ static allo_status bump_alloc_adapter(void *restrict *restrict dest,
 static allo_status bump_free_adapter(void *restrict ctx, void *restrict ptr) {
   (void)ctx;
   (void)ptr;
-  return ALLO_OK;
+  return ALLO_ERR_INVALID_OP;
 }
 
 static allo_status bump_free_all_adapter(void *ctx) {

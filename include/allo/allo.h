@@ -14,8 +14,6 @@
 // - Fixed sized pool allocator (see allo/allo_pool.h)
 //
 // TODO:
-// - add status for unsupported allocator operations in vtables instead of
-//   performing a no-op.
 // - consider adding macro flags such as ALLO_ENABLE_SAFE_ALLOC to toggle
 //   between using ALLO_ASSERT or returning allo_status
 
