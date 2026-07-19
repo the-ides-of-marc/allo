@@ -18,6 +18,8 @@ typedef enum allo_status {
   ALLO_ERR_INVALID_ALIGNMENT,
   // Indicates that memory is not aligned.
   ALLO_ERR_NOT_ALIGNED,
+  // Indicates that an invalid operation was attempted.
+  ALLO_ERR_INVALID_OP,
 
 } allo_status;
 
@@ -40,9 +42,10 @@ static inline const char *allo_status_str(allo_status status) {
     return "INVALID ALIGNMENT";
   case ALLO_ERR_NOT_ALIGNED:
     return "NOT ALIGNED";
-  default:
-    return "UNKNOWN";
+  case ALLO_ERR_INVALID_OP:
+    return "INVALID OP";
   }
+  return "UNKNOWN";
 }
 
 #endif // !ALLO_STATUS_H
