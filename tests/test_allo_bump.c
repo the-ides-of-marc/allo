@@ -27,7 +27,8 @@ enum {
 const size_t aligns[] = {1, 1 << 1, 1 << 2, 1 << 3, 1 << 4};
 
 // Sizes for allocations that tests will use.
-const size_t chunk_sizes[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+const size_t chunk_sizes[] = {1, 2,  3,  4,  5,  6,  7,  8,
+                              9, 10, 11, 12, 13, 14, 15, 16};
 
 // Tests that allocator has the correct state on a successful init.
 static void test_allo_bump_init_ok(void) {
@@ -132,10 +133,11 @@ static void test_allo_bump_alloc_invalid_align(void) {
       allo_bump_assert(&b);
 
       void *dest = NULL;
-      ALLO_TEST_ASSERT_STATUS_MSG(
-          ALLO_ERR_INVALID_ALIGNMENT,
-          allo_bump_alloc(&dest, &b, chunk_sizes[size_i], invalid_aligns[align_i]),
-          "alloc must fail");
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT,
+                                  allo_bump_alloc(&dest, &b,
+                                                  chunk_sizes[size_i],
+                                                  invalid_aligns[align_i]),
+                                  "alloc must fail");
     }
   }
 }
@@ -185,14 +187,15 @@ static void test_allo_bump_alloc_non_empty_allocator(void) {
         b.cursor -= *cursor_offset;
         allo_bump_assert(&b);
 
-        uintptr_t next_expected_cursor =
-            allo_math_align_down(b.cursor - chunk_sizes[size_i], aligns[align_i]);
+        uintptr_t next_expected_cursor = allo_math_align_down(
+            b.cursor - chunk_sizes[size_i], aligns[align_i]);
         TEST_ASSERT_TRUE_MESSAGE(
             b.start <= next_expected_cursor && next_expected_cursor < b.end,
             "next_expected_cursor must be a valid memory address in allocator");
 
         void *dest = NULL;
-        status = allo_bump_alloc(&dest, &b, chunk_sizes[size_i], aligns[align_i]);
+        status =
+            allo_bump_alloc(&dest, &b, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
         TEST_ASSERT_EQUAL_PTR_MESSAGE(next_expected_cursor, b.cursor,
                                       "cursor must be at expected position");
@@ -369,7 +372,8 @@ static void test_allo_bump_buf_alignments(void) {
     void *dest = NULL;
     for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
       for (size_t align_j = 0; align_j < ALLO_ARR_LEN(aligns); ++align_j) {
-        status = allo_bump_alloc(&dest, &b, chunk_sizes[size_i], aligns[align_j]);
+        status =
+            allo_bump_alloc(&dest, &b, chunk_sizes[size_i], aligns[align_j]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
         allo_bump_assert(&b);
       }
