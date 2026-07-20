@@ -22,47 +22,11 @@ const size_t aligns[] = {sizeof(void *), sizeof(void *) << 1,
                          sizeof(void *) << 2};
 
 // Sizes for pool chunks that tests will use.
-const size_t sizes[] = {sizeof(void *), sizeof(void *) * 2, sizeof(void *) * 3,
-                        sizeof(void *) * 4};
+const size_t chunk_sizes[] = {sizeof(void *), sizeof(void *) * 2,
+                              sizeof(void *) * 3, sizeof(void *) * 4};
 
 // Number of chunks to fit in allocator that tests will use.
-const size_t chunks[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-// Tests that allocator has the correct state on a successful init.
-static void test_allo_pool_init_ok(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
-    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
-        continue;
-      }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
-        void *buf = NULL;
-        void *buf_aligned =
-            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
-        allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
-        allo_pool_assert(&p);
-
-        TEST_ASSERT_EQUAL_PTR_MESSAGE(buf_aligned, p.start,
-                                      "start of memory region must match");
-        TEST_ASSERT_EQUAL_PTR_MESSAGE((uintptr_t)buf_aligned + buf_size, p.end,
-                                      "end of memory region must match");
-        TEST_ASSERT_EQUAL_PTR_MESSAGE(
-            buf_aligned, p.free_list,
-            "free list must start at the beginning of the memory region");
-
-        TEST_ASSERT_TRUE_MESSAGE(p.chunk_size % aligns[align_i] == 0,
-                                 "chunk size must be a multiple of alignment");
-
-        free(buf);
-      }
-    }
-  }
-}
+const size_t chunk_counts[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
 // Tests when init takes in a null allocator.
 static void test_allo_pool_init_null_allocator(void) {
@@ -225,25 +189,28 @@ static void test_allo_pool_init_buf_not_aligned(void) {
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NOT_ALIGNED, status, "init must fail");
 }
 
+// Tests chunk capacity.
 static void test_allo_pool_chunk_cap(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
         continue;
       }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
         void *buf = {0};
         void *buf_aligned =
             ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
         allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
 
-        TEST_ASSERT_EQUAL_MESSAGE(chunks[chunk_i], allo_pool_chunk_cap(&p),
+        TEST_ASSERT_EQUAL_MESSAGE(chunk_counts[count_i],
+                                  allo_pool_chunk_cap(&p),
                                   "chunk capacity must match");
         free(buf);
       }
@@ -251,21 +218,59 @@ static void test_allo_pool_chunk_cap(void) {
   }
 }
 
-static void test_allo_pool_free_chunks(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+// Tests that allocator has the correct state on a successful init.
+static void test_allo_pool_init_ok(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
         continue;
       }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = NULL;
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(buf_aligned, p.start,
+                                      "start of memory region must match");
+        TEST_ASSERT_EQUAL_PTR_MESSAGE((uintptr_t)buf_aligned + buf_size, p.end,
+                                      "end of memory region must match");
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(
+            buf_aligned, p.free_list,
+            "free list must start at the beginning of the memory region");
+
+        TEST_ASSERT_TRUE_MESSAGE(p.chunk_size % aligns[align_i] == 0,
+                                 "chunk size must be a multiple of alignment");
+
+        free(buf);
+      }
+    }
+  }
+}
+
+static void test_allo_pool_free_chunks(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
         void *buf = {0};
         void *buf_aligned =
             ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
         allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
 
@@ -294,23 +299,83 @@ static void test_allo_pool_free_chunks(void) {
   }
 }
 
-// Tests the state of the allocator and allocated memory on a successful init on
-// an empty allocator.
-static void test_allo_pool_alloc_ok(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+// Tests when alloc takes in a null destination.
+static void test_allo_pool_alloc_null_dest(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
         continue;
       }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
         void *buf = {0};
         void *buf_aligned =
             ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
         allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL,
+                                    allo_pool_alloc(NULL, &p),
+                                    "alloc must fail");
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests when alloc takes in a null allocator.
+static void test_allo_pool_alloc_null_allocator(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        void *dest = NULL;
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL,
+                                    allo_pool_alloc(&dest, NULL),
+                                    "alloc must fail");
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests the state of the allocator and allocated memory on a successful init on
+// an empty allocator.
+static void test_allo_pool_alloc_ok(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
 
@@ -337,20 +402,21 @@ static void test_allo_pool_alloc_ok(void) {
 // Tests when allocation is attempted on an allocator with insufficient free
 // memory.
 static void test_allo_pool_alloc_oom(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
         continue;
       }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
         void *buf = {0};
         void *buf_aligned =
             ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
         allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
 
@@ -376,22 +442,23 @@ static void test_allo_pool_alloc_oom(void) {
   }
 }
 
-// Tests freeing a chunk from the allocator.
-static void test_allo_pool_free(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+// Tests when free takes in a null allocator.
+static void test_allo_pool_free_null_allocator(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
         continue;
       }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
         void *buf = {0};
         void *buf_aligned =
             ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
         allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
 
@@ -400,7 +467,173 @@ static void test_allo_pool_free(void) {
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
         allo_pool_assert(&p);
 
-        allo_pool_free(&p, dest);
+        status = allo_pool_free(NULL, dest);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL,
+                                    allo_pool_free(NULL, dest),
+                                    "free must fail");
+        allo_pool_assert(&p);
+
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests when free takes in a null ptr.
+static void test_allo_pool_free_null_ptr(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        void *dest = NULL;
+        status = allo_pool_alloc(&dest, &p);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        allo_pool_assert(&p);
+
+        status = allo_pool_free(&p, NULL);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+                                    "free must fail");
+        allo_pool_assert(&p);
+
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests when free takes in a pointer outside of the allocator's memory region.
+static void test_allo_pool_free_ptr_is_out_of_allocator_memory_region(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        void *dest = NULL;
+        status = allo_pool_alloc(&dest, &p);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        allo_pool_assert(&p);
+
+        status = allo_pool_free(&p, (void *)(p.start - 1));
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                    "free must fail");
+        allo_pool_assert(&p);
+
+        status = allo_pool_free(&p, (void *)(p.end));
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                    "free must fail");
+        allo_pool_assert(&p);
+
+        status = allo_pool_free(&p, (void *)(p.end + 1));
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+                                    "free must fail");
+        allo_pool_assert(&p);
+
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests when free takes in a pointer is within the allocator's memory region
+// but is not a valid chunk's address.
+static void test_allo_pool_free_ptr_is_in_memory_region_but_not_valid(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      // skip chunks of size 1 as any address within region is valid.
+      if (chunk_sizes[size_i] == 1) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        void *dest = NULL;
+        status = allo_pool_alloc(&dest, &p);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        allo_pool_assert(&p);
+
+        uintptr_t invalid_ptr = p.start + chunk_sizes[size_i] - 1;
+        TEST_ASSERT_TRUE_MESSAGE(
+            invalid_ptr % p.chunk_size != 0,
+            "invalid ptr must not be a valid chunk address");
+        status = allo_pool_free(&p, (void *)invalid_ptr);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
+                                    "free must fail");
+        allo_pool_assert(&p);
+
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests freeing a chunk from the allocator.
+static void test_allo_pool_free_ok(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        void *dest = NULL;
+        status = allo_pool_alloc(&dest, &p);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        allo_pool_assert(&p);
+
+        status = allo_pool_free(&p, dest);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "free must succeed");
+
         TEST_ASSERT_EQUAL_PTR_MESSAGE(
             dest, p.free_list, "free list must point to latest freed memory");
         allo_pool_assert(&p);
@@ -411,24 +644,29 @@ static void test_allo_pool_free(void) {
   }
 }
 
-// Tests freeing all allocated chunks
-static void test_allo_pool_free_all(void) {
-  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(sizes); ++size_i) {
+// Tests when free all takes in a null allocator.
+static void test_allo_pool_free_all_null_allocator(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
-      if (sizes[size_i] < aligns[align_i] ||
-          sizes[size_i] % aligns[align_i] != 0) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
         continue;
       }
-      for (size_t chunk_i = 0; chunk_i < ALLO_ARR_LEN(chunks); ++chunk_i) {
-        size_t buf_size = chunks[chunk_i] * sizes[size_i];
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
         void *buf = {0};
         void *buf_aligned =
             ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
         allo_pool p = {0};
-        allo_status status = allo_pool_init(&p, buf_aligned, buf_size,
-                                            sizes[size_i], aligns[align_i]);
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
+
+        status = allo_pool_free_all(NULL);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+                                    "free all must succeed");
 
         size_t cap = allo_pool_chunk_cap(&p);
 
@@ -441,7 +679,53 @@ static void test_allo_pool_free_all(void) {
 
         TEST_ASSERT_NULL_MESSAGE(p.free_list, "allocator must be full");
 
-        allo_pool_free_all(&p);
+        status = allo_pool_free_all(NULL);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+                                    "free all must succeed");
+        allo_pool_assert(&p);
+
+        free(buf);
+      }
+    }
+  }
+}
+
+// Tests freeing all allocated chunks
+static void test_allo_pool_free_all_ok(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      if (chunk_sizes[size_i] < aligns[align_i] ||
+          chunk_sizes[size_i] % aligns[align_i] != 0) {
+        continue;
+      }
+      for (size_t count_i = 0; count_i < ALLO_ARR_LEN(chunk_counts);
+           ++count_i) {
+        size_t buf_size = chunk_counts[count_i] * chunk_sizes[size_i];
+        void *buf = {0};
+        void *buf_aligned =
+            ALLO_TEST_MEM_ALLOC(&buf, buf_size, aligns[align_i]);
+        allo_pool p = {0};
+        allo_status status = allo_pool_init(
+            &p, buf_aligned, buf_size, chunk_sizes[size_i], aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_pool_assert(&p);
+
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, allo_pool_free_all(&p),
+                                    "free all must succeed");
+
+        size_t cap = allo_pool_chunk_cap(&p);
+
+        void *dest = NULL;
+        for (size_t i = 0; i < cap; ++i) {
+          status = allo_pool_alloc(&dest, &p);
+          ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+          allo_pool_assert(&p);
+        }
+
+        TEST_ASSERT_NULL_MESSAGE(p.free_list, "allocator must be full");
+
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, allo_pool_free_all(&p),
+                                    "free all must succeed");
         allo_pool_assert(&p);
 
         TEST_ASSERT_EQUAL_MESSAGE(
@@ -479,7 +763,6 @@ static void test_allo_allocator_from_pool(void) {
 int main(void) {
   UNITY_BEGIN();
 
-  RUN_TEST(test_allo_pool_init_ok);
   RUN_TEST(test_allo_pool_init_null_allocator);
   RUN_TEST(test_allo_pool_init_null_buf);
   RUN_TEST(test_allo_pool_init_zero_chunk_size);
@@ -490,17 +773,25 @@ int main(void) {
   RUN_TEST(test_allo_pool_init_chunk_size_not_a_multiple_of_align);
   RUN_TEST(test_allo_pool_init_chunk_size_exceeds_buf_size);
   RUN_TEST(test_allo_pool_init_buf_not_aligned);
+  RUN_TEST(test_allo_pool_init_ok);
 
   RUN_TEST(test_allo_pool_chunk_cap);
 
   RUN_TEST(test_allo_pool_free_chunks);
 
+  RUN_TEST(test_allo_pool_alloc_null_dest);
+  RUN_TEST(test_allo_pool_alloc_null_allocator);
   RUN_TEST(test_allo_pool_alloc_ok);
   RUN_TEST(test_allo_pool_alloc_oom);
 
-  RUN_TEST(test_allo_pool_free);
+  RUN_TEST(test_allo_pool_free_null_allocator);
+  RUN_TEST(test_allo_pool_free_null_ptr);
+  RUN_TEST(test_allo_pool_free_ptr_is_out_of_allocator_memory_region);
+  RUN_TEST(test_allo_pool_free_ptr_is_in_memory_region_but_not_valid);
+  RUN_TEST(test_allo_pool_free_ok);
 
-  RUN_TEST(test_allo_pool_free_all);
+  RUN_TEST(test_allo_pool_free_all_null_allocator);
+  RUN_TEST(test_allo_pool_free_all_ok);
 
   RUN_TEST(test_allo_allocator_from_pool);
 
