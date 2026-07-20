@@ -173,7 +173,7 @@ static void test_allo_pool_init_chunk_size_exceeds_buf_size(void) {
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
 }
 
-// Tests when init takes in a buffer that is not aligned to alignemtn
+// Tests when init takes in a buffer that is not aligned to alignment
 // requirements.
 static void test_allo_pool_init_buf_not_aligned(void) {
   enum {
@@ -666,7 +666,7 @@ static void test_allo_pool_free_all_null_allocator(void) {
 
         status = allo_pool_free_all(NULL);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
-                                    "free all must succeed");
+                                    "free all must fail");
 
         size_t cap = allo_pool_chunk_cap(&p);
 
@@ -681,7 +681,7 @@ static void test_allo_pool_free_all_null_allocator(void) {
 
         status = allo_pool_free_all(NULL);
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
-                                    "free all must succeed");
+                                    "free all must fail");
         allo_pool_assert(&p);
 
         free(buf);

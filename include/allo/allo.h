@@ -12,10 +12,6 @@
 // - Fixed sized bump allocator (see allo/allo_bump.h)
 // - Fixed sized stack allocator (see allo/allo_stack.h)
 // - Fixed sized pool allocator (see allo/allo_pool.h)
-//
-// TODO:
-// - consider adding macro flags such as ALLO_ENABLE_SAFE_ALLOC to toggle
-//   between using ALLO_ASSERT or returning allo_status
 
 // IWYU pragma: begin_exports
 #include "allo_allocator.h"

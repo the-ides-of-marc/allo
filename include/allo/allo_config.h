@@ -2,12 +2,13 @@
 #define ALLO_CONFIG_H
 
 // Safe alloc and free are enabled by default.
+//
+// If unsafe alloc or free is enabled, all validation performed on
+// function arguments passed by the caller are omitted in alloc/free
+// implementations. Invalid arguments can result in undefined behaviour.
 
 #define ALLO_SAFE_ALLOC
 #define ALLO_SAFE_FREE
-
-// If unsafe alloc or free is enabled,
-// asserts must be enabled.
 
 #ifdef ALLO_ENABLE_UNSAFE_ALLOC
 #undef ALLO_SAFE_ALLOC
@@ -15,10 +16,6 @@
 
 #ifdef ALLO_ENABLE_UNSAFE_FREE
 #undef ALLO_SAFE_FREE
-#endif
-
-#if defined(ALLO_ENABLE_UNSAFE_ALLOC) || defined(ALLO_ENABLE_UNSAFE_FREE)
-#define ALLO_ENABLE_ASSERT
 #endif
 
 #ifdef ALLO_ENABLE_ASSERT

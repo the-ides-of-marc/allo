@@ -3,12 +3,7 @@
 A C99 Library providing allocators that manage fixed sized contiguous memory regions.
 
 The allocators do not reallocate or deallocate any memory and strictly manage the memory
-it is given upon initialization.
-
-Allocators
-- allo_bump
-- allo_stack
-- allo_pool
+it is given upon initialization. See [Allocators](#allocators) for a list of supported allocators.
 
 All allocators can be wrapped in an `allo_allocator` type, a fat pointer, which provides
 common allocator operations.
@@ -19,15 +14,37 @@ See [BUILD.md](BUILD.md) for building the library from source.
 
 ## Usage
 
-All operations that can succeed or fail return `allo_status` which is a enumeration of statuses
+All operations that can succeed or fail return `allo_status` which is an enumeration of statuses
 that spans the entire library's usage.
 
-The library indicate errors either via `allo_status` or asserts, where `allo_status` can be handled
-programmatically while asserts crash the program. Due to the terminating nature of asserts,
-they are disabled by default and can be toggled on by defining `ALLO_ENABLE_ASSERT`.
+The library indicates errors either via `allo_status` or asserts, where `allo_status` can be handled
+programmatically while asserts crash the program.
 
-This is done to allow operations such as allocations and frees to be fast, such as hot loops.
-When verification of correctness is needed, then enabling asserts provides that layer of checking.
+### Configuration
+
+The library's default behaviour, with no definitions, is to use `allo_status` to indicate all errors,
+with asserts disabled.
+
+To enable asserts, you can define `ALLO_ENABLE_ASSERT`.
+
+> [!NOTE]
+> Library asserts use `assert` from `<assert.h>` when enabled, and is a no op when disabled.
+> Asserts are used extensively to ensure invariants are held and incur performance overhead.
+
+The library also offers ways to improve performance in alloc and free operations by replacing
+specific input validation with asserts instead by defining
+`ALLO_ENABLE_UNSAFE_ALLOC` and `ALLO_ENABLE_UNSAFE_FREE`.
+
+> [!WARNING]
+> When enabling unsafe alloc/free with `ALLO_ENABLE_UNSAFE_ALLOC` and `ALLO_ENABLE_UNSAFE_FREE`,
+> validation of arguments passed by the caller are omitted in their implementations.
+> Invalid arguments can result in undefined behaviour.
+> 
+> Asserts can be enabled by defining `ALLO_ENABLE_ASSERT` to add these checks back as asserts
+> but these incur performance overhead, in that case you may rather just use the library
+> with default safe behaviour.
+
+### Examples
 
 Here is an example of using a pool allocator, `allo_pool`.
 
@@ -53,7 +70,8 @@ int main(void) {
 
     // Define and initialize the allocator.
     allo_pool pool_allocator;
-    allo_status status = allo_pool_init(&pool_allocator, buf, BUF_SIZE, CHUNK_SIZE, ALIGN);
+    size_t chunk_size = sizeof(struct message);
+    allo_status status = allo_pool_init(&pool_allocator, buf, BUF_SIZE, chunk_size, ALIGN);
     if (status != ALLO_OK) {
         fprintf(stderr, "error initializing allocator: %s\n", allo_status_str(status));
         return 1;
@@ -151,7 +169,7 @@ for allocation and writes the address to the `dest` argument.
 
 Typically bump allocators do not freeing individual allocated memory, only freeing all the 
 allocated memory at once.
-Freeing all allocated memory at once can be done via `allo_bump_reset`
+Freeing all allocated memory at once can be done via `allo_bump_free_all`
 However, to provide flexibility to the caller, `allo_bump_set_cursor` can be used to manually set
 the cursor to a position in the allocator. With proper management of allocated addresses, the caller
 can effectively free all allocations up to a specific point of time.
