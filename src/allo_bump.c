@@ -14,7 +14,7 @@ static allo_status bump_free_adapter(void *restrict ctx, void *restrict ptr) {
 }
 
 static allo_status bump_free_all_adapter(void *ctx) {
-  allo_bump_reset((allo_bump *)ctx);
+  allo_bump_free_all((allo_bump *)ctx);
   return ALLO_OK;
 }
 

@@ -24,11 +24,11 @@ static inline void allo_pool_assert(const allo_pool *p);
 // Both the padded `align` and padded `chunk_size` will be >= `sizeof(void *)`,
 // as required for the free list to operate.
 //
-// ALLO_ERR_NULL is returned if `p` or `buf` is NULL.
-// ALLO_ERR_INVALID_SIZE is returend if `buf_size` or `chunk_size` is 0 or if
+// ALLO_ERR_INVALID_NULL is returned if `p` or `buf` is NULL.
+// ALLO_ERR_INVALID_SIZE is returned if `buf_size` or `chunk_size` is 0 or if
 // the padded `chunk_size` exceeds `buf_size`.
-// ALLO_ERR_INVALID_ALIGN is returned if `align` is 0.
-// ALLO_ERR_MEM_NOT_ALIGNED is returned if the `buf`  is not aligned with the
+// ALLO_ERR_INVALID_ALIGNMENT is returned if `align` is 0.
+// ALLO_ERR_NOT_ALIGNED is returned if the `buf`  is not aligned with the
 // rounded `align`.
 static inline allo_status allo_pool_init(allo_pool *restrict p,
                                          void *restrict buf, size_t buf_size,
@@ -42,15 +42,23 @@ static inline size_t allo_pool_free_chunks(const allo_pool *p);
 
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
 // The free list is then updated to point to the next free chunk of memory.
+// ALLO_ERR_INVALID_NULL is returned if `dest` or `p` is NULL.
+// ALLO_OOM is returned if there is no more available chunk to allocate.
 static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
                                           allo_pool *restrict p);
 
 // Frees the memory allocated at `ptr`.
 // The free list is then updated to point to `ptr`.
-static inline void allo_pool_free(allo_pool *restrict p, void *restrict ptr);
+// ALLO_ERR_INVALID_NULL is returned if `p` or `ptr` is NULL.
+// ALLO_ERR_OUT_OF_BOUNDS is returned if `ptr` is outside of the allocator's
+// memory range.
+// ALLO_ERR_INVALID_ADDR is returned if `ptr` is not a valid chunk address.
+static inline allo_status allo_pool_free(allo_pool *restrict p,
+                                         void *restrict ptr);
 
 // Frees all memory allocated on allocator `p`.
-static inline void allo_pool_free_all(allo_pool *p);
+// ALLO_ERR_INVALID_NULL is returned if `p` is NULL.
+static inline allo_status allo_pool_free_all(allo_pool *p);
 
 // Returns a allocator type from a pool allocator.
 static inline allo_allocator allo_allocator_from_pool(allo_pool *p);
@@ -144,6 +152,7 @@ static inline allo_status allo_pool_init(allo_pool *restrict p,
     return ALLO_ERR_NOT_ALIGNED;
   }
 
+  ALLO_ASSERT(align, "alignment must not be 0");
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
   ALLO_ASSERT(align >= sizeof(void *), "alignment must >= sizeof(void*)");
   ALLO_ASSERT(chunk_size >= sizeof(void *), "chunk size must <= sizeof(void*)");
@@ -187,6 +196,15 @@ static inline size_t allo_pool_free_chunks(const allo_pool *p) {
 
 static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
                                           allo_pool *restrict p) {
+#ifdef ALLO_SAFE_ALLOC
+  {
+    if (!dest || !p) {
+      return ALLO_ERR_INVALID_NULL;
+    }
+  }
+#endif
+  ALLO_ASSERT(dest, "dest must not be NULL");
+  ALLO_ASSERT(p, "pool allocator must not be NULL");
   allo_pool_assert(p);
 
   *dest = NULL;
@@ -202,30 +220,49 @@ static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
   return ALLO_OK;
 }
 
-// Frees the memory allocated at `ptr`.
-// The free list is then updated to point to `ptr`.
-static inline void allo_pool_free(allo_pool *restrict p, void *restrict ptr) {
-  allo_pool_assert(p);
+static inline allo_status allo_pool_free(allo_pool *restrict p,
+                                         void *restrict ptr) {
+#ifdef ALLO_SAFE_FREE
+  {
+    if (!p || !ptr) {
+      return ALLO_ERR_INVALID_NULL;
+    }
+    uintptr_t mem = (uintptr_t)ptr;
+    if (mem < p->start || mem >= p->end) {
+      return ALLO_ERR_OUT_OF_BOUNDS;
+    }
+    if ((mem - p->start) % p->chunk_size != 0) {
+      return ALLO_ERR_INVALID_ADDR;
+    }
+  }
+#endif
+
   ALLO_ASSERT(ptr, "ptr must not be NULL");
   ALLO_ASSERT(p->start <= (uintptr_t)ptr,
               "ptr must be >= start of memory region");
   ALLO_ASSERT((uintptr_t)ptr < p->end, "ptr must be < end of memory region");
-  ALLO_ASSERT(((uintptr_t)ptr - (uintptr_t)p->start) % p->chunk_size == 0,
+  ALLO_ASSERT(((uintptr_t)ptr - p->start) % p->chunk_size == 0,
               "region in [start..ptr] must be a multiple of chunk size");
   ALLO_ASSERT(allo_math_is_aligned((uintptr_t)ptr, p->align),
               "ptr must be aligned");
+  allo_pool_assert(p);
 
   void **next_ptr = ptr;
   *next_ptr = p->free_list;
   p->free_list = ptr;
 
   allo_pool_assert(p);
+  return ALLO_OK;
 }
 
-static inline void allo_pool_free_all(allo_pool *p) {
+static inline allo_status allo_pool_free_all(allo_pool *p) {
+  if (!p) {
+    return ALLO_ERR_INVALID_NULL;
+  }
   allo_pool_assert(p);
   allo_pool_freelist_reset_(p);
   allo_pool_assert(p);
+  return ALLO_OK;
 }
 
 static inline allo_allocator allo_allocator_from_pool(allo_pool *p) {
