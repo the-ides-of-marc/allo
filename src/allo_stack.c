@@ -1,6 +1,41 @@
 #include "allo/allo_stack.h"
 #include "allo/allo_status.h"
 
+allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
+                            size_t buf_size) {
+  if (!s || !buf) {
+    return ALLO_ERR_INVALID_NULL;
+  }
+  if (!buf_size) {
+    return ALLO_ERR_INVALID_SIZE;
+  }
+
+  s->start = (uintptr_t)buf;
+  s->end = s->start + buf_size;
+  s->cursor = s->end;
+
+  allo_stack_assert(s);
+  return ALLO_OK;
+}
+
+allo_status allo_stack_free_all(allo_stack *s) {
+  if (!s) {
+    return ALLO_ERR_INVALID_NULL;
+  }
+  allo_stack_assert(s);
+  s->cursor = s->end;
+  allo_stack_assert(s);
+  return ALLO_OK;
+}
+
+allo_allocator allo_allocator_from_stack(allo_stack *s) {
+  allo_stack_assert(s);
+  return (allo_allocator){
+      .allocator = s,
+      .vtable = &allo_stack_vtable,
+  };
+}
+
 static allo_status allo_stack_alloc_adapter(void *restrict *restrict dest,
                                             void *restrict ctx, size_t size,
                                             size_t align) {
