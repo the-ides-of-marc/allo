@@ -3,7 +3,7 @@
 
 #include "allo/allo_allocator.h"
 #include "allo/allo_config.h"
-#include "allo_status.h"
+#include "allo/allo_status.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -11,9 +11,9 @@
 typedef struct allo_pool {
   // Implicit free list managing the addresses of available chunks.
   void *free_list;
-  // Start of memory region.
+  // Start of managed memory region.
   uintptr_t start;
-  // End of memory region.
+  // End of managed memory region.
   uintptr_t end;
   // Chunk size.
   size_t chunk_size;

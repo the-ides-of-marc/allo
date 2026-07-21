@@ -1,9 +1,10 @@
 #ifndef ALLO_BUMP_H
 #define ALLO_BUMP_H
 
-#include "allo_allocator.h"
-#include "allo_status.h"
-#include "internal/allo_math.h"
+#include "allo/allo_allocator.h"
+#include "allo/allo_config.h"
+#include "allo/allo_status.h"
+#include "allo/internal/allo_math.h"
 #include <stddef.h>
 #include <stdint.h>
 

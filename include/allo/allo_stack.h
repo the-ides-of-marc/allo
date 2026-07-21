@@ -16,6 +16,7 @@ typedef struct allo_stack {
   uintptr_t end;
   // Cursor pointing to the header of latest allocated memory,
   // which is followed by the allocated memory itself.
+  // Points to `end` if allocator is empty.
   uintptr_t cursor;
 } allo_stack;
 
