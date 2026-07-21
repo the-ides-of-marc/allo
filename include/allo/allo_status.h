@@ -8,8 +8,6 @@ typedef enum allo_status {
   ALLO_OK = 0,
   // Indicates out of memory.
   ALLO_OOM,
-  // Indicates access out of bounds.
-  ALLO_ERR_OUT_OF_BOUNDS,
   // Indicates an invalid address.
   ALLO_ERR_INVALID_ADDR,
   // Indicates an invalid null.
@@ -17,9 +15,7 @@ typedef enum allo_status {
   // Indicates an invalid size.
   ALLO_ERR_INVALID_SIZE,
   // Indicates an invalid alignment.
-  ALLO_ERR_INVALID_ALIGNMENT,
-  // Indicates that memory is not aligned.
-  ALLO_ERR_NOT_ALIGNED,
+  ALLO_ERR_INVALID_ALIGN,
   // Indicates that an invalid operation was attempted.
   ALLO_ERR_INVALID_OP,
 
@@ -34,18 +30,14 @@ static inline const char *allo_status_str(allo_status status) {
     return "OK";
   case ALLO_OOM:
     return "OUT OF MEMORY";
-  case ALLO_ERR_OUT_OF_BOUNDS:
-    return "OUT OF BOUNDS";
   case ALLO_ERR_INVALID_ADDR:
     return "INVALID ADDRESS";
   case ALLO_ERR_INVALID_NULL:
     return "INVALID NULL";
   case ALLO_ERR_INVALID_SIZE:
     return "INVALID SIZE";
-  case ALLO_ERR_INVALID_ALIGNMENT:
+  case ALLO_ERR_INVALID_ALIGN:
     return "INVALID ALIGNMENT";
-  case ALLO_ERR_NOT_ALIGNED:
-    return "NOT ALIGNED";
   case ALLO_ERR_INVALID_OP:
     return "INVALID OP";
   }

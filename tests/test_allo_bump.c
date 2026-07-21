@@ -133,7 +133,7 @@ static void test_allo_bump_alloc_invalid_align(void) {
       allo_bump_assert(&b);
 
       void *dest = NULL;
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN,
                                   allo_bump_alloc(&dest, &b,
                                                   chunk_sizes[size_i],
                                                   invalid_aligns[align_i]),
@@ -309,7 +309,7 @@ static void test_allo_bump_set_cursor_out_of_bounds(void) {
     uintptr_t cursor = b.end - offsets[offset_i];
 
     status = allo_bump_set_cursor(&b, (void *)cursor);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
                                 "operation must fail");
   }
 }

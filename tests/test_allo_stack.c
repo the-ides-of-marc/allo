@@ -129,7 +129,7 @@ static void test_allo_stack_alloc_invalid_align(void) {
       void *dest = NULL;
       status = allo_stack_alloc(&dest, &s, chunk_sizes[size_i],
                                 invalid_aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status,
                                   "alloc must fail");
       allo_stack_assert(&s);
     }
