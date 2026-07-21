@@ -516,7 +516,7 @@ static void test_allo_pool_free_null_ptr(void) {
 }
 
 // Tests when free takes in a pointer outside of the allocator's memory region.
-static void test_allo_pool_free_ptr_is_out_of_allocator_memory_region(void) {
+static void test_allo_pool_free_ptr_is_out_of_bounds(void) {
   for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
     for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
       if (chunk_sizes[size_i] < aligns[align_i] ||
@@ -541,17 +541,17 @@ static void test_allo_pool_free_ptr_is_out_of_allocator_memory_region(void) {
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, (void *)(p.start - 1));
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, (void *)(p.end));
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, (void *)(p.end + 1));
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_OUT_OF_BOUNDS, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
@@ -786,7 +786,7 @@ int main(void) {
 
   RUN_TEST(test_allo_pool_free_null_allocator);
   RUN_TEST(test_allo_pool_free_null_ptr);
-  RUN_TEST(test_allo_pool_free_ptr_is_out_of_allocator_memory_region);
+  RUN_TEST(test_allo_pool_free_ptr_is_out_of_bounds);
   RUN_TEST(test_allo_pool_free_ptr_is_in_memory_region_but_not_valid);
   RUN_TEST(test_allo_pool_free_ok);
 

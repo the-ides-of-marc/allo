@@ -8,8 +8,6 @@ typedef enum allo_status {
   ALLO_OK = 0,
   // Indicates out of memory.
   ALLO_OOM,
-  // Indicates access out of bounds.
-  ALLO_ERR_OUT_OF_BOUNDS,
   // Indicates an invalid address.
   ALLO_ERR_INVALID_ADDR,
   // Indicates an invalid null.
@@ -34,8 +32,6 @@ static inline const char *allo_status_str(allo_status status) {
     return "OK";
   case ALLO_OOM:
     return "OUT OF MEMORY";
-  case ALLO_ERR_OUT_OF_BOUNDS:
-    return "OUT OF BOUNDS";
   case ALLO_ERR_INVALID_ADDR:
     return "INVALID ADDRESS";
   case ALLO_ERR_INVALID_NULL:

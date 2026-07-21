@@ -32,7 +32,7 @@ static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
 
 // Sets the allocator's cursor to point to the given `cursor` address.
 // ALLO_ERR_INVALID_NULL is returned if `b` or `cursor` is NULL.
-// ALLO_ERR_OUT_OF_BOUNDS is returned if `cursor` is outside of the allocator's
+// ALLO_ERR_INVALID_ADDR is returned if `cursor` is outside of the allocator's
 // memory region.
 static inline allo_status allo_bump_set_cursor(allo_bump *restrict b,
                                                const void *restrict cursor);
@@ -132,7 +132,7 @@ static inline allo_status allo_bump_set_cursor(allo_bump *restrict b,
 
   uintptr_t c = (uintptr_t)cursor;
   if (c < b->start || c > b->end) {
-    return ALLO_ERR_OUT_OF_BOUNDS;
+    return ALLO_ERR_INVALID_ADDR;
   }
   b->cursor = c;
 

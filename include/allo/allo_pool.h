@@ -50,8 +50,6 @@ static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
 // Frees the memory allocated at `ptr`.
 // The free list is then updated to point to `ptr`.
 // ALLO_ERR_INVALID_NULL is returned if `p` or `ptr` is NULL.
-// ALLO_ERR_OUT_OF_BOUNDS is returned if `ptr` is outside of the allocator's
-// memory range.
 // ALLO_ERR_INVALID_ADDR is returned if `ptr` is not a valid chunk address.
 static inline allo_status allo_pool_free(allo_pool *restrict p,
                                          void *restrict ptr);
@@ -229,7 +227,7 @@ static inline allo_status allo_pool_free(allo_pool *restrict p,
     }
     uintptr_t mem = (uintptr_t)ptr;
     if (mem < p->start || mem >= p->end) {
-      return ALLO_ERR_OUT_OF_BOUNDS;
+      return ALLO_ERR_INVALID_ADDR;
     }
     if ((mem - p->start) % p->chunk_size != 0) {
       return ALLO_ERR_INVALID_ADDR;
