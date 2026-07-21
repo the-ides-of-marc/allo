@@ -1,5 +1,5 @@
-#include "allo/internal/math.h"
 #include "allo/pool.h"
+#include "allo/internal/math.h"
 
 allo_status allo_pool_init(allo_pool *restrict p, void *restrict buf,
                            size_t buf_size, size_t chunk_size, size_t align) {
