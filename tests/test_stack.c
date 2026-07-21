@@ -4,7 +4,6 @@
 #include "allo/stack.h"
 #include "allo/status.h"
 #include "allo_test/allo_test.h"
-#include "allo_test_assert.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
-#include "allo_test_assert.h"
-#include "allo_test_io.h"
+#include "assert.h"
+#include "io.h"
 #include <unity_internals.h>
 
 void allo_test_assert_status(allo_status expected, allo_status actual,

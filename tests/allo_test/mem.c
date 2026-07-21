@@ -1,6 +1,6 @@
-#include "allo_test_mem.h"
+#include "allo_test/mem.h"
 #include "allo/internal/math.h"
-#include "allo_test_io.h"
+#include "allo_test/io.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <unity_internals.h>

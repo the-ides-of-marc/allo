@@ -4,8 +4,6 @@
 #include "allo/pool.h"
 #include "allo/status.h"
 #include "allo_test/allo_test.h"
-#include "allo_test_assert.h"
-#include "allo_test_mem.h"
 #include "unity.h"
 #include <stddef.h>
 #include <stdint.h>
