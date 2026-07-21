@@ -79,8 +79,7 @@ static void test_allo_pool_init_zero_align(void) {
   uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, 0);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT, status,
-                              "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status, "init must fail");
 }
 
 // Tests when init takes in an alignment smaller than sizeof(void*).
@@ -96,7 +95,7 @@ static void test_allo_pool_init_align_too_small(void) {
     uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
     allo_pool p = {0};
     allo_status status = allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, i);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status,
                                 "init must fail");
   }
 }
@@ -115,7 +114,7 @@ static void test_allo_pool_init_align_not_pow2(void) {
     allo_pool p = {0};
     allo_status status =
         allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, not_pow2[i]);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status,
                                 "init must fail");
   }
 }
@@ -186,7 +185,7 @@ static void test_allo_pool_init_buf_not_aligned(void) {
   allo_pool p = {0};
   allo_status status =
       allo_pool_init(&p, buf + 1, BUF_SIZE - 1, CHUNK_SIZE, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NOT_ALIGNED, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status, "init must fail");
 }
 
 // Tests chunk capacity.

@@ -96,7 +96,7 @@ static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
       return ALLO_ERR_INVALID_SIZE;
     }
     if (!align || !allo_math_is_pow2(align)) {
-      return ALLO_ERR_INVALID_ALIGNMENT;
+      return ALLO_ERR_INVALID_ALIGN;
     }
   }
 #endif

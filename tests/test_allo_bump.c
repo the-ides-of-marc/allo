@@ -133,7 +133,7 @@ static void test_allo_bump_alloc_invalid_align(void) {
       allo_bump_assert(&b);
 
       void *dest = NULL;
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGNMENT,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN,
                                   allo_bump_alloc(&dest, &b,
                                                   chunk_sizes[size_i],
                                                   invalid_aligns[align_i]),
