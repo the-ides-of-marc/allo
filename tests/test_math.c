@@ -1,5 +1,5 @@
-#include "allo/internal/allo_common.h"
-#include "allo/internal/allo_math.h"
+#include "allo/internal/common.h"
+#include "allo/internal/math.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <unity.h>

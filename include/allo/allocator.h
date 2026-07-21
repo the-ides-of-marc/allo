@@ -1,7 +1,7 @@
 #ifndef ALLO_ALLOCATOR_H
 #define ALLO_ALLOCATOR_H
 
-#include "allo_status.h"
+#include "status.h"
 #include <stddef.h>
 
 // Allocator interface that provides common operations on allocator

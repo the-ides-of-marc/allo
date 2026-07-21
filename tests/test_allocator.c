@@ -1,5 +1,5 @@
 #include "allo/allo.h"
-#include "allo/internal/allo_math.h"
+#include "allo/internal/math.h"
 #include "allo_test/allo_test.h"
 #include "unity.h"
 #include <stddef.h>
