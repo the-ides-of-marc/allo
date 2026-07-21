@@ -1,7 +1,7 @@
 #ifndef ALLO_TEST_ASSERT_H
 #define ALLO_TEST_ASSERT_H
 
-#include "allo/allo_status.h"
+#include "allo/status.h"
 #include <stddef.h>
 #include <stdint.h>
 

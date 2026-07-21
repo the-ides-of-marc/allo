@@ -50,9 +50,9 @@ add_library(allo)
 add_library(allo::allo ALIAS allo)
 target_sources(allo
     PRIVATE
-        src/allo_bump.c
-        src/allo_stack.c
-        src/allo_pool.c
+        src/bump.c
+        src/stack.c
+        src/pool.c
 )
 target_include_directories(allo
     PUBLIC

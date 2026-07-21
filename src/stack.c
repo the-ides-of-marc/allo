@@ -1,5 +1,5 @@
-#include "allo/allo_stack.h"
-#include "allo/allo_status.h"
+#include "allo/stack.h"
+#include "allo/status.h"
 
 allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
                             size_t buf_size) {

@@ -1,4 +1,4 @@
-#include "allo/allo_bump.h"
+#include "allo/bump.h"
 
 allo_status allo_bump_init(allo_bump *restrict b, void *restrict buf,
                            size_t buf_size) {

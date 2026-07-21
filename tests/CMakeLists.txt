@@ -37,12 +37,12 @@ endfunction()
 
 
 set(TESTS
-    test_allo_common
-    test_allo_math
-    test_allo_allocator
-    test_allo_bump
-    test_allo_stack
-    test_allo_pool
+    test_common
+    test_math
+    test_allocator
+    test_bump
+    test_stack
+    test_pool
 )
 
 foreach(TEST ${TESTS})

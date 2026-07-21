@@ -1,10 +1,10 @@
 #ifndef ALLO_STACK_H
 #define ALLO_STACK_H
 
-#include "allo/allo_allocator.h"
-#include "allo/allo_config.h"
-#include "allo/allo_status.h"
-#include "allo/internal/allo_math.h"
+#include "allo/allocator.h"
+#include "allo/config.h"
+#include "allo/internal/math.h"
+#include "allo/status.h"
 #include <stddef.h>
 #include <stdint.h>
 

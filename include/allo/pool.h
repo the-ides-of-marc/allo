@@ -1,9 +1,9 @@
 #ifndef ALLO_POOL_H
 #define ALLO_POOL_H
 
-#include "allo/allo_allocator.h"
-#include "allo/allo_config.h"
-#include "allo/allo_status.h"
+#include "allo/allocator.h"
+#include "allo/config.h"
+#include "allo/status.h"
 #include <stddef.h>
 #include <stdint.h>
 

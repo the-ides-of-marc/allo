@@ -1,4 +1,4 @@
-#include "allo/internal/allo_common.h"
+#include "allo/internal/common.h"
 #include <unity.h>
 #include <unity_internals.h>
 

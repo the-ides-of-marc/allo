@@ -1,7 +1,7 @@
 #ifndef ALLO_MATH_H
 #define ALLO_MATH_H
 
-#include "allo/allo_config.h"
+#include "allo/config.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

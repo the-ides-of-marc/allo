@@ -1,8 +1,8 @@
-#include "allo/allo_allocator.h"
-#include "allo/allo_stack.h"
-#include "allo/allo_status.h"
-#include "allo/internal/allo_common.h"
-#include "allo/internal/allo_math.h"
+#include "allo/allocator.h"
+#include "allo/internal/common.h"
+#include "allo/internal/math.h"
+#include "allo/stack.h"
+#include "allo/status.h"
 #include "allo_test/allo_test.h"
 #include "allo_test_assert.h"
 #include <stddef.h>

@@ -1,5 +1,5 @@
 #include "allo_test_mem.h"
-#include "allo/internal/allo_math.h"
+#include "allo/internal/math.h"
 #include "allo_test_io.h"
 #include <stddef.h>
 #include <stdlib.h>
