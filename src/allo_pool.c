@@ -35,7 +35,6 @@ allo_status allo_pool_init(allo_pool *restrict p, void *restrict buf,
   size_t chunk_count = buf_size / chunk_size;
 
   p->chunk_size = chunk_size;
-  p->align = align;
   p->start = (uintptr_t)buf;
   p->end = p->start + chunk_count * p->chunk_size;
   ALLO_ASSERT((uintptr_t)p->end <= (uintptr_t)buf + buf_size,

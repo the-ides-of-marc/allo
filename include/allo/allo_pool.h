@@ -17,26 +17,17 @@ typedef struct allo_pool {
   uintptr_t end;
   // Chunk size.
   size_t chunk_size;
-  size_t align;
 } allo_pool;
 
 // Asserts the state of a pool allocator.
 static inline void allo_pool_assert(const allo_pool *p) {
   ALLO_ASSERT(p, "pool allocator must not be NULL");
 
-  ALLO_ASSERT(p->align, "pool allocator alignment must be non-zero");
-  ALLO_ASSERT(p->align >= sizeof(void *),
-              "pool allocator alignment must be able to hold a pointer");
-  ALLO_ASSERT(allo_math_is_pow2(p->align),
-              "pool allocator must be a power of 2");
-
   ALLO_ASSERT(p->chunk_size, "chunk size must be non-zero");
   ALLO_ASSERT(p->chunk_size <= p->end - p->start,
               "chunk size must not be greater than the memory region");
   ALLO_ASSERT(p->chunk_size >= sizeof(void *),
               "chunk size must be able to hold a pointer");
-  ALLO_ASSERT(p->chunk_size % p->align == 0,
-              "chunk size must be a multiple of alignment");
 
   ALLO_ASSERT((p->end - p->start) / p->chunk_size,
               "chunk count must be non-zero");
@@ -44,10 +35,6 @@ static inline void allo_pool_assert(const allo_pool *p) {
   ALLO_ASSERT(p->start, "start must not be NULL");
   ALLO_ASSERT(p->end, "end must not be NULL");
   ALLO_ASSERT(p->start < p->end, "start must be lesser than end");
-
-  ALLO_ASSERT(allo_math_is_aligned(p->start, p->align),
-              "start must be aligned");
-  ALLO_ASSERT(allo_math_is_aligned(p->end, p->align), "end must be aligned");
 
   if (p->free_list) {
     ALLO_ASSERT(p->start <= (uintptr_t)p->free_list,
@@ -57,8 +44,6 @@ static inline void allo_pool_assert(const allo_pool *p) {
     ALLO_ASSERT(p->start <= (uintptr_t)p->free_list &&
                     (uintptr_t)p->free_list < p->end,
                 "free list must be within the allocator's memory region");
-    ALLO_ASSERT(allo_math_is_aligned((uintptr_t)p->free_list, p->align),
-                "free list must be aligned");
   }
   (void)p;
 }
@@ -149,8 +134,6 @@ static inline allo_status allo_pool_free(allo_pool *restrict p,
   ALLO_ASSERT((uintptr_t)ptr < p->end, "ptr must be < end of memory region");
   ALLO_ASSERT(((uintptr_t)ptr - p->start) % p->chunk_size == 0,
               "region in [start..ptr] must be a multiple of chunk size");
-  ALLO_ASSERT(allo_math_is_aligned((uintptr_t)ptr, p->align),
-              "ptr must be aligned");
   allo_pool_assert(p);
 
   void **next_ptr = ptr;
