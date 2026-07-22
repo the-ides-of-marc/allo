@@ -66,6 +66,105 @@ static void test_allo_bump_init_zero_buf_size(void) {
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
 }
 
+// Tests the state of the allocator and allocated memory on a successful init on
+// an empty allocator.
+static void test_allo_bump_alloc_unsafe_empty_allocator(void) {
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      uint8_t buf[BUF_SIZE] = {0};
+      allo_bump b = {0};
+      allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+      allo_bump_assert(&b);
+
+      size_t old_cursor = b.cursor;
+      void *dest = NULL;
+      status = allo_bump_alloc_unsafe(&dest, &b, chunk_sizes[size_i],
+                                      aligns[align_i]);
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(dest, b.cursor, "dest must = cursor");
+      TEST_ASSERT_TRUE_MESSAGE(old_cursor > b.cursor,
+                               "cursor must have shifted down");
+
+      bool is_aligned = allo_math_is_aligned((uintptr_t)dest, aligns[align_i]);
+      TEST_ASSERT_TRUE_MESSAGE(is_aligned, "dest must be aligned");
+      allo_bump_assert(&b);
+    }
+  }
+}
+
+// Tests the state of the allocator and allocated memory on a successful init on
+// an non-empty allocator.
+static void test_allo_bump_alloc_unsafe_non_empty_allocator(void) {
+  const size_t cursor_offsets[] = {1, 2, 4, 8, 16};
+
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      for (const size_t *cursor_offset = cursor_offsets;
+           cursor_offset < cursor_offsets + ALLO_ARR_LEN(cursor_offsets);
+           ++cursor_offset) {
+        uint8_t buf[BUF_SIZE] = {0};
+        allo_bump b = {0};
+        allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+        allo_bump_assert(&b);
+
+        b.cursor -= *cursor_offset;
+        allo_bump_assert(&b);
+
+        uintptr_t next_expected_cursor = allo_math_align_down(
+            b.cursor - chunk_sizes[size_i], aligns[align_i]);
+        TEST_ASSERT_TRUE_MESSAGE(
+            b.start <= next_expected_cursor && next_expected_cursor < b.end,
+            "next_expected_cursor must be a valid memory address in allocator");
+
+        void *dest = NULL;
+        status = allo_bump_alloc_unsafe(&dest, &b, chunk_sizes[size_i],
+                                        aligns[align_i]);
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(next_expected_cursor, b.cursor,
+                                      "cursor must be at expected position");
+        TEST_ASSERT_EQUAL_PTR_MESSAGE(dest, b.cursor, "dest must = cursor");
+        TEST_ASSERT_TRUE_MESSAGE(
+            allo_math_is_aligned((uintptr_t)dest, aligns[align_i]),
+            "dest must be aligned");
+        allo_bump_assert(&b);
+      }
+    }
+  }
+}
+
+// Tests when allocation is attempted on an allocator with insufficient free
+// memory.
+static void test_allo_bump_alloc_unsafe_oom(void) {
+  const size_t size = 8;
+  const uintptr_t offsets[] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+  for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+    for (uintptr_t offset_i = 0; offset_i < ALLO_ARR_LEN(offsets); ++offset_i) {
+      TEST_ASSERT_TRUE_MESSAGE(offsets[offset_i] < size,
+                               "free space in allocator must be less than size "
+                               "to allocate to cause OOM");
+      uint8_t buf[BUF_SIZE] = {0};
+      allo_bump b = {0};
+      allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+      allo_bump_assert(&b);
+
+      b.cursor = b.start + offsets[offset_i];
+      allo_bump_assert(&b);
+
+      uintptr_t cursor_position = b.cursor;
+      void *dest = NULL;
+      status = allo_bump_alloc_unsafe(&dest, &b, size, aligns[align_i]);
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OOM, status, "alloc must fail (oom)");
+      TEST_ASSERT_NULL_MESSAGE(dest, "dest must remain NULL");
+      TEST_ASSERT_EQUAL_PTR_MESSAGE(cursor_position, b.cursor,
+                                    "cursor must remain unchanged");
+    }
+  }
+}
+
 // Tests when alloc takes in a null destination.
 static void test_allo_bump_alloc_null_dest(void) {
   for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
@@ -418,6 +517,10 @@ int main(void) {
   RUN_TEST(test_allo_bump_init_null_allocator);
   RUN_TEST(test_allo_bump_init_null_buf);
   RUN_TEST(test_allo_bump_init_zero_buf_size);
+
+  RUN_TEST(test_allo_bump_alloc_unsafe_empty_allocator);
+  RUN_TEST(test_allo_bump_alloc_unsafe_non_empty_allocator);
+  RUN_TEST(test_allo_bump_alloc_unsafe_oom);
 
   RUN_TEST(test_allo_bump_alloc_null_dest);
   RUN_TEST(test_allo_bump_alloc_null_allocator);

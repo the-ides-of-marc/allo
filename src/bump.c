@@ -53,10 +53,23 @@ allo_allocator allo_allocator_from_bump(allo_bump *b) {
   };
 }
 
+static allo_status bump_alloc_unsafe_adapter(void *restrict *restrict dest,
+                                             void *restrict ctx, size_t size,
+                                             size_t align) {
+  return allo_bump_alloc_unsafe(dest, (allo_bump *)ctx, size, align);
+}
+
 static allo_status bump_alloc_adapter(void *restrict *restrict dest,
                                       void *restrict ctx, size_t size,
                                       size_t align) {
   return allo_bump_alloc(dest, (allo_bump *)ctx, size, align);
+}
+
+static allo_status bump_free_unsafe_adapter(void *restrict ctx,
+                                            void *restrict ptr) {
+  (void)ctx;
+  (void)ptr;
+  return ALLO_ERR_INVALID_OP;
 }
 
 static allo_status bump_free_adapter(void *restrict ctx, void *restrict ptr) {
@@ -72,6 +85,8 @@ static allo_status bump_free_all_adapter(void *ctx) {
 
 const allo_allocator_vtable allo_bump_vtable = {
     .alloc = bump_alloc_adapter,
+    .alloc_unsafe = bump_alloc_unsafe_adapter,
     .free = bump_free_adapter,
+    .free_unsafe = bump_free_unsafe_adapter,
     .free_all = bump_free_all_adapter,
 };
