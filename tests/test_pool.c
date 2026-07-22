@@ -1,5 +1,4 @@
 #include "allo/allo.h"
-#include "allo/allocator.h"
 #include "allo/internal/common.h"
 #include "allo/pool.h"
 #include "allo/status.h"
@@ -857,28 +856,6 @@ static void test_allo_pool_free_all_ok(void) {
   }
 }
 
-// Tests creating an allocator interface from a concrete pool allocator.
-static void test_allo_allocator_from_pool(void) {
-  enum {
-    CHUNK_SIZE = 32,
-    CHUNK_COUNT = 10,
-    BUF_SIZE = CHUNK_SIZE * CHUNK_COUNT,
-    ALIGN = 16,
-  };
-  uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
-  allo_pool p = {0};
-  allo_status status = allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
-  allo_pool_assert(&p);
-
-  allo_allocator a = allo_allocator_from_pool(&p);
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&p, a.allocator,
-                                "underlying allocator must match");
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&allo_pool_vtable, a.vtable,
-                                "vtable must match");
-  allo_pool_assert(a.allocator);
-}
-
 int main(void) {
   UNITY_BEGIN();
 
@@ -916,8 +893,6 @@ int main(void) {
 
   RUN_TEST(test_allo_pool_free_all_null_allocator);
   RUN_TEST(test_allo_pool_free_all_ok);
-
-  RUN_TEST(test_allo_allocator_from_pool);
 
   return UNITY_END();
 }

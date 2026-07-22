@@ -14,7 +14,6 @@
 // - Fixed sized pool allocator  (allo/pool.h)
 
 // IWYU pragma: begin_exports
-#include "allocator.h"
 #include "bump.h"
 #include "config.h"
 #include "pool.h"

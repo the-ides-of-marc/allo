@@ -1,7 +1,6 @@
 #ifndef ALLO_POOL_H
 #define ALLO_POOL_H
 
-#include "allo/allocator.h"
 #include "allo/config.h"
 #include "allo/status.h"
 #include <stddef.h>
@@ -158,11 +157,5 @@ static inline allo_status allo_pool_free(allo_pool *restrict p,
 // Frees all memory allocated on allocator `p`.
 // ALLO_ERR_INVALID_NULL is returned if `p` is NULL.
 allo_status allo_pool_free_all(allo_pool *p);
-
-// Returns a allocator type from a pool allocator.
-allo_allocator allo_allocator_from_pool(allo_pool *p);
-
-// VTable for pool allocator.
-extern const allo_allocator_vtable allo_pool_vtable;
 
 #endif // !ALLO_POOL_H

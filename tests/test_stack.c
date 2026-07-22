@@ -1,4 +1,3 @@
-#include "allo/allocator.h"
 #include "allo/internal/common.h"
 #include "allo/internal/math.h"
 #include "allo/stack.h"
@@ -568,22 +567,6 @@ static void test_allo_stack_buf_alignments(void) {
   }
 }
 
-// Tests creating an allocator interface from a concrete stack allocator.
-static void test_allo_allocator_from_stack(void) {
-  uint8_t buf[BUF_SIZE] = {0};
-  allo_stack s = {0};
-  allo_status status = allo_stack_init(&s, buf, BUF_SIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
-  allo_stack_assert(&s);
-
-  allo_allocator a = allo_allocator_from_stack(&s);
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&s, a.allocator,
-                                "underlying allocator must match");
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&allo_stack_vtable, a.vtable,
-                                "vtable must match");
-  allo_stack_assert(a.allocator);
-}
-
 int main(void) {
   UNITY_BEGIN();
 
@@ -612,8 +595,6 @@ int main(void) {
   RUN_TEST(test_allo_stack_free_all_ok);
 
   RUN_TEST(test_allo_stack_buf_alignments);
-
-  RUN_TEST(test_allo_allocator_from_stack);
 
   return UNITY_END();
 }
