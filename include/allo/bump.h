@@ -39,26 +39,13 @@ allo_status allo_bump_init(allo_bump *restrict b, void *restrict buf,
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
-// ALLO_ERR_INVALID_NULL is returned if `dest` or `b` is NULL.
-// ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
-// ALLO_ERR_INVALID_ALIGN is returned if `align` is not a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
-static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
-                                          allo_bump *restrict b, size_t size,
-                                          size_t align) {
-#ifdef ALLO_SAFE_ALLOC
-  {
-    if (!dest || !b) {
-      return ALLO_ERR_INVALID_NULL;
-    }
-    if (!size) {
-      return ALLO_ERR_INVALID_SIZE;
-    }
-    if (!align || !allo_math_is_pow2(align)) {
-      return ALLO_ERR_INVALID_ALIGN;
-    }
-  }
-#endif
+//
+// Arguments are not checked and invalid values can result in undefined
+// behaviour.
+static inline allo_status allo_bump_alloc_unsafe(void *restrict *restrict dest,
+                                                 allo_bump *restrict b,
+                                                 size_t size, size_t align) {
   ALLO_ASSERT(dest, "dest must not be NULL");
   ALLO_ASSERT(b, "bump allocator must not be NULL");
   ALLO_ASSERT(size, "size to allocate must not be 0");
@@ -79,6 +66,27 @@ static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
 
   *dest = (void *)next_cursor;
   return ALLO_OK;
+}
+
+// Tries to allocate `size` bytes at `align` alignment.
+// `size` must be > 0 and `align` must be a power of 2.
+// ALLO_ERR_INVALID_NULL is returned if `dest` or `b` is NULL.
+// ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
+// ALLO_ERR_INVALID_ALIGN is returned if `align` is not a power of 2.
+// ALLO_OOM is returned if there is insufficient space to allocate the bytes.
+static inline allo_status allo_bump_alloc(void *restrict *restrict dest,
+                                          allo_bump *restrict b, size_t size,
+                                          size_t align) {
+  if (!dest || !b) {
+    return ALLO_ERR_INVALID_NULL;
+  }
+  if (!size) {
+    return ALLO_ERR_INVALID_SIZE;
+  }
+  if (!align || !allo_math_is_pow2(align)) {
+    return ALLO_ERR_INVALID_ALIGN;
+  }
+  return allo_bump_alloc_unsafe(dest, b, size, align);
 }
 
 // Sets the allocator's cursor to point to the given `cursor` address.
