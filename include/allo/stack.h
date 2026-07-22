@@ -38,26 +38,13 @@ allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
-// ALLO_ERR_INVALID_NULL is returned if `dest` or `s` is NULL.
-// ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
-// ALLO_ERR_INVALID_ALIGNMENT is returned if `align` is not a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
-static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
-                                           allo_stack *restrict s, size_t size,
-                                           size_t align) {
-#ifdef ALLO_SAFE_ALLOC
-  {
-    if (!dest || !s) {
-      return ALLO_ERR_INVALID_NULL;
-    }
-    if (!size) {
-      return ALLO_ERR_INVALID_SIZE;
-    }
-    if (!align || !allo_math_is_pow2(align)) {
-      return ALLO_ERR_INVALID_ALIGN;
-    }
-  }
-#endif
+//
+// Arguments are not checked and invalid values can result in undefined
+// behaviour.
+static inline allo_status allo_stack_alloc_unsafe(void *restrict *restrict dest,
+                                                  allo_stack *restrict s,
+                                                  size_t size, size_t align) {
   ALLO_ASSERT(dest, "dest must not be NULL");
   ALLO_ASSERT(size, "size must not be 0");
   ALLO_ASSERT(align, "alignment must not be 0");
@@ -80,6 +67,27 @@ static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
 
   allo_stack_assert(s);
   return ALLO_OK;
+}
+
+// Tries to allocate `size` bytes at `align` alignment.
+// `size` must be > 0 and `align` must be a power of 2.
+// ALLO_ERR_INVALID_NULL is returned if `dest` or `s` is NULL.
+// ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
+// ALLO_ERR_INVALID_ALIGNMENT is returned if `align` is not a power of 2.
+// ALLO_OOM is returned if there is insufficient space to allocate the bytes.
+static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
+                                           allo_stack *restrict s, size_t size,
+                                           size_t align) {
+  if (!dest || !s) {
+    return ALLO_ERR_INVALID_NULL;
+  }
+  if (!size) {
+    return ALLO_ERR_INVALID_SIZE;
+  }
+  if (!align || !allo_math_is_pow2(align)) {
+    return ALLO_ERR_INVALID_ALIGN;
+  }
+  return allo_stack_alloc_unsafe(dest, s, size, align);
 }
 
 // Frees the latest allocation.
