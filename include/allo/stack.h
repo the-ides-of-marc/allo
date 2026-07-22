@@ -91,13 +91,10 @@ static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
 }
 
 // Frees the latest allocation.
-// ALLO_ERR_INVALID_NULL is returned if `s` is NULL.
-static inline allo_status allo_stack_free(allo_stack *s) {
-#ifdef ALLO_SAFE_FREE
-  if (!s) {
-    return ALLO_ERR_INVALID_NULL;
-  }
-#endif
+//
+// Arguments are not checked and invalid values can result in undefined
+// behaviour.
+static inline allo_status allo_stack_free_unsafe(allo_stack *s) {
   allo_stack_assert(s);
 
   if (s->cursor == s->end) {
@@ -113,6 +110,15 @@ static inline allo_status allo_stack_free(allo_stack *s) {
 
   allo_stack_assert(s);
   return ALLO_OK;
+}
+
+// Frees the latest allocation.
+// ALLO_ERR_INVALID_NULL is returned if `s` is NULL.
+static inline allo_status allo_stack_free(allo_stack *s) {
+  if (!s) {
+    return ALLO_ERR_INVALID_NULL;
+  }
+  return allo_stack_free_unsafe(s);
 }
 
 // Frees all memory allocated on allocator `s`.

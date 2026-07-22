@@ -363,6 +363,42 @@ static void test_allo_stack_alloc_oom(void) {
   }
 }
 
+// Tests when freeing memory from the allocator.
+static void test_allo_stack_free_unsafe_ok(void) {
+  uint8_t buf[BUF_SIZE] = {0};
+  allo_stack s = {0};
+  allo_status status = allo_stack_init(&s, buf, BUF_SIZE);
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
+  allo_stack_assert(&s);
+
+  uintptr_t cursor_positions[ALLO_ARR_LEN(chunk_sizes) * ALLO_ARR_LEN(aligns)] =
+      {0};
+  size_t cursor_i = 0;
+
+  for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
+    for (size_t align_i = 0; align_i < ALLO_ARR_LEN(aligns); ++align_i) {
+      cursor_positions[cursor_i++] = s.cursor;
+
+      void *dest = NULL;
+      status =
+          allo_stack_alloc(&dest, &s, chunk_sizes[size_i], aligns[align_i]);
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
+      allo_stack_assert(&s);
+    }
+  }
+  TEST_ASSERT_EQUAL_MESSAGE(ALLO_ARR_LEN(cursor_positions), cursor_i,
+                            "cursor positions must all be tracked");
+
+  for (size_t i = 0; i < ALLO_ARR_LEN(cursor_positions); ++i) {
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, allo_stack_free_unsafe(&s),
+                                "free must succeed");
+    TEST_ASSERT_EQUAL_PTR_MESSAGE(
+        cursor_positions[ALLO_ARR_LEN(cursor_positions) - i - 1], s.cursor,
+        "free must set cursor back to position");
+    allo_stack_assert(&s);
+  }
+}
+
 // Tests when free takes in a null allocator.
 static void test_allo_stack_free_null_allocator(void) {
   uint8_t buf[BUF_SIZE] = {0};
@@ -566,6 +602,8 @@ int main(void) {
   RUN_TEST(test_allo_stack_alloc_empty_allocator);
   RUN_TEST(test_allo_stack_alloc_non_empty_allocator);
   RUN_TEST(test_allo_stack_alloc_oom);
+
+  RUN_TEST(test_allo_stack_free_unsafe_ok);
 
   RUN_TEST(test_allo_stack_free_null_allocator);
   RUN_TEST(test_allo_stack_free_ok);
