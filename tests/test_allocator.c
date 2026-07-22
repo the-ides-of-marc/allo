@@ -13,14 +13,18 @@ static const uintptr_t MOCK_BASE_ADDR = 0x1000;
 
 struct mock_state {
   size_t alloc_calls;
+  size_t alloc_unsafe_calls;
   size_t free_calls;
+  size_t free_unsafe_calls;
   size_t free_all_calls;
   void *ptr_last_allocated;
 };
 
 static void mock_state_init(struct mock_state *m) {
   m->alloc_calls = 0;
+  m->alloc_unsafe_calls = 0;
   m->free_calls = 0;
+  m->free_unsafe_calls = 0;
   m->free_all_calls = 0;
   m->ptr_last_allocated = NULL;
 }
@@ -34,9 +38,26 @@ static allo_status mock_alloc(void *restrict *restrict dest, void *restrict ctx,
   return ALLO_OK;
 }
 
+static allo_status mock_alloc_unsafe(void *restrict *restrict dest,
+                                     void *restrict ctx, size_t size,
+                                     size_t align) {
+  struct mock_state *state = ctx;
+  ++state->alloc_unsafe_calls;
+  *dest = (void *)(MOCK_BASE_ADDR + size + align);
+  state->ptr_last_allocated = *dest;
+  return ALLO_OK;
+}
+
 static allo_status mock_free(void *ctx, void *ptr) {
   struct mock_state *state = ctx;
   ++state->free_calls;
+  (void)ptr;
+  return ALLO_OK;
+}
+
+static allo_status mock_free_unsafe(void *ctx, void *ptr) {
+  struct mock_state *state = ctx;
+  ++state->free_unsafe_calls;
   (void)ptr;
   return ALLO_OK;
 }
@@ -48,9 +69,11 @@ static allo_status mock_free_all(void *ctx) {
 }
 
 static allo_allocator_vtable mock_vtable = {
-    .alloc = &mock_alloc,
-    .free = &mock_free,
-    .free_all = &mock_free_all,
+    .alloc = mock_alloc,
+    .alloc_unsafe = mock_alloc_unsafe,
+    .free = mock_free,
+    .free_unsafe = mock_free_unsafe,
+    .free_all = mock_free_all,
 };
 
 void test_alloc_and_free(void) {
