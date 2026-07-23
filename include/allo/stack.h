@@ -35,6 +35,14 @@ static inline void allo_stack_assert(allo_stack *s) {
 allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
                             size_t buf_size);
 
+// Since C99 does not have alignof in its standard,
+// Use sizeof(uintptr_t) for alignment.
+// sizeof(uintptr_t) will never be smaller than alignof(uintptr_t),
+// so header will always have sufficient space.
+// The potential wasted space is bounded to sizeof(uintptr_t) -
+// alignof(uintptr_t), which is typically 0.
+#define ALLO_STACK_HEADER_ALIGN sizeof(uintptr_t)
+
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
@@ -60,14 +68,8 @@ static inline allo_status allo_stack_alloc_unsafe(void *restrict *restrict dest,
   }
   *dest = (void *)next_cursor;
 
-  // Since C99 does not have alignof in its standard,
-  // Use sizeof(uintptr_t) for alignment.
-  // sizeof(uintptr_t) will never be smaller than alignof(uintptr_t),
-  // so header will always have sufficient space.
-  // The potential wasted space is bounded to sizeof(uintptr_t) -
-  // alignof(uintptr_t), which is typically 0.
-  next_cursor =
-      allo_math_align_down(next_cursor - sizeof(uintptr_t), sizeof(uintptr_t));
+  next_cursor = allo_math_align_down(next_cursor - sizeof(uintptr_t),
+                                     ALLO_STACK_HEADER_ALIGN);
 
   *(uintptr_t *)next_cursor = s->cursor;
   s->cursor = next_cursor;
