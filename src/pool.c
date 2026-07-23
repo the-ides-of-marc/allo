@@ -1,6 +1,23 @@
 #include "allo/pool.h"
 #include "allo/internal/math.h"
 
+// Resets the free list in the pool allocator.
+static void allo_pool_freelist_reset(allo_pool *p) {
+  allo_pool_assert(p);
+
+  size_t chunk_count = (p->end - p->start) / p->chunk_size;
+  void **curr_chunk = (void **)p->start;
+  for (size_t i = 0; i < chunk_count - 1; ++i) {
+    void *next = (uint8_t *)curr_chunk + p->chunk_size;
+    *curr_chunk = next;
+    curr_chunk = next;
+  }
+  *curr_chunk = NULL;
+
+  p->free_list = (void *)p->start;
+  allo_pool_assert(p);
+}
+
 allo_status allo_pool_init(allo_pool *restrict p, void *restrict buf,
                            size_t buf_size, size_t chunk_size, size_t align) {
   if (!p || !buf) {
@@ -59,22 +76,6 @@ size_t allo_pool_free_chunks(const allo_pool *p) {
     ++chunks;
   }
   return chunks;
-}
-
-void allo_pool_freelist_reset(allo_pool *p) {
-  allo_pool_assert(p);
-
-  size_t chunk_count = (p->end - p->start) / p->chunk_size;
-  void **curr_chunk = (void **)p->start;
-  for (size_t i = 0; i < chunk_count - 1; ++i) {
-    void *next = (uint8_t *)curr_chunk + p->chunk_size;
-    *curr_chunk = next;
-    curr_chunk = next;
-  }
-  *curr_chunk = NULL;
-
-  p->free_list = (void *)p->start;
-  allo_pool_assert(p);
 }
 
 allo_status allo_pool_free_all(allo_pool *p) {
