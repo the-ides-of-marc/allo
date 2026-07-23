@@ -71,9 +71,6 @@ size_t allo_pool_chunk_cap(const allo_pool *p);
 // Returns the number of free chunks remaining in this pool.
 size_t allo_pool_free_chunks(const allo_pool *p);
 
-// Resets the free list in the pool allocator.
-void allo_pool_freelist_reset(allo_pool *p);
-
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
 // The free list is then updated to point to the next free chunk of memory.
 // ALLO_OOM is returned if there is no more available chunk to allocate.
