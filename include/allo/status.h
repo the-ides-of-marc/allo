@@ -20,24 +20,6 @@ typedef enum allo_status {
 } allo_status;
 
 // Returns a string literal representing the status.
-static inline const char *allo_status_str(allo_status status);
-
-static inline const char *allo_status_str(allo_status status) {
-  switch (status) {
-  case ALLO_OK:
-    return "OK";
-  case ALLO_OOM:
-    return "OUT OF MEMORY";
-  case ALLO_ERR_INVALID_ADDR:
-    return "INVALID ADDRESS";
-  case ALLO_ERR_INVALID_NULL:
-    return "INVALID NULL";
-  case ALLO_ERR_INVALID_SIZE:
-    return "INVALID SIZE";
-  case ALLO_ERR_INVALID_ALIGN:
-    return "INVALID ALIGNMENT";
-  }
-  return "UNKNOWN";
-}
+const char *allo_status_str(allo_status status);
 
 #endif // !ALLO_STATUS_H
