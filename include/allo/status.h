@@ -8,36 +8,18 @@ typedef enum allo_status {
   ALLO_OK = 0,
   // Indicates out of memory.
   ALLO_OOM,
-  // Indicates an invalid address.
-  ALLO_ERR_INVALID_ADDR,
-  // Indicates an invalid null.
-  ALLO_ERR_INVALID_NULL,
-  // Indicates an invalid size.
-  ALLO_ERR_INVALID_SIZE,
-  // Indicates an invalid alignment.
-  ALLO_ERR_INVALID_ALIGN,
+  // Indicates an error due to an invalid address.
+  ALLO_ERR_ADDR,
+  // Indicates an error due to a null pointer.
+  ALLO_ERR_NULL,
+  // Indicates an error due to an invalid size.
+  ALLO_ERR_SIZE,
+  // Indicates an error due to alignment.
+  ALLO_ERR_ALIGN,
 
 } allo_status;
 
 // Returns a string literal representing the status.
-static inline const char *allo_status_str(allo_status status);
-
-static inline const char *allo_status_str(allo_status status) {
-  switch (status) {
-  case ALLO_OK:
-    return "OK";
-  case ALLO_OOM:
-    return "OUT OF MEMORY";
-  case ALLO_ERR_INVALID_ADDR:
-    return "INVALID ADDRESS";
-  case ALLO_ERR_INVALID_NULL:
-    return "INVALID NULL";
-  case ALLO_ERR_INVALID_SIZE:
-    return "INVALID SIZE";
-  case ALLO_ERR_INVALID_ALIGN:
-    return "INVALID ALIGNMENT";
-  }
-  return "UNKNOWN";
-}
+const char *allo_status_str(allo_status status);
 
 #endif // !ALLO_STATUS_H

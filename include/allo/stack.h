@@ -30,8 +30,8 @@ static inline void allo_stack_assert(allo_stack *s) {
 
 // Initializes the stack allocator `s` to manage `buf` from
 // `buf[0]..buf[buf_size-1]`.
-// ALLO_ERR_INVALID_NULL is returned if `s` or `buf` is NULL.
-// ALLO_ERR_INVALID_SIZE is returned if `buf_size` is 0.
+// ALLO_ERR_NULL is returned if `s` or `buf` is NULL.
+// ALLO_ERR_SIZE is returned if `buf_size` is 0.
 allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
                             size_t buf_size);
 
@@ -70,21 +70,21 @@ static inline allo_status allo_stack_alloc_unsafe(void *restrict *restrict dest,
 
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
-// ALLO_ERR_INVALID_NULL is returned if `dest` or `s` is NULL.
-// ALLO_ERR_INVALID_SIZE is returned if `size` is 0.
-// ALLO_ERR_INVALID_ALIGNMENT is returned if `align` is not a power of 2.
+// ALLO_ERR_NULL is returned if `dest` or `s` is NULL.
+// ALLO_ERR_SIZE is returned if `size` is 0.
+// ALLO_ERR_ALIGN is returned if `align` is not a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
 static inline allo_status allo_stack_alloc(void *restrict *restrict dest,
                                            allo_stack *restrict s, size_t size,
                                            size_t align) {
   if (!dest || !s) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   if (!size) {
-    return ALLO_ERR_INVALID_SIZE;
+    return ALLO_ERR_SIZE;
   }
   if (!align || !allo_math_is_pow2(align)) {
-    return ALLO_ERR_INVALID_ALIGN;
+    return ALLO_ERR_ALIGN;
   }
   return allo_stack_alloc_unsafe(dest, s, size, align);
 }
@@ -112,16 +112,16 @@ static inline allo_status allo_stack_free_unsafe(allo_stack *s) {
 }
 
 // Frees the latest allocation.
-// ALLO_ERR_INVALID_NULL is returned if `s` is NULL.
+// ALLO_ERR_NULL is returned if `s` is NULL.
 static inline allo_status allo_stack_free(allo_stack *s) {
   if (!s) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   return allo_stack_free_unsafe(s);
 }
 
 // Frees all memory allocated on allocator `s`.
-// ALLO_ERR_INVALID_NULL is returned if `s` is NULL.
+// ALLO_ERR_NULL is returned if `s` is NULL.
 allo_status allo_stack_free_all(allo_stack *s);
 
 #endif // !ALLO_STACK_H
