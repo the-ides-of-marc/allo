@@ -182,8 +182,7 @@ static void test_allo_stack_alloc_null_dest(void) {
       allo_stack_assert(&s);
 
       status = allo_stack_alloc(NULL, &s, chunk_sizes[size_i], aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                                  "alloc must fail");
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "alloc must fail");
       allo_stack_assert(&s);
     }
   }
@@ -202,8 +201,7 @@ static void test_allo_stack_alloc_null_allocator(void) {
       void *dest = NULL;
       status =
           allo_stack_alloc(&dest, NULL, chunk_sizes[size_i], aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                                  "alloc must fail");
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "alloc must fail");
       allo_stack_assert(&s);
     }
   }
@@ -220,8 +218,7 @@ static void test_allo_stack_alloc_zero_size(void) {
 
     void *dest = NULL;
     status = allo_stack_alloc(&dest, &s, 0, aligns[align_i]);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status,
-                                "alloc must fail");
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status, "alloc must fail");
     allo_stack_assert(&s);
   }
 }
@@ -241,8 +238,7 @@ static void test_allo_stack_alloc_invalid_align(void) {
       void *dest = NULL;
       status = allo_stack_alloc(&dest, &s, chunk_sizes[size_i],
                                 invalid_aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status,
-                                  "alloc must fail");
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status, "alloc must fail");
       allo_stack_assert(&s);
     }
   }
@@ -482,8 +478,7 @@ static void test_allo_stack_free_all_null_allocator(void) {
   allo_stack_assert(&s);
 
   status = allo_stack_free_all(NULL);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                              "free all must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "free all must fail");
   allo_stack_assert(&s);
 
   for (size_t size_i = 0; size_i < ALLO_ARR_LEN(chunk_sizes); ++size_i) {
@@ -495,15 +490,13 @@ static void test_allo_stack_free_all_null_allocator(void) {
       allo_stack_assert(&s);
 
       status = allo_stack_free_all(NULL);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                                  "free all must fail");
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "free all must fail");
       allo_stack_assert(&s);
     }
   }
 
   status = allo_stack_free_all(NULL);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                              "free all must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "free all must fail");
   allo_stack_assert(&s);
 }
 

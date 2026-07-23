@@ -371,8 +371,7 @@ static void test_allo_bump_set_cursor_null_allocator(void) {
     uintptr_t cursor = b.end - offsets[offset_i];
 
     status = allo_bump_set_cursor(NULL, (void *)cursor);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                                "operation must fail");
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "operation must fail");
   }
 }
 
@@ -385,8 +384,7 @@ static void test_allo_bump_set_cursor_null_cursor(void) {
   allo_bump_assert(&b);
 
   status = allo_bump_set_cursor(&b, NULL);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
-                              "operation must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "operation must fail");
 }
 
 // Tests when setting the cursor with an address that is outside the memory
@@ -405,8 +403,7 @@ static void test_allo_bump_set_cursor_out_of_bounds(void) {
     uintptr_t cursor = b.end - offsets[offset_i];
 
     status = allo_bump_set_cursor(&b, (void *)cursor);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status,
-                                "operation must fail");
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status, "operation must fail");
   }
 }
 
