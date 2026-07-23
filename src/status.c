@@ -3,17 +3,17 @@
 const char *allo_status_str(allo_status status) {
   switch (status) {
   case ALLO_OK:
-    return "OK";
+    return "allo: ok";
   case ALLO_OOM:
-    return "OUT OF MEMORY";
-  case ALLO_ERR_INVALID_ADDR:
-    return "INVALID ADDRESS";
-  case ALLO_ERR_INVALID_NULL:
-    return "INVALID NULL";
-  case ALLO_ERR_INVALID_SIZE:
-    return "INVALID SIZE";
-  case ALLO_ERR_INVALID_ALIGN:
-    return "INVALID ALIGNMENT";
+    return "allo: out of memory";
+  case ALLO_ERR_ADDR:
+    return "allo: invalid address";
+  case ALLO_ERR_NULL:
+    return "allo: null pointer";
+  case ALLO_ERR_SIZE:
+    return "allo: invalid size";
+  case ALLO_ERR_ALIGN:
+    return "allo: invalid alignment";
   }
-  return "UNKNOWN";
+  return "allo: unknown status";
 }

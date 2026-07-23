@@ -8,14 +8,14 @@ typedef enum allo_status {
   ALLO_OK = 0,
   // Indicates out of memory.
   ALLO_OOM,
-  // Indicates an invalid address.
-  ALLO_ERR_INVALID_ADDR,
-  // Indicates an invalid null.
-  ALLO_ERR_INVALID_NULL,
-  // Indicates an invalid size.
-  ALLO_ERR_INVALID_SIZE,
-  // Indicates an invalid alignment.
-  ALLO_ERR_INVALID_ALIGN,
+  // Indicates an error due to an invalid address.
+  ALLO_ERR_ADDR,
+  // Indicates an error due to a null pointer.
+  ALLO_ERR_NULL,
+  // Indicates an error due to an invalid size.
+  ALLO_ERR_SIZE,
+  // Indicates an error due to alignment.
+  ALLO_ERR_ALIGN,
 
 } allo_status;
 

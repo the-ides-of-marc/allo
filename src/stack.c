@@ -4,10 +4,10 @@
 allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
                             size_t buf_size) {
   if (!s || !buf) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   if (!buf_size) {
-    return ALLO_ERR_INVALID_SIZE;
+    return ALLO_ERR_SIZE;
   }
 
   s->start = (uintptr_t)buf;
@@ -20,7 +20,7 @@ allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
 
 allo_status allo_stack_free_all(allo_stack *s) {
   if (!s) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   allo_stack_assert(s);
   s->cursor = s->end;

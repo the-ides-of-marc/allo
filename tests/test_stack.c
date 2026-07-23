@@ -30,7 +30,7 @@ const size_t chunk_sizes[] = {sizeof(void *), sizeof(void *) * 2,
 static void test_allo_stack_init_null_allocator(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_status status = allo_stack_init(NULL, buf, BUF_SIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "init must fail");
 }
 
 // Tests when init takes in a zero sized buffer.
@@ -38,7 +38,7 @@ static void test_allo_stack_init_zero_buf_size(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_stack s = {0};
   allo_status status = allo_stack_init(&s, buf, 0);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status, "init must fail");
 }
 
 // Tests that allocator thas the correct state on a successful init.
@@ -182,7 +182,7 @@ static void test_allo_stack_alloc_null_dest(void) {
       allo_stack_assert(&s);
 
       status = allo_stack_alloc(NULL, &s, chunk_sizes[size_i], aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                   "alloc must fail");
       allo_stack_assert(&s);
     }
@@ -202,7 +202,7 @@ static void test_allo_stack_alloc_null_allocator(void) {
       void *dest = NULL;
       status =
           allo_stack_alloc(&dest, NULL, chunk_sizes[size_i], aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                   "alloc must fail");
       allo_stack_assert(&s);
     }
@@ -220,7 +220,7 @@ static void test_allo_stack_alloc_zero_size(void) {
 
     void *dest = NULL;
     status = allo_stack_alloc(&dest, &s, 0, aligns[align_i]);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status,
                                 "alloc must fail");
     allo_stack_assert(&s);
   }
@@ -241,7 +241,7 @@ static void test_allo_stack_alloc_invalid_align(void) {
       void *dest = NULL;
       status = allo_stack_alloc(&dest, &s, chunk_sizes[size_i],
                                 invalid_aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status,
                                   "alloc must fail");
       allo_stack_assert(&s);
     }
@@ -406,7 +406,7 @@ static void test_allo_stack_free_null_allocator(void) {
   ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
   allo_stack_assert(&s);
 
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, allo_stack_free(NULL),
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, allo_stack_free(NULL),
                               "free must fail");
   allo_stack_assert(&s);
 
@@ -424,7 +424,7 @@ static void test_allo_stack_free_null_allocator(void) {
       ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "alloc must succeed");
       allo_stack_assert(&s);
 
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, allo_stack_free(NULL),
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, allo_stack_free(NULL),
                                   "free must fail");
       allo_stack_assert(&s);
     }
@@ -432,7 +432,7 @@ static void test_allo_stack_free_null_allocator(void) {
   TEST_ASSERT_EQUAL_MESSAGE(ALLO_ARR_LEN(cursor_positions), cursor_i,
                             "cursor positions must all be tracked");
 
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, allo_stack_free(NULL),
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, allo_stack_free(NULL),
                               "free must fail");
   allo_stack_assert(&s);
 }
@@ -482,7 +482,7 @@ static void test_allo_stack_free_all_null_allocator(void) {
   allo_stack_assert(&s);
 
   status = allo_stack_free_all(NULL);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                               "free all must fail");
   allo_stack_assert(&s);
 
@@ -495,14 +495,14 @@ static void test_allo_stack_free_all_null_allocator(void) {
       allo_stack_assert(&s);
 
       status = allo_stack_free_all(NULL);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                   "free all must fail");
       allo_stack_assert(&s);
     }
   }
 
   status = allo_stack_free_all(NULL);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                               "free all must fail");
   allo_stack_assert(&s);
 }

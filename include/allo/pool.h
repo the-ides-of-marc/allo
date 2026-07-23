@@ -57,10 +57,10 @@ static inline void allo_pool_assert(const allo_pool *p) {
 // Both the padded `align` and padded `chunk_size` will be >= `sizeof(void *)`,
 // as required for the free list to operate.
 //
-// ALLO_ERR_INVALID_NULL is returned if `p` or `buf` is NULL.
-// ALLO_ERR_INVALID_SIZE is returned if `buf_size` or `chunk_size` is 0 or if
+// ALLO_ERR_NULL is returned if `p` or `buf` is NULL.
+// ALLO_ERR_SIZE is returned if `buf_size` or `chunk_size` is 0 or if
 // the padded `chunk_size` exceeds `buf_size`.
-// ALLO_ERR_INVALID_ALIGN is returned if `align` is 0 or if the `buf` is not
+// ALLO_ERR_ALIGN is returned if `align` is 0 or if the `buf` is not
 // aligned with the rounded `align`.
 allo_status allo_pool_init(allo_pool *restrict p, void *restrict buf,
                            size_t buf_size, size_t chunk_size, size_t align);
@@ -101,12 +101,12 @@ static inline allo_status allo_pool_alloc_unsafe(void *restrict *restrict dest,
 
 // Allocates a new chunk of memory of `p->chunk_size` and writes it to `*dest`.
 // The free list is then updated to point to the next free chunk of memory.
-// ALLO_ERR_INVALID_NULL is returned if `dest` or `p` is NULL.
+// ALLO_ERR_NULL is returned if `dest` or `p` is NULL.
 // ALLO_OOM is returned if there is no more available chunk to allocate.
 static inline allo_status allo_pool_alloc(void *restrict *restrict dest,
                                           allo_pool *restrict p) {
   if (!dest || !p) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   return allo_pool_alloc_unsafe(dest, p);
 }
@@ -136,26 +136,26 @@ static inline allo_status allo_pool_free_unsafe(allo_pool *restrict p,
 
 // Frees the memory allocated at `ptr`.
 // The free list is then updated to point to `ptr`.
-// ALLO_ERR_INVALID_NULL is returned if `p` or `ptr` is NULL.
-// ALLO_ERR_INVALID_ADDR is returned if `ptr` is outside of the allocator's
+// ALLO_ERR_NULL is returned if `p` or `ptr` is NULL.
+// ALLO_ERR_ADDR is returned if `ptr` is outside of the allocator's
 // memory range or is not a valid chunk address.
 static inline allo_status allo_pool_free(allo_pool *restrict p,
                                          void *restrict ptr) {
   if (!p || !ptr) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   uintptr_t mem = (uintptr_t)ptr;
   if (mem < p->start || mem >= p->end) {
-    return ALLO_ERR_INVALID_ADDR;
+    return ALLO_ERR_ADDR;
   }
   if ((mem - p->start) % p->chunk_size != 0) {
-    return ALLO_ERR_INVALID_ADDR;
+    return ALLO_ERR_ADDR;
   }
   return allo_pool_free_unsafe(p, ptr);
 }
 
 // Frees all memory allocated on allocator `p`.
-// ALLO_ERR_INVALID_NULL is returned if `p` is NULL.
+// ALLO_ERR_NULL is returned if `p` is NULL.
 allo_status allo_pool_free_all(allo_pool *p);
 
 #endif // !ALLO_POOL_H

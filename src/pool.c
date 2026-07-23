@@ -4,20 +4,20 @@
 allo_status allo_pool_init(allo_pool *restrict p, void *restrict buf,
                            size_t buf_size, size_t chunk_size, size_t align) {
   if (!p || !buf) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   if (!buf_size || !chunk_size) {
-    return ALLO_ERR_INVALID_SIZE;
+    return ALLO_ERR_SIZE;
   }
   if (!align || align < sizeof(void *) || !allo_math_is_pow2(align)) {
-    return ALLO_ERR_INVALID_ALIGN;
+    return ALLO_ERR_ALIGN;
   }
   if (chunk_size < sizeof(void *) || chunk_size % align != 0 ||
       chunk_size > buf_size) {
-    return ALLO_ERR_INVALID_SIZE;
+    return ALLO_ERR_SIZE;
   }
   if (!allo_math_is_aligned((uintptr_t)buf, align)) {
-    return ALLO_ERR_INVALID_ALIGN;
+    return ALLO_ERR_ALIGN;
   }
 
   ALLO_ASSERT(align, "alignment must not be 0");
@@ -79,7 +79,7 @@ void allo_pool_freelist_reset(allo_pool *p) {
 
 allo_status allo_pool_free_all(allo_pool *p) {
   if (!p) {
-    return ALLO_ERR_INVALID_NULL;
+    return ALLO_ERR_NULL;
   }
   allo_pool_assert(p);
   allo_pool_freelist_reset(p);

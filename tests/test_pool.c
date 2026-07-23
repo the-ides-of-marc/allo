@@ -35,7 +35,7 @@ static void test_allo_pool_init_null_allocator(void) {
   };
   uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
   allo_status status = allo_pool_init(NULL, buf, BUF_SIZE, CHUNK_SIZE, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "init must fail");
 }
 
 // Tests when init takes in a null buffer.
@@ -48,7 +48,7 @@ static void test_allo_pool_init_null_buf(void) {
   };
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, NULL, BUF_SIZE, CHUNK_SIZE, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "init must fail");
 }
 
 // Tests when init takes in a zero sized chunk size.
@@ -62,7 +62,7 @@ static void test_allo_pool_init_zero_chunk_size(void) {
   uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, BUF_SIZE, 0, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status, "init must fail");
 }
 
 // Tests when init takes in a zero sized alignment.
@@ -76,7 +76,7 @@ static void test_allo_pool_init_zero_align(void) {
   uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, 0);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status, "init must fail");
 }
 
 // Tests when init takes in an alignment smaller than sizeof(void*).
@@ -92,7 +92,7 @@ static void test_allo_pool_init_align_too_small(void) {
     uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
     allo_pool p = {0};
     allo_status status = allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, i);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status,
                                 "init must fail");
   }
 }
@@ -111,7 +111,7 @@ static void test_allo_pool_init_align_not_pow2(void) {
     allo_pool p = {0};
     allo_status status =
         allo_pool_init(&p, buf, BUF_SIZE, CHUNK_SIZE, not_pow2[i]);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status,
                                 "init must fail");
   }
 }
@@ -127,7 +127,7 @@ static void test_allo_pool_init_chunk_size_too_small(void) {
       allo_pool p = {0};
       allo_status status = allo_pool_init(&p, buf_aligned, buf_size, chunk_size,
                                           aligns[align_i]);
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status,
                                   "init must fail");
       free(buf);
     }
@@ -149,7 +149,7 @@ static void test_allo_pool_init_chunk_size_not_a_multiple_of_align(void) {
     allo_pool p = {0};
     allo_status status =
         allo_pool_init(&p, buf_aligned, buf_size, chunk_size, aligns[align_i]);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status,
                                 "init must fail");
     free(buf);
   }
@@ -166,7 +166,7 @@ static void test_allo_pool_init_chunk_size_exceeds_buf_size(void) {
   uint8_t buf[BUF_SIZE] __attribute__((aligned(ALIGN))) = {0};
   allo_pool p = {0};
   allo_status status = allo_pool_init(&p, buf, BUF_SIZE, BUF_SIZE + 1, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status, "init must fail");
 }
 
 // Tests when init takes in a buffer that is not aligned to alignment
@@ -182,7 +182,7 @@ static void test_allo_pool_init_buf_not_aligned(void) {
   allo_pool p = {0};
   allo_status status =
       allo_pool_init(&p, buf + 1, BUF_SIZE - 1, CHUNK_SIZE, ALIGN);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN, status, "init must fail");
 }
 
 // Tests chunk capacity.
@@ -399,7 +399,7 @@ static void test_allo_pool_alloc_null_dest(void) {
         ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
         allo_pool_assert(&p);
 
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL,
                                     allo_pool_alloc(NULL, &p),
                                     "alloc must fail");
         free(buf);
@@ -429,7 +429,7 @@ static void test_allo_pool_alloc_null_allocator(void) {
         allo_pool_assert(&p);
 
         void *dest = NULL;
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL,
                                     allo_pool_alloc(&dest, NULL),
                                     "alloc must fail");
         free(buf);
@@ -586,7 +586,7 @@ static void test_allo_pool_free_null_allocator(void) {
         allo_pool_assert(&p);
 
         status = allo_pool_free(NULL, dest);
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL,
                                     allo_pool_free(NULL, dest),
                                     "free must fail");
         allo_pool_assert(&p);
@@ -623,7 +623,7 @@ static void test_allo_pool_free_null_ptr(void) {
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, NULL);
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
@@ -659,17 +659,17 @@ static void test_allo_pool_free_ptr_is_out_of_bounds(void) {
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, (void *)(p.start - 1));
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, (void *)(p.end));
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
         status = allo_pool_free(&p, (void *)(p.end + 1));
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
@@ -714,7 +714,7 @@ static void test_allo_pool_free_ptr_is_in_memory_region_but_not_valid(void) {
             invalid_ptr % p.chunk_size != 0,
             "invalid ptr must not be a valid chunk address");
         status = allo_pool_free(&p, (void *)invalid_ptr);
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status,
                                     "free must fail");
         allo_pool_assert(&p);
 
@@ -783,7 +783,7 @@ static void test_allo_pool_free_all_null_allocator(void) {
         allo_pool_assert(&p);
 
         status = allo_pool_free_all(NULL);
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                     "free all must fail");
 
         size_t cap = allo_pool_chunk_cap(&p);
@@ -798,7 +798,7 @@ static void test_allo_pool_free_all_null_allocator(void) {
         TEST_ASSERT_NULL_MESSAGE(p.free_list, "allocator must be full");
 
         status = allo_pool_free_all(NULL);
-        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+        ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                     "free all must fail");
         allo_pool_assert(&p);
 

@@ -47,14 +47,14 @@ static void test_allo_bump_init_ok(void) {
 static void test_allo_bump_init_null_allocator(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_status status = allo_bump_init(NULL, buf, BUF_SIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "init must fail");
 }
 
 // Tests when init takes in a null buffer.
 static void test_allo_bump_init_null_buf(void) {
   allo_bump b = {0};
   allo_status status = allo_bump_init(&b, NULL, BUF_SIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status, "init must fail");
 }
 
 // Tests when init takes in a zero sized buffer.
@@ -62,7 +62,7 @@ static void test_allo_bump_init_zero_buf_size(void) {
   uint8_t buf[BUF_SIZE] = {0};
   allo_bump b = {0};
   allo_status status = allo_bump_init(&b, buf, 0);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE, status, "init must fail");
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE, status, "init must fail");
 }
 
 // Tests the state of the allocator and allocated memory on a successful init on
@@ -174,7 +174,7 @@ static void test_allo_bump_alloc_null_dest(void) {
       ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
       allo_bump_assert(&b);
       ALLO_TEST_ASSERT_STATUS_MSG(
-          ALLO_ERR_INVALID_NULL,
+          ALLO_ERR_NULL,
           allo_bump_alloc(NULL, &b, chunk_sizes[size_i], aligns[align_i]),
           "alloc must fail");
     }
@@ -193,7 +193,7 @@ static void test_allo_bump_alloc_null_allocator(void) {
 
       void *dest = NULL;
       ALLO_TEST_ASSERT_STATUS_MSG(
-          ALLO_ERR_INVALID_NULL,
+          ALLO_ERR_NULL,
           allo_bump_alloc(&dest, NULL, chunk_sizes[size_i], aligns[align_i]),
           "alloc must fail");
     }
@@ -210,7 +210,7 @@ static void test_allo_bump_alloc_zero_size(void) {
     allo_bump_assert(&b);
 
     void *dest = NULL;
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_SIZE,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_SIZE,
                                 allo_bump_alloc(&dest, &b, 0, aligns[align_i]),
                                 "alloc must fail");
   }
@@ -229,7 +229,7 @@ static void test_allo_bump_alloc_invalid_align(void) {
       allo_bump_assert(&b);
 
       void *dest = NULL;
-      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ALIGN,
+      ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ALIGN,
                                   allo_bump_alloc(&dest, &b,
                                                   chunk_sizes[size_i],
                                                   invalid_aligns[align_i]),
@@ -371,7 +371,7 @@ static void test_allo_bump_set_cursor_null_allocator(void) {
     uintptr_t cursor = b.end - offsets[offset_i];
 
     status = allo_bump_set_cursor(NULL, (void *)cursor);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                                 "operation must fail");
   }
 }
@@ -385,7 +385,7 @@ static void test_allo_bump_set_cursor_null_cursor(void) {
   allo_bump_assert(&b);
 
   status = allo_bump_set_cursor(&b, NULL);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, status,
+  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, status,
                               "operation must fail");
 }
 
@@ -405,7 +405,7 @@ static void test_allo_bump_set_cursor_out_of_bounds(void) {
     uintptr_t cursor = b.end - offsets[offset_i];
 
     status = allo_bump_set_cursor(&b, (void *)cursor);
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_ADDR, status,
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_ADDR, status,
                                 "operation must fail");
   }
 }
@@ -424,7 +424,7 @@ static void test_allo_bump_free_all_null_allocator(void) {
     b.cursor -= offsets[offset_i];
     allo_bump_assert(&b);
 
-    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_INVALID_NULL, allo_bump_free_all(NULL),
+    ALLO_TEST_ASSERT_STATUS_MSG(ALLO_ERR_NULL, allo_bump_free_all(NULL),
                                 "free all must fail");
     allo_bump_assert(&b);
   }
