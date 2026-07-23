@@ -59,8 +59,16 @@ static inline allo_status allo_stack_alloc_unsafe(void *restrict *restrict dest,
     return ALLO_OOM;
   }
   *dest = (void *)next_cursor;
-  next_cursor = allo_math_align_down(next_cursor - sizeof(uintptr_t),
-                                     ALLO_MATH_ALIGNOF(uintptr_t));
+
+  // Since C99 does not have alignof in its standard,
+  // Use sizeof(uintptr_t) for alignment.
+  // sizeof(uintptr_t) will never be smaller than alignof(uintptr_t),
+  // so header will always have sufficient space.
+  // The potential wasted space is bounded to sizeof(uintptr_t) -
+  // alignof(uintptr_t), which is typically 0.
+  next_cursor =
+      allo_math_align_down(next_cursor - sizeof(uintptr_t), sizeof(uintptr_t));
+
   *(uintptr_t *)next_cursor = s->cursor;
   s->cursor = next_cursor;
 
