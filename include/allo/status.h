@@ -16,8 +16,6 @@ typedef enum allo_status {
   ALLO_ERR_INVALID_SIZE,
   // Indicates an invalid alignment.
   ALLO_ERR_INVALID_ALIGN,
-  // Indicates that an invalid operation was attempted.
-  ALLO_ERR_INVALID_OP,
 
 } allo_status;
 
@@ -38,8 +36,6 @@ static inline const char *allo_status_str(allo_status status) {
     return "INVALID SIZE";
   case ALLO_ERR_INVALID_ALIGN:
     return "INVALID ALIGNMENT";
-  case ALLO_ERR_INVALID_OP:
-    return "INVALID OP";
   }
   return "UNKNOWN";
 }

@@ -1,5 +1,4 @@
 #include "allo/allo.h"
-#include "allo/allocator.h"
 #include "allo/bump.h"
 #include "allo/internal/common.h"
 #include "allo/internal/math.h"
@@ -494,22 +493,6 @@ static void test_allo_bump_buf_alignments(void) {
   }
 }
 
-// Tests creating an allocator interface from a concrete bump allocator.
-static void test_allo_allocator_from_bump(void) {
-  uint8_t buf[BUF_SIZE] = {0};
-  allo_bump b = {0};
-  allo_status status = allo_bump_init(&b, buf, BUF_SIZE);
-  ALLO_TEST_ASSERT_STATUS_MSG(ALLO_OK, status, "init must succeed");
-  allo_bump_assert(&b);
-
-  allo_allocator a = allo_allocator_from_bump(&b);
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&b, a.allocator,
-                                "underlying allocator must match");
-  TEST_ASSERT_EQUAL_PTR_MESSAGE(&allo_bump_vtable, a.vtable,
-                                "vtable must match");
-  allo_bump_assert(a.allocator);
-}
-
 int main(void) {
   UNITY_BEGIN();
 
@@ -539,8 +522,6 @@ int main(void) {
   RUN_TEST(test_allo_bump_free_all_ok);
 
   RUN_TEST(test_allo_bump_buf_alignments);
-
-  RUN_TEST(test_allo_allocator_from_bump);
 
   return UNITY_END();
 }

@@ -1,7 +1,6 @@
 #ifndef ALLO_STACK_H
 #define ALLO_STACK_H
 
-#include "allo/allocator.h"
 #include "allo/config.h"
 #include "allo/internal/math.h"
 #include "allo/status.h"
@@ -124,11 +123,5 @@ static inline allo_status allo_stack_free(allo_stack *s) {
 // Frees all memory allocated on allocator `s`.
 // ALLO_ERR_INVALID_NULL is returned if `s` is NULL.
 allo_status allo_stack_free_all(allo_stack *s);
-
-// Returns a allocator type from a stack allocator.
-allo_allocator allo_allocator_from_stack(allo_stack *s);
-
-// VTable for stack allocator.
-extern const allo_allocator_vtable allo_stack_vtable;
 
 #endif // !ALLO_STACK_H

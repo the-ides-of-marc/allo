@@ -1,7 +1,6 @@
 #ifndef ALLO_BUMP_H
 #define ALLO_BUMP_H
 
-#include "allo/allocator.h"
 #include "allo/config.h"
 #include "allo/internal/math.h"
 #include "allo/status.h"
@@ -102,11 +101,5 @@ allo_status allo_bump_set_cursor(allo_bump *restrict b,
 // invalid and unsafe to use.
 // ALLO_ERR_INVALID_NULL is returned if `b` is NULL.
 allo_status allo_bump_free_all(allo_bump *b);
-
-// Returns a allocator type from a bump allocator.
-allo_allocator allo_allocator_from_bump(allo_bump *b);
-
-// VTable for bump allocator.
-extern const allo_allocator_vtable allo_bump_vtable;
 
 #endif // !ALLO_BUMP_H

@@ -6,11 +6,6 @@ The allocators do not reallocate or deallocate any memory and strictly manage th
 they are given upon initialization.
 See [Allocators](#allocators) for a list of supported allocators.
 
-All allocators can be wrapped in an `allo_allocator` type, a fat pointer, which provides
-common allocator operations.
-Each allocator provides its own vtable found in its own source file.
-> Not all allocators support every operation provided by `allo_allocator`.
-
 See [BUILD.md](BUILD.md) for building the library from source.
 
 ## Usage
@@ -45,7 +40,6 @@ Allocators often provide similar operations with the following patterns:
   The unsafe variant omits parameter validation performance penalty at the 
   risk of undefined behaviour on invalid values.
 - `allo_*_free_all`: Frees all allocated memory from the allocator.
-- `allo_allocator_from_*`: Returns a generic allocator type from the allocator.
 
 > [!NOTE]
 > The unsafe variants, `allo_*_alloc_unsafe` and `allo_*_free_unsafe`, are useful when allocating/freeing
@@ -167,55 +161,3 @@ int main(void) {
     return 0;
 }
 ```
-
-Here is an example of using a bump allocator, `allo_bump`,
-through the generic `allo_allocator` interface.
-
-```c
-#include "allo/allo.h"
-#include <stdalign.h>
-#include <stddef.h>
-#include <stdint.h>
-
-struct message {
-    uint8_t header[128];
-    uint8_t payload[4096];
-};
-
-int main(void) {
-    // Define the memory region for the allocator to manage.
-    enum { BUF_SIZE = 1 << 10 };
-    uint8_t buf[BUF_SIZE];
-
-    // Define and initialize the allocator.
-    allo_bump bump_allocator;
-    allo_status status = allo_bump_init(&bump_allocator, buf, BUF_SIZE);
-    if (status != ALLO_OK) {
-        fprintf(stderr, "error initializing allocator: %s\n", allo_status_str(status));
-        return 1;
-    }
-    allo_allocator allocator = allo_allocator_from_bump(&bump_allocator);
-
-    // Allocate memory for struct.
-    void *dest = NULL;
-    status = allo_alloc(&dest, allocator, sizeof(struct message), alignof(struct message));
-
-    // Handle when allocation is not successful.
-    if (status != ALLO_OK) {
-        // Handle when there is no more space in the allocator.
-        if (status == ALLO_OOM) {
-            fprintf(stderr, "insufficient space in allocator: %s\n", allo_status_str(status));
-            return 1;
-        }
-        fprintf(stderr, "error allocating memory: %s\n", allo_status_str(status));
-        return 1;
-    }
-
-    // Use allocated memory.
-    struct message* msg = dest;
-
-    return 0;
-}
-```
-
-

@@ -39,7 +39,6 @@ endfunction()
 set(TESTS
     test_common
     test_math
-    test_allocator
     test_bump
     test_stack
     test_pool
