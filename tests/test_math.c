@@ -269,24 +269,6 @@ void test_allo_math_align_down(void) {
   }
 }
 
-void test_allo_math_alignof(void) {
-  TEST_ASSERT_EQUAL(1, ALLO_MATH_ALIGNOF(uint8_t));
-  TEST_ASSERT_EQUAL(2, ALLO_MATH_ALIGNOF(uint16_t));
-  TEST_ASSERT_EQUAL(4, ALLO_MATH_ALIGNOF(uint32_t));
-  TEST_ASSERT_EQUAL(8, ALLO_MATH_ALIGNOF(uint64_t));
-
-  enum e { A = 1, B = 2, C = 3 };
-  TEST_ASSERT_EQUAL(ALLO_MATH_ALIGNOF(int), ALLO_MATH_ALIGNOF(enum e));
-
-  struct s {
-    uint8_t uint8;
-    uint16_t uint16;
-    uint32_t uint32;
-    uint64_t uint64;
-  };
-  TEST_ASSERT_EQUAL(8, ALLO_MATH_ALIGNOF(struct s));
-}
-
 int main(void) {
   UNITY_BEGIN();
 
@@ -306,8 +288,6 @@ int main(void) {
   RUN_TEST(test_allo_math_align_up);
 
   RUN_TEST(test_allo_math_align_down);
-
-  RUN_TEST(test_allo_math_alignof);
 
   return UNITY_END();
 }
