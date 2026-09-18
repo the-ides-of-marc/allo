@@ -44,6 +44,9 @@ allo_status allo_alloc_req_query_size_bump(size_t *size,
     if (!allo_math_is_pow2(alloc_reqs[i].align)) {
       return ALLO_ERR_ALIGN;
     }
+    if (alloc_reqs[i].size > ptr_curr) {
+      return ALLO_OOM;
+    }
     ptr_curr -= alloc_reqs[i].size;
     ptr_curr = allo_math_align_down(ptr_curr, alloc_reqs[i].align);
   }

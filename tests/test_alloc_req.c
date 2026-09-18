@@ -118,6 +118,17 @@ static void test_allo_alloc_req_query_size_bump_unaligned_alloc_req(void) {
                                                      ALLO_ARR_LEN(alloc_reqs)));
 }
 
+static void test_allo_alloc_req_query_size_bump_oom(void) {
+  allo_alloc_req alloc_reqs[] = {
+      {.size = UINTPTR_MAX, .align = 1},
+      {.size = 1, .align = 1},
+  };
+  size_t query_size;
+  ALLO_TEST_ASSERT_STATUS(
+      ALLO_OOM, allo_alloc_req_query_size_bump(&query_size, alloc_reqs,
+                                               ALLO_ARR_LEN(alloc_reqs)));
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_allo_alloc_req_query_size_bump_ok);
@@ -125,5 +136,6 @@ int main(void) {
   RUN_TEST(test_allo_alloc_req_query_size_bump_null_alloc_reqs_non_zero_count);
   RUN_TEST(test_allo_alloc_req_query_size_bump_zero_sized_alloc_req);
   RUN_TEST(test_allo_alloc_req_query_size_bump_unaligned_alloc_req);
+  RUN_TEST(test_allo_alloc_req_query_size_bump_oom);
   return UNITY_END();
 }
