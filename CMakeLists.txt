@@ -51,6 +51,7 @@ add_library(allo::allo ALIAS allo)
 target_sources(allo
     PRIVATE
         src/status.c
+        src/alloc_req.c
         src/bump.c
         src/stack.c
         src/pool.c

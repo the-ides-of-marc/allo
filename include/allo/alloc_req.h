@@ -2,6 +2,7 @@
 #define ALLO_ALLOC_REQ_H
 
 #include "allo/config.h"
+#include "allo/internal/math.h"
 #include "allo/status.h"
 #include <stddef.h>
 
@@ -17,7 +18,7 @@ static inline void allo_alloc_req_assert(const allo_alloc_req *a) {
   (void)a;
 }
 
-allo_status allo_alloc_req_bump_query_size(size_t *size,
+allo_status allo_alloc_req_query_size_bump(size_t *size,
                                            const allo_alloc_req *alloc_reqs,
                                            size_t alloc_reqs_count);
 
