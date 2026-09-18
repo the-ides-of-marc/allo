@@ -25,7 +25,7 @@ function(add_allo_test TEST_NAME)
             allo
             allo_test
     )
-    target_compile_definitions(${TEST_NAME} PRIVATE ALLO_ENABLE_ASSERT)
+    target_compile_definitions(allo PRIVATE ALLO_ENABLE_ASSERT)
     setup_dev_flags(${TEST_NAME})
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     set_tests_properties(${TEST_NAME}
@@ -39,6 +39,7 @@ endfunction()
 set(TESTS
     test_common
     test_math
+    test_alloc_req
     test_bump
     test_stack
     test_pool
