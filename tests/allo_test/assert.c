@@ -8,7 +8,9 @@ void allo_test_assert_status(allo_status expected, allo_status actual,
   if (expected != actual) {
     char buf[BUF_SIZE] = {0};
     size_t offset = 0;
-    allo_test_snprintf(buf, BUF_SIZE, &offset, "%s: ", message);
+    if (message) {
+      allo_test_snprintf(buf, BUF_SIZE, &offset, "%s: ", message);
+    }
     allo_test_snprintf(
         buf, BUF_SIZE, &offset, "expected=%d (%s) actual=%d (%s)", expected,
         allo_status_str(expected), actual, allo_status_str(actual));

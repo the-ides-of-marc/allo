@@ -7,6 +7,8 @@
 
 void allo_test_assert_status(allo_status expected, allo_status actual,
                              const char *message, size_t line);
+#define ALLO_TEST_ASSERT_STATUS(expected, actual)                              \
+  allo_test_assert_status((expected), (actual), NULL, __LINE__)
 #define ALLO_TEST_ASSERT_STATUS_MSG(expected, actual, message)                 \
   allo_test_assert_status((expected), (actual), (message), __LINE__)
 
