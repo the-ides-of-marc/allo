@@ -4,6 +4,7 @@
 #include "allo/config.h"
 #include "allo/internal/math.h"
 #include "allo/status.h"
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -43,6 +44,9 @@ allo_status allo_stack_init(allo_stack *restrict s, void *restrict buf,
 // alignof(uintptr_t), which is typically 0.
 #define ALLO_STACK_HEADER_ALIGN sizeof(uintptr_t)
 
+// The width of the header in bytes.
+#define ALLO_STACK_HEADER_WIDTH sizeof(uintptr_t)
+
 // Tries to allocate `size` bytes at `align` alignment.
 // `size` must be > 0 and `align` must be a power of 2.
 // ALLO_OOM is returned if there is insufficient space to allocate the bytes.
@@ -58,21 +62,28 @@ static inline allo_status allo_stack_alloc_unsafe(void *restrict *restrict dest,
   ALLO_ASSERT(allo_math_is_pow2(align), "alignment must be a power of 2");
   allo_stack_assert(s);
 
-  uintptr_t next_cursor = s->cursor - size;
-  if (next_cursor > s->cursor) {
+  uintptr_t ptr_data = s->cursor - size;
+  if (ptr_data > s->cursor) {
     return ALLO_OOM;
   }
-  next_cursor = allo_math_align_down(next_cursor, align);
-  if (next_cursor < s->start) {
+  ptr_data = allo_math_align_down(ptr_data, align);
+  if (ptr_data < s->start) {
     return ALLO_OOM;
   }
-  *dest = (void *)next_cursor;
+  *dest = (void *)ptr_data;
 
-  next_cursor = allo_math_align_down(next_cursor - sizeof(uintptr_t),
-                                     ALLO_STACK_HEADER_ALIGN);
+  uintptr_t ptr_header = ptr_data - ALLO_STACK_HEADER_WIDTH;
+  if (ptr_header > ptr_data) {
+    return ALLO_OOM;
+  }
+  ptr_header = allo_math_align_down(ptr_header, ALLO_STACK_HEADER_ALIGN);
+  if (ptr_header < s->start) {
+    return ALLO_OOM;
+  }
+  *(uintptr_t *)ptr_header = s->cursor;
 
-  *(uintptr_t *)next_cursor = s->cursor;
-  s->cursor = next_cursor;
+  ALLO_ASSERT(ptr_header < ptr_data, "header must precede data");
+  s->cursor = ptr_header;
 
   allo_stack_assert(s);
   return ALLO_OK;
